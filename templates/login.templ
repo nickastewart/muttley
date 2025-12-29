@@ -2,29 +2,30 @@ package templates
 
 templ Login(){
     <!DOCTYPE html>
-    @Head() 
     <html>
-        <div id='login-page'>
-            <div id='login-page-left' class='login-split'>
-            </div>
-            <div id='login-page-right' class='login-split'>
-                <div id='login-form-section'>
-                    <form id='login-form' action='login' method='POST'>
-                        <div>
-                            <label for='email'>Email</label>
-                            <input class='input-full-width' type='email' name='email'>
-                        </div>
-                        <div>
-                            <label for='password'>Password</label>
-                            <input class='input-full-width' type='password' name='password'>
-                        </div>
-                        <div>
-                            <input class='input-full-width submit-button' type='submit' value='Login'>
-                        </div>
-                    </form> 
+        @Head() 
+        <body>
+            <div id='login-page'>
+                <div id='login-page-left' class='login-split'>
+                </div>
+                <div id='login-page-right' class='login-split'>
+                    <div id='login-form-section'>
+                        <form id='login-form' action='login' method='POST'>
+                            <div>
+                                <label for='email'>Email</label>
+                                <input class='input-full-width' type='email' name='email'>
+                            </div>
+                            <div>
+                                <label for='password'>Password</label>
+                                <input class='input-full-width' type='password' name='password'>
+                            </div>
+                            <div>
+                                <input class='input-full-width submit-button' type='submit' value='Login'>
+                            </div>
+                        </form> 
+                    </div>
                 </div>
             </div>
-        </div>
+        </body>
     </html>
-
  }

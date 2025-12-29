@@ -128,7 +128,7 @@ func (controller *AuthController) LoginForm(c *gin.Context) {
 	}
 	http.SetCookie(c.Writer, cookie)
 
-	c.HTML(http.StatusOK, "Home Page", templates.Home())
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 func (controller *AuthController) CheckAccessToken(c *gin.Context) {

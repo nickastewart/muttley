@@ -4,15 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-	"racer_http/repository"
-	"racer_http/sqlite/entities"
+	"muttley/repository"
+	"muttley/sqlite/entities"
 
 	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	racer "github.com/nickastewart/racer-parser"
-	"github.com/nickastewart/racer-parser/model"
+	parser "github.com/nickastewart/muttley-parser"
+	"github.com/nickastewart/muttley-parser/model"
 )
 
 type FileUploadController struct {
@@ -60,7 +60,7 @@ func (controller *FileUploadController) UploadFile(c *gin.Context) {
 	}
 	defer file.Close()
 
-	event, err := racer.ParseFile(file)
+	event, err := parser.ParseFile(file)
 	if err != nil {
 		log.Println("Failed to parse file")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

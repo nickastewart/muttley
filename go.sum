@@ -52,8 +52,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdhx/f4=
 github.com/ncruces/go-strftime v0.1.9/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
-github.com/nickastewart/racer-parser v0.0.0-20251028134242-4ab7ea3ca69c h1:JcBl6j1NvpFy8GB+4MUPVhyjZcjR3pQ/yTa+O3OrjlA=
-github.com/nickastewart/racer-parser v0.0.0-20251028134242-4ab7ea3ca69c/go.mod h1:SnWOd33xlNIy914tfE6kEEwoYDnrbM1BeOGTCoYKLQA=
+github.com/nickastewart/muttley-parser v0.0.0-20251229190818-c748d3322dbb h1:YrKM9kqJA3U1DmoopmXhavvtJPcyaUKFXQ7yTbe4eJk=
+github.com/nickastewart/muttley-parser v0.0.0-20251229190818-c748d3322dbb/go.mod h1:C3mFJa+cuvcNgoaIYUSK56HI1cMzctV5bE2N84tCq7w=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

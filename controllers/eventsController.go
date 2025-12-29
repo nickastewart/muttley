@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"context"
+	"muttley/repository"
+	"muttley/sqlite/entities"
 	"net/http"
-	"racer_http/repository"
-	"racer_http/sqlite/entities"
 
 	"github.com/gin-gonic/gin"
 )

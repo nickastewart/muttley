@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	_ "modernc.org/sqlite"
+	"muttley/controllers"
+	"muttley/repository"
+	"muttley/sqlite/entities"
+	"muttley/templates"
 	"net/http"
-	"racer_http/controllers"
-	"racer_http/repository"
-	"racer_http/sqlite/entities"
-	"racer_http/templates"
 )
 
 func main() {
@@ -61,6 +61,10 @@ func main() {
 
 	router.GET("/signup", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "", templates.Signup())
+	})
+
+	router.GET("/leaderboard", authController.CheckAccessToken, func(c *gin.Context) {
+		c.HTML(http.StatusOK, "", templates.Leaderboard())
 	})
 
 	router.Run()

@@ -3,10 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"muttley/repository"
+	"muttley/sqlite/entities"
+	"muttley/templates"
 	"net/http"
-	"racer_http/repository"
-	"racer_http/sqlite/entities"
-	"racer_http/templates"
 	"time"
 
 	"github.com/gin-gonic/gin"

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"racer_http/sqlite/entities"
+	"muttley/sqlite/entities"
 )
 
 type UserRepository interface {

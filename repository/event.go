@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"log"
-	"racer_http/sqlite/entities"
+	"muttley/sqlite/entities"
 )
 
 type EventRepositorySqlite struct {

@@ -1,8 +1,20 @@
 package templates
 
-templ Leaderboard() {
+import (
+    "muttley/sqlite/entities"
+    "fmt"
+)
+func formatTime(time int64) string {
+    minutes := time / 60000
+    seconds := (time % 60000) / 1000
+    millis := time % 1000
+    return fmt.Sprintf("%02d:%02d.%03d", minutes, seconds, millis)
+} 
+
+templ Leaderboard(events []entities.GetEventsByUserRow) {
     <!DOCTYPE html>
     @Head()
+    @Header()
     <body>
         <div id='leaderboard-container'>
             <table id='leaderboard-table'>
@@ -18,28 +30,19 @@ templ Leaderboard() {
                     <th class='leaderboard-header-cell'>Number Of Laps</th>
                 </thead>
                 <tbody>
-                    <tr class='leaderboard-row'>
-                        <td class='leaderboard-cell'>1</td>
-                        <td class='leaderboard-cell'>Nick Stewart</td>
-                        <td class='leaderboard-cell'>2025-09-12</td>
-                        <td class='leaderboard-cell'>Daytona Milton Keynes</td>
-                        <td class='leaderboard-cell'>SODI (2024 20min Race)</td>
-                        <td class='leaderboard-cell'>1:10:05.12</td>
-                        <td class='leaderboard-cell'>1:11:10.33</td>
-                        <td class='leaderboard-cell'>10</td>
-                        <td class='leaderboard-cell'>14</td>
-                    </tr>
-                    <tr class='leaderboard-row'>
-                        <td class='leaderboard-cell'>2</td>
-                        <td class='leaderboard-cell'>Alex Adams</td>
-                        <td class='leaderboard-cell'>2025-09-12</td>
-                        <td class='leaderboard-cell'>Daytona Milton Keynes</td>
-                        <td class='leaderboard-cell'>SODI (2024 20min Race)</td>
-                        <td class='leaderboard-cell'>1:12:12.12</td>
-                        <td class='leaderboard-cell'>1:14:53.33</td>
-                        <td class='leaderboard-cell'>15</td>
-                        <td class='leaderboard-cell'>14</td>
-                    </tr>
+                    for index, event := range events { 
+                        <tr class='leaderboard-row'>
+                            <td class='leaderboard-cell'>{ index + 1 }</td>
+                            <td class='leaderboard-cell'>{ event.User.FirstName + " " + event.User.LastName}</td>
+                            <td class='leaderboard-cell'>{ event.Event.Date }</td>
+                            <td class='leaderboard-cell'>{ event.Location.Name }</td>
+                            <td class='leaderboard-cell'>{ event.Event.Type }</td>
+                            <td class='leaderboard-cell'>{ formatTime(event.EventResult.BestLapTime) }</td>
+                            <td class='leaderboard-cell'>{ formatTime(event.EventResult.AverageLapTime) }</td>
+                            <td class='leaderboard-cell'>{ event.EventResult.Position }</td>
+                            <td class='leaderboard-cell'>{ event.EventResult.NumberOfLaps }</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>

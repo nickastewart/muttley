@@ -198,9 +198,10 @@ func (q *Queries) GetEventResultByEventIdAndUserId(ctx context.Context, arg GetE
 }
 
 const getEventsByUser = `-- name: GetEventsByUser :many
-SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps FROM event
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.password, user.created_at FROM event
     LEFT JOIN location on event.location_id = location.id
     LEFT JOIN event_result on event.id = event_result.event_id
+    LEFT JOIN user on user.id = event_result.user_id
     WHERE event_result.user_id = ?
 `
 
@@ -208,6 +209,7 @@ type GetEventsByUserRow struct {
 	Event       Event
 	Location    Location
 	EventResult EventResult
+	User        User
 }
 
 func (q *Queries) GetEventsByUser(ctx context.Context, userID int64) ([]GetEventsByUserRow, error) {
@@ -234,6 +236,12 @@ func (q *Queries) GetEventsByUser(ctx context.Context, userID int64) ([]GetEvent
 			&i.EventResult.AverageLapTime,
 			&i.EventResult.Position,
 			&i.EventResult.NumberOfLaps,
+			&i.User.ID,
+			&i.User.FirstName,
+			&i.User.LastName,
+			&i.User.Email,
+			&i.User.Password,
+			&i.User.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

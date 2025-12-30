@@ -4,6 +4,7 @@ import (
 	"context"
 	"muttley/repository"
 	"muttley/sqlite/entities"
+	"muttley/templates"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -44,5 +45,6 @@ func (controller *EventsController) GetEventsByUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, events)
+
+	c.HTML(http.StatusOK, "", templates.Leaderboard(events))
 }

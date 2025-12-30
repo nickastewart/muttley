@@ -25,13 +25,13 @@ func main() {
 
 	queries := entities.New(db)
 	var userRepository repository.UserRepository = repository.NewUserRepository(queries)
-	//var locationRepository repository.LocationRepository = repository.NewLocationRepository(queries)
-	//var eventRepository repository.EventRepository = repository.NewEventRepository(queries)
-	//var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
+	var locationRepository repository.LocationRepository = repository.NewLocationRepository(queries)
+	var eventRepository repository.EventRepository = repository.NewEventRepository(queries)
+	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
 
 	authController := controllers.NewAuthController(userRepository)
 	//	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
-	//	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository)
+	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository)
 
 	if err != nil {
 		log.Panic(err)
@@ -63,9 +63,7 @@ func main() {
 		c.HTML(http.StatusOK, "", templates.Signup())
 	})
 
-	router.GET("/leaderboard", authController.CheckAccessToken, func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", templates.Leaderboard())
-	})
+	router.GET("/leaderboard", authController.CheckAccessToken, eventController.GetEventsByUser)
 
 	router.Run()
 }

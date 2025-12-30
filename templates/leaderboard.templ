@@ -1,0 +1,47 @@
+package templates
+
+templ Leaderboard() {
+    <!DOCTYPE html>
+    @Head()
+    <body>
+        <div id='leaderboard-container'>
+            <table id='leaderboard-table'>
+                <thead>
+                    <th class='leaderboard-header-cell'>Pos</th>
+                    <th class='leaderboard-header-cell'>Driver</th>
+                    <th class='leaderboard-header-cell'>Date</th>
+                    <th class='leaderboard-header-cell'>Location</th>
+                    <th class='leaderboard-header-cell'>Event Type</th>
+                    <th class='leaderboard-header-cell'>Best Lap Time</th>
+                    <th class='leaderboard-header-cell'>Average Lap Time</th>
+                    <th class='leaderboard-header-cell'>Position</th>
+                    <th class='leaderboard-header-cell'>Number Of Laps</th>
+                </thead>
+                <tbody>
+                    <tr class='leaderboard-row'>
+                        <td class='leaderboard-cell'>1</td>
+                        <td class='leaderboard-cell'>Nick Stewart</td>
+                        <td class='leaderboard-cell'>2025-09-12</td>
+                        <td class='leaderboard-cell'>Daytona Milton Keynes</td>
+                        <td class='leaderboard-cell'>SODI (2024 20min Race)</td>
+                        <td class='leaderboard-cell'>1:10:05.12</td>
+                        <td class='leaderboard-cell'>1:11:10.33</td>
+                        <td class='leaderboard-cell'>10</td>
+                        <td class='leaderboard-cell'>14</td>
+                    </tr>
+                    <tr class='leaderboard-row'>
+                        <td class='leaderboard-cell'>2</td>
+                        <td class='leaderboard-cell'>Alex Adams</td>
+                        <td class='leaderboard-cell'>2025-09-12</td>
+                        <td class='leaderboard-cell'>Daytona Milton Keynes</td>
+                        <td class='leaderboard-cell'>SODI (2024 20min Race)</td>
+                        <td class='leaderboard-cell'>1:12:12.12</td>
+                        <td class='leaderboard-cell'>1:14:53.33</td>
+                        <td class='leaderboard-cell'>15</td>
+                        <td class='leaderboard-cell'>14</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+}

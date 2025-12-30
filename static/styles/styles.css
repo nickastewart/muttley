@@ -2,6 +2,8 @@ html {
     font-family: Arial, sans-serif;
 }
 
+/* Sign Up Page */
+
 #signup-page {
     width:100%;
 }
@@ -49,6 +51,8 @@ html {
     margin-top:20px;
     margin-bottom:5px;
 }
+
+/* Login Page */
 
 .input-full-width {
     border: 1px solid #CCCCCC;
@@ -126,3 +130,41 @@ html {
     box-shadow: none;
     border-radius: 200px;
 }
+
+
+/* Leaderboard */
+
+#leaderboard-container {
+    margin: 0 auto;
+    width: 80%;
+}
+
+#leaderboard-table {
+    border-collapse: collapse;
+    border-radius:7px;
+    overflow: hidden;
+    width:100%;
+}
+
+#leaderboard-table thead {
+    background-color: #36304a;
+    color: white;
+}
+
+.leaderboard-header-cell {
+    padding: 10px;
+    text-align:center;
+    border: none;
+}
+
+#leaderboard-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.leaderboard-cell {
+    padding: 10px;
+    text-align:center;
+    border: none;
+}
+
+

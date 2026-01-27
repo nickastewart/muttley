@@ -188,4 +188,9 @@ nav {
     border: none;
 }
 
+/* Upload File */
 
+#upload-file-container {
+   width:80%; 
+   margin: 0 auto;
+}

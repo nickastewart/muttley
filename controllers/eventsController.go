@@ -29,7 +29,7 @@ func NewEventsController(userRepository repository.UserRepository,
 	}
 }
 
-func (controller *EventsController) GetEventsByUser(c *gin.Context) {
+func (controller *EventsController) Leaderboard(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")
 

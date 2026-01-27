@@ -15,7 +15,6 @@ import (
 
 func main() {
 	// TODO: Add testing to parser
-	// TODO: Start using Templ
 
 	db, err := sql.Open("sqlite", "./sqlite/racer.db")
 	if err != nil {
@@ -30,7 +29,7 @@ func main() {
 	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
 
 	authController := controllers.NewAuthController(userRepository)
-	//	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
+	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
 	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository)
 
 	if err != nil {
@@ -63,7 +62,10 @@ func main() {
 		c.HTML(http.StatusOK, "", templates.Signup())
 	})
 
-	router.GET("/leaderboard", authController.CheckAccessToken, eventController.GetEventsByUser)
+	router.GET("/leaderboard", authController.CheckAccessToken, eventController.Leaderboard)
+
+	router.GET("/upload", authController.CheckAccessToken, fileUploadController.UploadFile)
+	router.POST("/upload/process", authController.CheckAccessToken, fileUploadController.ProcessFile)
 
 	router.Run()
 }

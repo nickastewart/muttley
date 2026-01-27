@@ -6,6 +6,7 @@ import (
 	"log"
 	"muttley/repository"
 	"muttley/sqlite/entities"
+	"muttley/templates"
 
 	"context"
 	"net/http"
@@ -35,6 +36,10 @@ func NewFileUploadController(userRepository repository.UserRepository,
 }
 
 func (controller *FileUploadController) UploadFile(c *gin.Context) {
+	c.HTML(http.StatusOK, "", templates.UploadFile())
+}
+
+func (controller *FileUploadController) ProcessFile(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")
 
@@ -46,13 +51,13 @@ func (controller *FileUploadController) UploadFile(c *gin.Context) {
 	user := u.(entities.GetUserByIdRow)
 
 	form, err := c.MultipartForm()
-	multipartFile := form.File["file"]
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	multipartFile := form.File["file"]
 	file, err := multipartFile[0].Open()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -128,7 +133,6 @@ func (controller *FileUploadController) processEvent(ctx context.Context, event 
 		}
 
 		savedEvent, err := controller.EventRepository.CreateEvent(ctx, createEventParams)
-
 		if err != nil {
 			return eventEntity, err
 		}

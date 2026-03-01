@@ -27,10 +27,12 @@ func main() {
 	var locationRepository repository.LocationRepository = repository.NewLocationRepository(queries)
 	var eventRepository repository.EventRepository = repository.NewEventRepository(queries)
 	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
+	var friendRepository repository.FriendRepository = repository.NewFriendRepository(queries)
 
 	authController := controllers.NewAuthController(userRepository)
 	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
 	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository)
+	friendController := controllers.NewFriendController(friendRepository)
 
 	if err != nil {
 		log.Panic(err)
@@ -42,9 +44,7 @@ func main() {
 	router.POST("/signup", authController.Signup)
 	router.POST("/login", authController.LoginForm)
 
-	// TODO: Add add friend endpoint, need to check auth
-
-	//router.POST("friend", authCOntroller.checkAuth, friendController.AddFriend)
+	router.POST("friend", authController.CheckAccessToken, friendController.AddFriend)
 
 	// TODO: Add get events endpoint that includes friends, need to check auth
 	// TODO: Add endpoint to remove friends

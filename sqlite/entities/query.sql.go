@@ -256,6 +256,42 @@ func (q *Queries) GetEventsByUser(ctx context.Context, userID int64) ([]GetEvent
 	return items, nil
 }
 
+const getFriendsByUser = `-- name: GetFriendsByUser :many
+SELECT id, user_id, friend_id, friend_status, accepted_date, created_at, updated_at, row_version FROM friend WHERE user_id = ? and friend_status = 'ACCEPTED'
+`
+
+func (q *Queries) GetFriendsByUser(ctx context.Context, userID int64) ([]Friend, error) {
+	rows, err := q.db.QueryContext(ctx, getFriendsByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Friend
+	for rows.Next() {
+		var i Friend
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.FriendID,
+			&i.FriendStatus,
+			&i.AcceptedDate,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.RowVersion,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLocationByName = `-- name: GetLocationByName :one
 SELECT id, name FROM location WHERE name = ?
 `
@@ -330,4 +366,63 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getUserFriendsResults = `-- name: GetUserFriendsResults :many
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.password, user.created_at FROM event
+    LEFT JOIN location on event.location_id = location.id
+    LEFT JOIN event_result on event.id = event_result.event_id
+    LEFT JOIN user on user.id = event_result.user_id
+    WHERE event_result.user_id in (SELECT friend_id FROM friend WHERE friend.user_id = ?)
+`
+
+type GetUserFriendsResultsRow struct {
+	Event       Event
+	Location    Location
+	EventResult EventResult
+	User        User
+}
+
+func (q *Queries) GetUserFriendsResults(ctx context.Context, userID int64) ([]GetUserFriendsResultsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserFriendsResults, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserFriendsResultsRow
+	for rows.Next() {
+		var i GetUserFriendsResultsRow
+		if err := rows.Scan(
+			&i.Event.ID,
+			&i.Event.LocationID,
+			&i.Event.Type,
+			&i.Event.Date,
+			&i.Event.TotalDrivers,
+			&i.Location.ID,
+			&i.Location.Name,
+			&i.EventResult.ID,
+			&i.EventResult.EventID,
+			&i.EventResult.UserID,
+			&i.EventResult.BestLapTime,
+			&i.EventResult.AverageLapTime,
+			&i.EventResult.Position,
+			&i.EventResult.NumberOfLaps,
+			&i.User.ID,
+			&i.User.FirstName,
+			&i.User.LastName,
+			&i.User.Email,
+			&i.User.Password,
+			&i.User.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

@@ -31,3 +31,11 @@ func (r *EventResultRepositorySqlite) GetEventResultByEventIdAndUserId(ctx conte
 	}
 	return eventResult, err
 }
+
+func (r *EventResultRepositorySqlite) GetUserFriendsResults(ctx context.Context, userId int64) ([]entities.GetUserFriendsResultsRow, error) {
+	results, err := r.queries.GetUserFriendsResults(ctx, userId)
+	if err != nil {
+		log.Println(err)
+	}
+	return results, err
+}

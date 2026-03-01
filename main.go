@@ -31,7 +31,7 @@ func main() {
 
 	authController := controllers.NewAuthController(userRepository)
 	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
-	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository)
+	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendController := controllers.NewFriendController(friendRepository)
 
 	if err != nil {

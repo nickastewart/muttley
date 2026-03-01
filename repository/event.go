@@ -35,7 +35,7 @@ func (r *EventRepositorySqlite) GetEventByLocationAndTypeAndDate(ctx context.Con
 	return event, err
 }
 
-func (r *EventRepositorySqlite) GetEventsByUser(ctx context.Context, userID int64) ([]entities.GetEventsByUserRow, error) {
+func (r *EventRepositorySqlite) GetEventsByUser(ctx context.Context, userID []int64) ([]entities.GetEventsByUserRow, error) {
 	events, err := r.queries.GetEventsByUser(ctx, userID)
 	if err != nil {
 		log.Println(err)

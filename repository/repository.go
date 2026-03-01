@@ -20,7 +20,7 @@ type LocationRepository interface {
 type EventRepository interface {
 	CreateEvent(ctx context.Context, arg entities.CreateEventParams) (entities.Event, error)
 	GetEventByLocationAndTypeAndDate(ctx context.Context, arg entities.GetEventByLocationAndTypeAndDateParams) (entities.Event, error)
-	GetEventsByUser(ctx context.Context, userID int64) ([]entities.GetEventsByUserRow, error)
+	GetEventsByUser(ctx context.Context, userID []int64) ([]entities.GetEventsByUserRow, error)
 }
 
 type EventResultRepository interface {
@@ -31,4 +31,5 @@ type EventResultRepository interface {
 
 type FriendRepository interface {
 	AddFriend(ctx context.Context, arg entities.AddFriendParams) (entities.Friend, error)
+	GetFriendsByUser(ctx context.Context, userId int64) ([]entities.Friend, error)
 }

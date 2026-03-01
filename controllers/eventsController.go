@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"log"
 	"muttley/repository"
 	"muttley/sqlite/entities"
 	"muttley/templates"
@@ -15,17 +16,20 @@ type EventsController struct {
 	LocationRepository     repository.LocationRepository
 	EventRepository        repository.EventRepository
 	EventResultRespository repository.EventResultRepository
+	FriendRepository       repository.FriendRepository
 }
 
 func NewEventsController(userRepository repository.UserRepository,
 	eventRepository repository.EventRepository,
 	locationRepository repository.LocationRepository,
-	eventResultRespository repository.EventResultRepository) *EventsController {
+	eventResultRespository repository.EventResultRepository,
+	friendRepository repository.FriendRepository) *EventsController {
 	return &EventsController{
 		UserRepository:         userRepository,
 		EventRepository:        eventRepository,
 		LocationRepository:     locationRepository,
 		EventResultRespository: eventResultRespository,
+		FriendRepository:       friendRepository,
 	}
 }
 
@@ -40,11 +44,27 @@ func (controller *EventsController) Leaderboard(c *gin.Context) {
 
 	user := u.(entities.GetUserByIdRow)
 
-	events, err := controller.EventRepository.GetEventsByUser(ctx, user.ID)
+	userIds := []int64{}
+	userIds = append(userIds, user.ID)
+	userIds = append(userIds, controller.getFriendIds(ctx, user.ID)...)
+
+	events, err := controller.EventRepository.GetEventsByUser(ctx, userIds)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.HTML(http.StatusOK, "", templates.Leaderboard(events))
+}
+
+func (controller *EventsController) getFriendIds(ctx context.Context, userId int64) []int64 {
+	friends, err := controller.FriendRepository.GetFriendsByUser(ctx, userId)
+	if err != nil {
+		log.Fatal("Error getting friends user ids")
+	}
+	friendIds := make([]int64, len(friends))
+	for index, friend := range friends {
+		friendIds[index] = friend.FriendID
+	}
+	return friendIds
 }

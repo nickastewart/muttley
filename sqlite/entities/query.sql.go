@@ -8,6 +8,7 @@ package entities
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 const addFriend = `-- name: AddFriend :one
@@ -202,7 +203,7 @@ SELECT event.id, event.location_id, event.type, event.date, event.total_drivers,
     LEFT JOIN location on event.location_id = location.id
     LEFT JOIN event_result on event.id = event_result.event_id
     LEFT JOIN user on user.id = event_result.user_id
-    WHERE event_result.user_id = ?
+    WHERE event_result.user_id in (/*SLICE:ids*/?)
 `
 
 type GetEventsByUserRow struct {
@@ -212,8 +213,18 @@ type GetEventsByUserRow struct {
 	User        User
 }
 
-func (q *Queries) GetEventsByUser(ctx context.Context, userID int64) ([]GetEventsByUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, getEventsByUser, userID)
+func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEventsByUserRow, error) {
+	query := getEventsByUser
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
 	if err != nil {
 		return nil, err
 	}

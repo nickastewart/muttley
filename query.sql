@@ -37,7 +37,7 @@ SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.e
     LEFT JOIN location on event.location_id = location.id
     LEFT JOIN event_result on event.id = event_result.event_id
     LEFT JOIN user on user.id = event_result.user_id
-    WHERE event_result.user_id = ?;
+    WHERE event_result.user_id in (sqlc.slice('ids'));
 
 -- name: AddFriend :one 
 INSERT INTO friend (user_id, friend_id, friend_status) VALUES (?, ?, ?) RETURNING *; 

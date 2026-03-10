@@ -44,9 +44,6 @@ func main() {
 	router.POST("/signup", authController.Signup)
 	router.POST("/login", authController.LoginForm)
 
-	router.POST("friend", authController.CheckAccessToken, friendController.AddFriend)
-
-	// TODO: Add get events endpoint that includes friends, need to check auth
 	// TODO: Add endpoint to remove friends
 
 	router.HTMLRender = &TemplRender{}
@@ -66,6 +63,10 @@ func main() {
 
 	router.GET("/upload", authController.CheckAccessToken, fileUploadController.UploadFile)
 	router.POST("/upload/process", authController.CheckAccessToken, fileUploadController.ProcessFile)
+
+	// TODO: Create Search Users Page
+	// TODO: Templating for adding friend
+	router.POST("friend", authController.CheckAccessToken, friendController.AddFriend)
 
 	router.Run()
 }

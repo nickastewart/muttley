@@ -46,8 +46,8 @@ func main() {
 
 	router.HTMLRender = &TemplRender{}
 
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", templates.Login())
+	router.GET("/", authController.CheckAccessToken, func(c *gin.Context) {
+		c.HTML(http.StatusOK, "", templates.Home())
 	})
 
 	router.GET("/login", func(c *gin.Context) {

@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "muttley/sqlite/entities"
 
-func Friend(friends []entities.User) templ.Component {
+func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

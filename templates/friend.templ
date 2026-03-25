@@ -2,7 +2,7 @@ package templates
 
 import "muttley/sqlite/entities"
 
-templ Friend(friends []entities.User) {
+templ Friend(friends []entities.GetFriendsByUserRow) {
 	@Head()
 	@Header()
 	<body>

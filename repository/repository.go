@@ -31,5 +31,5 @@ type EventResultRepository interface {
 
 type FriendRepository interface {
 	AddFriend(ctx context.Context, arg entities.AddFriendParams) (entities.Friend, error)
-	GetFriendsByUser(ctx context.Context, userId int64) ([]entities.User, error)
+	GetFriendsByUser(ctx context.Context, userId int64) ([]entities.GetFriendsByUserRow, error)
 }

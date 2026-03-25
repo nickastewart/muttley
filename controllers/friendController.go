@@ -37,7 +37,6 @@ func (controller *FriendController) Friends(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error getting friends"})
 		return
 	}
-
 	c.HTML(http.StatusOK, "", templates.Friend(friends))
 }
 

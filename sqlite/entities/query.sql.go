@@ -268,43 +268,35 @@ func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEvents
 }
 
 const getFriendsByUser = `-- name: GetFriendsByUser :many
-SELECT id, first_name, last_name, email, password, created_at FROM user
+SELECT id, first_name, last_name FROM user
 WHERE id in (
-    select friend.user_id from friend WHERE (friend.user_id = ? or friend.friend_id = ?) and friend_status = 'ACCEPTED'
-    UNION 
-    select friend.friend_id from friend WHERE (friend.user_id = ? or friend.friend_id = ?) and friend_status = 'ACCEPTED'
+    SELECT friend.user_id FROM friend WHERE friend.friend_id = ? 
+    UNION
+    SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
 )
 `
 
 type GetFriendsByUserParams struct {
-	UserID     int64
-	FriendID   int64
-	UserID_2   int64
-	FriendID_2 int64
+	FriendID int64
+	UserID   int64
 }
 
-func (q *Queries) GetFriendsByUser(ctx context.Context, arg GetFriendsByUserParams) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getFriendsByUser,
-		arg.UserID,
-		arg.FriendID,
-		arg.UserID_2,
-		arg.FriendID_2,
-	)
+type GetFriendsByUserRow struct {
+	ID        int64
+	FirstName string
+	LastName  string
+}
+
+func (q *Queries) GetFriendsByUser(ctx context.Context, arg GetFriendsByUserParams) ([]GetFriendsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFriendsByUser, arg.FriendID, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []GetFriendsByUserRow
 	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.FirstName,
-			&i.LastName,
-			&i.Email,
-			&i.Password,
-			&i.CreatedAt,
-		); err != nil {
+		var i GetFriendsByUserRow
+		if err := rows.Scan(&i.ID, &i.FirstName, &i.LastName); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

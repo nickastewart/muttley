@@ -64,7 +64,7 @@ func (controller *EventsController) getFriendIds(ctx context.Context, userId int
 	}
 	friendIds := make([]int64, len(friends))
 	for index, friend := range friends {
-		friendIds[index] = friend.FriendID
+		friendIds[index] = friend.ID
 	}
 	return friendIds
 }

@@ -43,7 +43,12 @@ SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.e
 INSERT INTO friend (user_id, friend_id, friend_status) VALUES (?, ?, ?) RETURNING *; 
 
 -- name: GetFriendsByUser :many 
-SELECT * FROM friend WHERE user_id = ? and friend_status = 'ACCEPTED'; 
+SELECT * FROM user
+WHERE id in (
+    select friend.user_id from friend WHERE (friend.user_id = ? or friend.friend_id = ?) and friend_status = 'ACCEPTED'
+    UNION 
+    select friend.friend_id from friend WHERE (friend.user_id = ? or friend.friend_id = ?) and friend_status = 'ACCEPTED'
+); 
 
 -- name: GetUserFriendsResults :many
 SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.embed(user) FROM event

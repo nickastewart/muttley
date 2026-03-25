@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"log"
 	"muttley/repository"
 	"muttley/sqlite/entities"
+	"muttley/templates"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type FriendController struct {
@@ -19,6 +19,26 @@ func NewFriendController(friendRepository repository.FriendRepository) *FriendCo
 	return &FriendController{
 		FriendRepository: friendRepository,
 	}
+}
+
+func (controller *FriendController) Friends(c *gin.Context) {
+	ctx := context.Background()
+	u, exists := c.Get("currentUser")
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not authenticated"})
+		return
+	}
+
+	user := u.(entities.GetUserByIdRow)
+
+	friends, err := controller.FriendRepository.GetFriendsByUser(ctx, user.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error getting friends"})
+		return
+	}
+
+	c.HTML(http.StatusOK, "", templates.Friend(friends))
 }
 
 func (controller *FriendController) AddFriend(c *gin.Context) {

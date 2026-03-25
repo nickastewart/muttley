@@ -1,0 +1,17 @@
+package templates
+
+import "muttley/sqlite/entities"
+
+templ Friend(friends []entities.User) {
+	@Head()
+	@Header()
+	<body>
+		<div id="friends-container">
+			<ul id="friends-list">
+				for _, friend := range friends {
+					<span>{ friend.ID }</span>
+				}
+			</ul>
+		</div>
+	</body>
+}

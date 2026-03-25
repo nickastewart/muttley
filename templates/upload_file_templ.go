@@ -41,7 +41,7 @@ func UploadFile() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"upload-file-container\"><div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div><label for=\"file\">Select Results:</label> <input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><div><label for=\"file-location\">Location:</label> <select name=\"file-location\"><option value=\"1\">Daytona Milton Keynes</option></select></div><input type=\"submit\"></form></div></div></body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"upload-file-container\"><div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div id=\"upload-file-location\"><label for=\"file-location\">Track:</label> <select name=\"file-location\"><option value=\"1\">Daytona Milton Keynes</option></select></div><div id=\"upload-file-file\"><input id=\"upload-file-input\" type=\"file\" name=\"files\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

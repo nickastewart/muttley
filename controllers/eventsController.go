@@ -7,6 +7,7 @@ import (
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"net/http"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,6 +54,10 @@ func (controller *EventsController) Leaderboard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].EventResult.BestLapTime < events[j].EventResult.BestLapTime
+	})
 
 	c.HTML(http.StatusOK, "", templates.Leaderboard(events))
 }

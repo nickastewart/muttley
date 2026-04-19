@@ -11,7 +11,7 @@ templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 			} else if user.FriendStatus == "REQUEST_PENDING" {
 				<button>Pending Request</button>
 			} else {
-				<button>Add</button>
+				<button hx-post="/addFriend">Add</button>
 			}
 		</div>
 	}

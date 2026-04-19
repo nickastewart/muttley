@@ -65,7 +65,6 @@ func main() {
 	router.GET("/search/friends", authHandler.CheckAccessToken, friendHandler.SearchFriends)
 
 	// TODO: Add endpoint to remove friends
-	// TODO: Templating for adding friend (modal on top of the friends page)
 
 	router.POST("/addFriend", authHandler.CheckAccessToken, friendHandler.AddFriend)
 

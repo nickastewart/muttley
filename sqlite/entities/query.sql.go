@@ -116,8 +116,8 @@ func (q *Queries) CreateLocation(ctx context.Context, name string) (Location, er
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO user (first_name, last_name, email, password) VALUES (?, ?, ?, ?)
-    RETURNING first_name, last_name, email, created_at
+INSERT INTO user (first_name, last_name, email, password, profile_id) VALUES (?, ?, ?, ?, ?)
+    RETURNING first_name, last_name, email, profile_id, created_at
 `
 
 type CreateUserParams struct {
@@ -125,12 +125,14 @@ type CreateUserParams struct {
 	LastName  string
 	Email     string
 	Password  string
+	ProfileID string
 }
 
 type CreateUserRow struct {
 	FirstName string
 	LastName  string
 	Email     string
+	ProfileID string
 	CreatedAt sql.NullString
 }
 
@@ -140,12 +142,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		arg.LastName,
 		arg.Email,
 		arg.Password,
+		arg.ProfileID,
 	)
 	var i CreateUserRow
 	err := row.Scan(
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,
+		&i.ProfileID,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -199,7 +203,7 @@ func (q *Queries) GetEventResultByEventIdAndUserId(ctx context.Context, arg GetE
 }
 
 const getEventsByUser = `-- name: GetEventsByUser :many
-SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.password, user.created_at FROM event
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.profile_id, user.password, user.created_at FROM event
     LEFT JOIN location on event.location_id = location.id
     LEFT JOIN event_result on event.id = event_result.event_id
     LEFT JOIN user on user.id = event_result.user_id
@@ -251,6 +255,7 @@ func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEvents
 			&i.User.FirstName,
 			&i.User.LastName,
 			&i.User.Email,
+			&i.User.ProfileID,
 			&i.User.Password,
 			&i.User.CreatedAt,
 		); err != nil {
@@ -330,7 +335,7 @@ func (q *Queries) GetLocationByName(ctx context.Context, name string) (Location,
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, email FROM user WHERE email = ?
+SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?
 `
 
 type GetUserByEmailRow struct {
@@ -338,6 +343,7 @@ type GetUserByEmailRow struct {
 	FirstName string
 	LastName  string
 	Email     string
+	ProfileID string
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
@@ -348,6 +354,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,
+		&i.ProfileID,
 	)
 	return i, err
 }
@@ -370,7 +377,7 @@ func (q *Queries) GetUserByEmailForLogin(ctx context.Context, email string) (Get
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, first_name, last_name, email, created_at FROM user WHERE id = ?
+SELECT id, first_name, last_name, email, profile_id, created_at FROM user WHERE id = ?
 `
 
 type GetUserByIdRow struct {
@@ -378,6 +385,7 @@ type GetUserByIdRow struct {
 	FirstName string
 	LastName  string
 	Email     string
+	ProfileID string
 	CreatedAt sql.NullString
 }
 
@@ -389,13 +397,14 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,
+		&i.ProfileID,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserFriendsResults = `-- name: GetUserFriendsResults :many
-SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.password, user.created_at FROM event
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.profile_id, user.password, user.created_at FROM event
     LEFT JOIN location ON event.location_id = location.id
     LEFT JOIN event_result ON event.id = event_result.event_id
     LEFT JOIN user ON user.id = event_result.user_id
@@ -437,6 +446,7 @@ func (q *Queries) GetUserFriendsResults(ctx context.Context, userID int64) ([]Ge
 			&i.User.FirstName,
 			&i.User.LastName,
 			&i.User.Email,
+			&i.User.ProfileID,
 			&i.User.Password,
 			&i.User.CreatedAt,
 		); err != nil {

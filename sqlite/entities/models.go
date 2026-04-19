@@ -47,6 +47,7 @@ type User struct {
 	FirstName string
 	LastName  string
 	Email     string
+	ProfileID string
 	Password  string
 	CreatedAt sql.NullString
 }

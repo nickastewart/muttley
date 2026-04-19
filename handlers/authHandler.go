@@ -7,7 +7,10 @@ import (
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"net/http"
+	"strconv"
 	"time"
+
+	"math/rand"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -32,7 +35,6 @@ type SignupForm struct {
 	ConfirmationPassword string `form:"password-confirm"`
 }
 
-// TODO: Change to inject a service instead of a repo
 func NewAuthHandler(userRepository repository.UserRepository) *AuthHandler {
 	return &AuthHandler{
 		UserRepository: userRepository,
@@ -61,6 +63,7 @@ func (handler *AuthHandler) Signup(c *gin.Context) {
 		LastName:  signupForm.LastName,
 		Email:     signupForm.Email,
 		Password:  string(passwordHash),
+		ProfileID: generateProfileId(signupForm.FirstName, signupForm.LastName),
 	}
 
 	_, err = handler.UserRepository.CreateUser(ctx, createUserParams)
@@ -71,6 +74,11 @@ func (handler *AuthHandler) Signup(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "", templates.Login())
+}
+
+func generateProfileId(firstName string, lastName string) string {
+	randomInt := rand.Intn(100000)
+	return firstName + "-" + lastName + "-" + strconv.Itoa(randomInt)
 }
 
 func (handler *AuthHandler) LoginForm(c *gin.Context) {

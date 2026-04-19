@@ -43,12 +43,14 @@ SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.e
 INSERT INTO friend (user_id, friend_id, friend_status) VALUES (?, ?, ?) RETURNING *; 
 
 -- name: GetFriendsByUser :many 
-SELECT id, first_name, last_name FROM user
-WHERE id in (
-    SELECT friend.user_id FROM friend WHERE friend.friend_id = ? 
-    UNION
-    SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
-); 
+SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) AS friend_status FROM user
+    LEFT JOIN friend f1 ON f1.user_id = user.id
+    LEFT JOIN friend f2 ON f2.friend_id = user.id
+    WHERE user.id in (
+        SELECT friend.user_id FROM friend WHERE friend.friend_id = ? 
+        UNION
+        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
+    ); 
 
 -- name: GetUserFriendsResults :many
 SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.embed(user) FROM event
@@ -59,7 +61,7 @@ SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.e
 
 -- name: GetUsersBySearchTerm :many
 SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) as friend_status FROM user 
-LEFT JOIN friend f1 ON f1.user_id = user.id
-LEFT JOIN friend f2 ON f2.friend_id = user.id
-WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE sqlc.arg(name) AND user.id != sqlc.arg(userId);
+    LEFT JOIN friend f1 ON f1.user_id = user.id
+    LEFT JOIN friend f2 ON f2.friend_id = user.id
+    WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE sqlc.arg(name) AND user.id != sqlc.arg(userId);
 

@@ -4,8 +4,15 @@ import "muttley/sqlite/entities"
 
 templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 	for _, user := range users {
-		<div>
-			{ user.FirstName + " " + user.LastName }
+		<div class="friend-card">
+			<h3>{ user.FirstName + " " + user.LastName }</h3>
+			if user.FriendStatus == "ACCEPTED" {
+				<button disabled>Accepted</button>
+			} else if user.FriendStatus == "REQUEST_PENDING" {
+				<button>Pending Request</button>
+			} else {
+				<button>Add</button>
+			}
 		</div>
 	}
 }

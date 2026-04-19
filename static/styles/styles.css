@@ -281,6 +281,7 @@ outline: none;
     display: flex;
     justify-content: flex-end; 
     gap: 12px; 
+    margin-bottom:50px;
 }
 
 #friend-actions ul{
@@ -305,5 +306,6 @@ outline: none;
 
 .friend-card {
     margin: 0 auto;
-    border: 1px solid black;
+    display: flex;
+    justify-content: space-between;
 }

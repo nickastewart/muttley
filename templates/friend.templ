@@ -25,7 +25,12 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 			<div id="friend-list">
 				for _, friend := range friends {
 					<div class="friend-card">
-						<span>{ friend.FirstName + " " + friend.LastName } </span>
+						<h3>{ friend.FirstName + " " + friend.LastName } </h3>
+						if friend.FriendStatus == "ACCEPTED" {
+							<button disabled>Accepted</button>
+						} else if friend.FriendStatus == "REQUEST_PENDING" {
+							<button>Pending Request</button>
+						}
 					</div>
 				}
 			</div>

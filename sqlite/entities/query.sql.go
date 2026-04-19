@@ -268,12 +268,14 @@ func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEvents
 }
 
 const getFriendsByUser = `-- name: GetFriendsByUser :many
-SELECT id, first_name, last_name FROM user
-WHERE id in (
-    SELECT friend.user_id FROM friend WHERE friend.friend_id = ? 
-    UNION
-    SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
-)
+SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) AS friend_status FROM user
+    LEFT JOIN friend f1 ON f1.user_id = user.id
+    LEFT JOIN friend f2 ON f2.friend_id = user.id
+    WHERE user.id in (
+        SELECT friend.user_id FROM friend WHERE friend.friend_id = ? 
+        UNION
+        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
+    )
 `
 
 type GetFriendsByUserParams struct {
@@ -282,9 +284,10 @@ type GetFriendsByUserParams struct {
 }
 
 type GetFriendsByUserRow struct {
-	ID        int64
-	FirstName string
-	LastName  string
+	ID           int64
+	FirstName    string
+	LastName     string
+	FriendStatus string
 }
 
 func (q *Queries) GetFriendsByUser(ctx context.Context, arg GetFriendsByUserParams) ([]GetFriendsByUserRow, error) {
@@ -296,7 +299,12 @@ func (q *Queries) GetFriendsByUser(ctx context.Context, arg GetFriendsByUserPara
 	var items []GetFriendsByUserRow
 	for rows.Next() {
 		var i GetFriendsByUserRow
-		if err := rows.Scan(&i.ID, &i.FirstName, &i.LastName); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.FriendStatus,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -447,9 +455,9 @@ func (q *Queries) GetUserFriendsResults(ctx context.Context, userID int64) ([]Ge
 
 const getUsersBySearchTerm = `-- name: GetUsersBySearchTerm :many
 SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) as friend_status FROM user 
-LEFT JOIN friend f1 ON f1.user_id = user.id
-LEFT JOIN friend f2 ON f2.friend_id = user.id
-WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?1 AND user.id != ?2
+    LEFT JOIN friend f1 ON f1.user_id = user.id
+    LEFT JOIN friend f2 ON f2.friend_id = user.id
+    WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?1 AND user.id != ?2
 `
 
 type GetUsersBySearchTermParams struct {

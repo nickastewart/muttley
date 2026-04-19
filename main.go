@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"log"
-	"muttley/controllers"
+	"muttley/handlers"
 	"muttley/repository"
 	"muttley/sqlite/entities"
 	"muttley/templates"
@@ -30,25 +30,21 @@ func main() {
 	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
 	var friendRepository repository.FriendRepository = repository.NewFriendRepository(queries)
 
-	authController := controllers.NewAuthController(userRepository)
-	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
-	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
-	friendHandler := controllers.NewFriendHandler(friendRepository, userRepository)
-
-	if err != nil {
-		log.Panic(err)
-	}
+	authHandler := handlers.NewAuthHandler(userRepository)
+	fileUploadHandler := handlers.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
+	eventHandler := handlers.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
+	friendHandler := handlers.NewFriendHandler(friendRepository, userRepository)
 
 	router := gin.Default()
 	router.Static("/styles", "./static/styles")
 	router.Static("/images", "./static/images")
 
-	router.POST("/signup", authController.Signup)
-	router.POST("/login", authController.LoginForm)
+	router.POST("/signup", authHandler.Signup)
+	router.POST("/login", authHandler.LoginForm)
 
 	router.HTMLRender = &TemplRender{}
 
-	router.GET("/", authController.CheckAccessToken, func(c *gin.Context) {
+	router.GET("/", authHandler.CheckAccessToken, func(c *gin.Context) {
 		c.HTML(http.StatusOK, "", templates.Home())
 	})
 
@@ -60,18 +56,18 @@ func main() {
 		c.HTML(http.StatusOK, "", templates.Signup())
 	})
 
-	router.GET("/leaderboard", authController.CheckAccessToken, eventController.Leaderboard)
+	router.GET("/leaderboard", authHandler.CheckAccessToken, eventHandler.Leaderboard)
 
-	router.GET("/upload", authController.CheckAccessToken, fileUploadController.UploadFile)
-	router.POST("/upload/process", authController.CheckAccessToken, fileUploadController.ProcessFile)
+	router.GET("/upload", authHandler.CheckAccessToken, fileUploadHandler.UploadFile)
+	router.POST("/upload/process", authHandler.CheckAccessToken, fileUploadHandler.ProcessFile)
 
-	router.GET("/friends", authController.CheckAccessToken, friendHandler.Friends)
+	router.GET("/friends", authHandler.CheckAccessToken, friendHandler.Friends)
 	// TODO: Create Search Users Page
-	router.GET("/search/friends", authController.CheckAccessToken, friendHandler.SearchFriends)
+	router.GET("/search/friends", authHandler.CheckAccessToken, friendHandler.SearchFriends)
 	// TODO: Add endpoint to remove friends
 	// TODO: Templating for adding friend (modal on top of the friends page)
 
-	router.POST("/addFriend", authController.CheckAccessToken, friendHandler.AddFriend)
+	router.POST("/addFriend", authHandler.CheckAccessToken, friendHandler.AddFriend)
 
 	router.Run()
 }

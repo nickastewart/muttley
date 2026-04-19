@@ -3,14 +3,15 @@ package main
 import (
 	"database/sql"
 	_ "embed"
-	"github.com/gin-gonic/gin"
 	"log"
-	_ "modernc.org/sqlite"
 	"muttley/controllers"
 	"muttley/repository"
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	_ "modernc.org/sqlite"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 	authController := controllers.NewAuthController(userRepository)
 	fileUploadController := controllers.NewFileUploadController(userRepository, eventRepository, locationRepository, eventResultRepository)
 	eventController := controllers.NewEventsController(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
-	friendController := controllers.NewFriendController(friendRepository)
+	friendHandler := controllers.NewFriendHandler(friendRepository, userRepository)
 
 	if err != nil {
 		log.Panic(err)
@@ -40,6 +41,7 @@ func main() {
 
 	router := gin.Default()
 	router.Static("/styles", "./static/styles")
+	router.Static("/images", "./static/images")
 
 	router.POST("/signup", authController.Signup)
 	router.POST("/login", authController.LoginForm)
@@ -63,11 +65,13 @@ func main() {
 	router.GET("/upload", authController.CheckAccessToken, fileUploadController.UploadFile)
 	router.POST("/upload/process", authController.CheckAccessToken, fileUploadController.ProcessFile)
 
+	router.GET("/friends", authController.CheckAccessToken, friendHandler.Friends)
 	// TODO: Create Search Users Page
-	router.GET("/friends", authController.CheckAccessToken, friendController.Friends)
+	router.GET("/search/friends", authController.CheckAccessToken, friendHandler.SearchFriends)
 	// TODO: Add endpoint to remove friends
-	// TODO: Templating for adding friend
-	router.POST("/addFriend", authController.CheckAccessToken, friendController.AddFriend)
+	// TODO: Templating for adding friend (modal on top of the friends page)
+
+	router.POST("/addFriend", authController.CheckAccessToken, friendHandler.AddFriend)
 
 	router.Run()
 }

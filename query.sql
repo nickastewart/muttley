@@ -50,10 +50,16 @@ WHERE id in (
     SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
 ); 
 
-
 -- name: GetUserFriendsResults :many
 SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.embed(user) FROM event
-    LEFT JOIN location on event.location_id = location.id
-    LEFT JOIN event_result on event.id = event_result.event_id
-    LEFT JOIN user on user.id = event_result.user_id
+    LEFT JOIN location ON event.location_id = location.id
+    LEFT JOIN event_result ON event.id = event_result.event_id
+    LEFT JOIN user ON user.id = event_result.user_id
     WHERE event_result.user_id in (SELECT friend_id FROM friend WHERE friend.user_id = ?);
+
+-- name: GetUsersBySearchTerm :many
+SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) as friend_status FROM user 
+LEFT JOIN friend f1 ON f1.user_id = user.id
+LEFT JOIN friend f2 ON f2.friend_id = user.id
+WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE sqlc.arg(name) AND user.id != sqlc.arg(userId);
+

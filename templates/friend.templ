@@ -6,12 +6,29 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 	@Head()
 	@Header()
 	<body>
-		<div id="friends-container">
-			<ul id="friends-list">
+		<div id="friend-container">
+			<div id="friend-actions">
+				<ul id="friend-actions">
+					<input
+						hx-get="/search/friends"
+						hx-target="#friend-list"
+						hx-trigger="keyup changed delay:500ms, search"
+						type="search"
+						id="friends-search-input"
+						name="searchTerm"
+						placeholder="Search..."
+						minlength="3"
+						maxlength="20"
+					/>
+				</ul>
+			</div>
+			<div id="friend-list">
 				for _, friend := range friends {
-					<span>{ friend.ID }</span>
+					<div class="friend-card">
+						<span>{ friend.FirstName + " " + friend.LastName } </span>
+					</div>
 				}
-			</ul>
+			</div>
 		</div>
 	</body>
 }

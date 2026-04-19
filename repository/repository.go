@@ -10,6 +10,7 @@ type UserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (entities.GetUserByEmailRow, error)
 	GetUserByEmailForLogin(ctx context.Context, email string) (entities.GetUserByEmailForLoginRow, error)
 	CreateUser(ctx context.Context, createUserParams entities.CreateUserParams) (entities.CreateUserRow, error)
+	GetUsersBySearchTerm(ctx context.Context, params entities.GetUsersBySearchTermParams) ([]entities.GetUsersBySearchTermRow, error)
 }
 
 type LocationRepository interface {

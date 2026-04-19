@@ -55,3 +55,11 @@ func (r *UserRepositorySqlite) GetUserByEmailForLogin(ctx context.Context, email
 
 	return user, err
 }
+
+func (r *UserRepositorySqlite) GetUsersBySearchTerm(ctx context.Context, params entities.GetUsersBySearchTermParams) ([]entities.GetUsersBySearchTermRow, error) {
+	users, err := r.queries.GetUsersBySearchTerm(ctx, params)
+	if err != nil {
+		log.Panic(err)
+	}
+	return users, err
+}

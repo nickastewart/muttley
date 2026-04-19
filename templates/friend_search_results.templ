@@ -1,0 +1,11 @@
+package templates
+
+import "muttley/sqlite/entities"
+
+templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
+	for _, user := range users {
+		<div>
+			{ user.FirstName + " " + user.LastName }
+		</div>
+	}
+}

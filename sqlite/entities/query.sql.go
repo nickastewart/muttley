@@ -388,9 +388,9 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 
 const getUserFriendsResults = `-- name: GetUserFriendsResults :many
 SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.password, user.created_at FROM event
-    LEFT JOIN location on event.location_id = location.id
-    LEFT JOIN event_result on event.id = event_result.event_id
-    LEFT JOIN user on user.id = event_result.user_id
+    LEFT JOIN location ON event.location_id = location.id
+    LEFT JOIN event_result ON event.id = event_result.event_id
+    LEFT JOIN user ON user.id = event_result.user_id
     WHERE event_result.user_id in (SELECT friend_id FROM friend WHERE friend.user_id = ?)
 `
 
@@ -431,6 +431,53 @@ func (q *Queries) GetUserFriendsResults(ctx context.Context, userID int64) ([]Ge
 			&i.User.Email,
 			&i.User.Password,
 			&i.User.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUsersBySearchTerm = `-- name: GetUsersBySearchTerm :many
+SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) as friend_status FROM user 
+LEFT JOIN friend f1 ON f1.user_id = user.id
+LEFT JOIN friend f2 ON f2.friend_id = user.id
+WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?1 AND user.id != ?2
+`
+
+type GetUsersBySearchTermParams struct {
+	Name   string
+	Userid int64
+}
+
+type GetUsersBySearchTermRow struct {
+	ID           int64
+	FirstName    string
+	LastName     string
+	FriendStatus string
+}
+
+func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearchTermParams) ([]GetUsersBySearchTermRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersBySearchTerm, arg.Name, arg.Userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUsersBySearchTermRow
+	for rows.Next() {
+		var i GetUsersBySearchTermRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.FriendStatus,
 		); err != nil {
 			return nil, err
 		}

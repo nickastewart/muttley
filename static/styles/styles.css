@@ -177,7 +177,7 @@ nav ul li a {
 #leaderboard-container {
     margin: 0 auto;
     margin-top: 50px;
-    width: 80%;
+    width: 1280px;
 }
 
 #leaderboard-table {
@@ -212,7 +212,7 @@ nav ul li a {
 /* Upload File */
 
 #upload-file-container {
-   width:80%; 
+   width:1280px; 
    margin: 0 auto;
 }
 
@@ -266,4 +266,44 @@ outline: none;
     border: none;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* Friends */
+
+#friend-container {
+    width: 1280px;
+    margin: 0 auto; 
+}
+
+#friend-actions {
+    margin: 0 auto; 
+    width: 720px;
+    display: flex;
+    justify-content: flex-end; 
+    gap: 12px; 
+}
+
+#friend-actions ul{
+    margin: 0 auto; 
+    width: 720px;
+}
+
+
+#friend-actions li {
+    list-style: none;
+    display: inline-block;
+}
+
+#friend-list {
+    margin: 0 auto; 
+    width: 720px;
+}
+
+#friend-list li {
+    list-style: none;
+}
+
+.friend-card {
+    margin: 0 auto;
+    border: 1px solid black;
 }

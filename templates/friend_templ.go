@@ -39,7 +39,7 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<body><div id=\"friend-container\"><div id=\"friend-actions\"><ul id=\"friend-actions\"><input hx-get=\"/search/friends\" hx-target=\"#friend-list\" hx-trigger=\"keyup changed delay:500ms, search\" type=\"search\" id=\"friends-search-input\" name=\"searchTerm\" placeholder=\"Search...\" minlength=\"3\" maxlength=\"20\"></ul></div><div id=\"friend-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<body><div id=\"friend-container\"><div id=\"friend-actions\"><ul id=\"friend-actions\"><input hx-get=\"/search/friends\" hx-target=\"#friend-list\" hx-trigger=\"keyup changed delay:500ms\" type=\"search\" id=\"friends-search-input\" name=\"searchTerm\" placeholder=\"Search...\" minlength=\"3\" maxlength=\"20\"></ul></div><div id=\"friend-list\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

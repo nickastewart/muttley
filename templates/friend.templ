@@ -12,7 +12,7 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 					<input
 						hx-get="/search/friends"
 						hx-target="#friend-list"
-						hx-trigger="keyup changed delay:500ms, search"
+						hx-trigger="keyup changed delay:500ms"
 						type="search"
 						id="friends-search-input"
 						name="searchTerm"

@@ -273,30 +273,30 @@ func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEvents
 }
 
 const getFriendsByUser = `-- name: GetFriendsByUser :many
-SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) AS friend_status FROM user
-    LEFT JOIN friend f1 ON f1.user_id = user.id
-    LEFT JOIN friend f2 ON f2.friend_id = user.id
+SELECT user.id, user.first_name, user.last_name, COALESCE(friend.friend_status, 'NONE') AS friend_status,
+        CASE 
+            WHEN friend.friend_id = ?1 AND COALESCE(friend.friend_status, 'NONE') = 'REQUESTED' THEN 'true'
+            ELSE 'false'
+        END AS confirmation_required
+    FROM user
+    LEFT JOIN friend ON (user.id = friend.user_id OR user.id = friend.friend_id)
     WHERE user.id in (
-        SELECT friend.user_id FROM friend WHERE friend.friend_id = ? 
+        SELECT friend.user_id FROM friend WHERE friend.friend_id = ?1 
         UNION
-        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?
-    )
+        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?1
+    ) AND user.id != ?1
 `
 
-type GetFriendsByUserParams struct {
-	FriendID int64
-	UserID   int64
-}
-
 type GetFriendsByUserRow struct {
-	ID           int64
-	FirstName    string
-	LastName     string
-	FriendStatus string
+	ID                   int64
+	FirstName            string
+	LastName             string
+	FriendStatus         string
+	ConfirmationRequired string
 }
 
-func (q *Queries) GetFriendsByUser(ctx context.Context, arg GetFriendsByUserParams) ([]GetFriendsByUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, getFriendsByUser, arg.FriendID, arg.UserID)
+func (q *Queries) GetFriendsByUser(ctx context.Context, userid int64) ([]GetFriendsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFriendsByUser, userid)
 	if err != nil {
 		return nil, err
 	}
@@ -309,6 +309,7 @@ func (q *Queries) GetFriendsByUser(ctx context.Context, arg GetFriendsByUserPara
 			&i.FirstName,
 			&i.LastName,
 			&i.FriendStatus,
+			&i.ConfirmationRequired,
 		); err != nil {
 			return nil, err
 		}

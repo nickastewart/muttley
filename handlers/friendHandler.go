@@ -21,7 +21,6 @@ func NewFriendHandler(friendRepository repository.FriendRepository, userReposito
 		UserRepository:   userRepository,
 	}
 }
-
 func (handler *FriendHandler) Friends(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")
@@ -34,6 +33,9 @@ func (handler *FriendHandler) Friends(c *gin.Context) {
 	user := u.(entities.GetUserByIdRow)
 
 	friends, err := handler.FriendRepository.GetFriendsByUser(ctx, user.ID)
+	for _, friend := range friends {
+		log.Print(friend)
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error getting friends"})
 		return

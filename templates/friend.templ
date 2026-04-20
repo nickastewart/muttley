@@ -28,8 +28,8 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 						<h3>{ friend.FirstName + " " + friend.LastName } </h3>
 						if friend.FriendStatus == "ACCEPTED" {
 							<button disabled>Accepted</button>
-						} else if friend.FriendStatus == "REQUEST_PENDING" {
-							<button>Pending Request</button>
+						} else if friend.ConfirmationRequired == "true" {
+							<button>Accept</button>
 						}
 					</div>
 				}

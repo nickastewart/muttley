@@ -25,11 +25,7 @@ func (r *FriendRepositorySqlite) AddFriend(ctx context.Context, addFriendParams 
 }
 
 func (r *FriendRepositorySqlite) GetFriendsByUser(ctx context.Context, userId int64) ([]entities.GetFriendsByUserRow, error) {
-	params := entities.GetFriendsByUserParams{
-		UserID:   userId,
-		FriendID: userId,
-	}
-	friends, err := r.queries.GetFriendsByUser(ctx, params)
+	friends, err := r.queries.GetFriendsByUser(ctx, userId)
 	if err != nil {
 		log.Println(err)
 	}

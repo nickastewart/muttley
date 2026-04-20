@@ -66,8 +66,8 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-			} else if friend.FriendStatus == "REQUEST_PENDING" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button>Pending Request</button>")
+			} else if friend.ConfirmationRequired == "true" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button>Accept</button>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

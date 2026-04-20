@@ -463,8 +463,19 @@ func (q *Queries) GetUserFriendsResults(ctx context.Context, userID int64) ([]Ge
 	return items, nil
 }
 
+const getUserIdByProfileId = `-- name: GetUserIdByProfileId :one
+SELECT user.id FROM user WHERE user.profile_id = ?
+`
+
+func (q *Queries) GetUserIdByProfileId(ctx context.Context, profileID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getUserIdByProfileId, profileID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getUsersBySearchTerm = `-- name: GetUsersBySearchTerm :many
-SELECT user.id, user.first_name, user.last_name, COALESCE(f1.friend_status, f2.friend_status) as friend_status FROM user 
+SELECT user.id, user.first_name, user.last_name, user.profile_id, COALESCE(f1.friend_status, f2.friend_status, 'NONE') as friend_status FROM user 
     LEFT JOIN friend f1 ON f1.user_id = user.id
     LEFT JOIN friend f2 ON f2.friend_id = user.id
     WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?1 AND user.id != ?2
@@ -479,6 +490,7 @@ type GetUsersBySearchTermRow struct {
 	ID           int64
 	FirstName    string
 	LastName     string
+	ProfileID    string
 	FriendStatus string
 }
 
@@ -495,6 +507,7 @@ func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearch
 			&i.ID,
 			&i.FirstName,
 			&i.LastName,
+			&i.ProfileID,
 			&i.FriendStatus,
 		); err != nil {
 			return nil, err

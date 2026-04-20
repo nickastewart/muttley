@@ -1,6 +1,7 @@
 package templates
 
 import "muttley/sqlite/entities"
+import "fmt"
 
 templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 	for _, user := range users {
@@ -11,7 +12,7 @@ templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 			} else if user.FriendStatus == "REQUEST_PENDING" {
 				<button>Pending Request</button>
 			} else {
-				<button hx-post="/addFriend">Add</button>
+				<button hx-post={ fmt.Sprintf("/addFriend?profileId=%s", user.ProfileID) }>Add</button>
 			}
 		</div>
 	}

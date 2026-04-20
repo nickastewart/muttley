@@ -63,3 +63,11 @@ func (r *UserRepositorySqlite) GetUsersBySearchTerm(ctx context.Context, params 
 	}
 	return users, err
 }
+
+func (r *UserRepositorySqlite) GetUserIdByProfileId(ctx context.Context, profileId string) (int64, error) {
+	userId, err := r.queries.GetUserIdByProfileId(ctx, profileId)
+	if err != nil {
+		log.Panic(err)
+	}
+	return userId, err
+}

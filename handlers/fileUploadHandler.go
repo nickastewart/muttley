@@ -58,6 +58,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 	}
 
 	multipartFile := form.File["file"]
+	log.Println(multipartFile)
 	file, err := multipartFile[0].Open()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -106,9 +107,9 @@ func (handler *FileUploadHandler) processLocation(ctx context.Context, event *mo
 	if location.ID == 0 || errors.Is(err, sql.ErrNoRows) {
 		createdLocation, err := handler.LocationRepository.CreateLocation(ctx, event.Location)
 		if err != nil {
-			return location, err
+			return createdLocation, err
 		}
-		location = createdLocation
+		return createdLocation, nil
 	}
 
 	return location, err
@@ -134,9 +135,9 @@ func (handler *FileUploadHandler) processEvent(ctx context.Context, event *model
 
 		savedEvent, err := handler.EventRepository.CreateEvent(ctx, createEventParams)
 		if err != nil {
-			return eventEntity, err
+			return savedEvent, err
 		}
-		eventEntity = savedEvent
+		return savedEvent, nil
 	}
 
 	return eventEntity, err
@@ -166,8 +167,8 @@ func (handler *FileUploadHandler) processEventResult(ctx context.Context, user e
 		if err != nil {
 			return eventResultEntity, err
 		}
+		return savedEntity, nil
 
-		eventResultEntity = savedEntity
 	}
 	return eventResultEntity, err
 }

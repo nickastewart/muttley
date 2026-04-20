@@ -8,7 +8,6 @@ import (
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"net/http"
-	"strconv"
 )
 
 type FriendHandler struct {
@@ -23,7 +22,7 @@ func NewFriendHandler(friendRepository repository.FriendRepository, userReposito
 	}
 }
 
-func (controller *FriendHandler) Friends(c *gin.Context) {
+func (handler *FriendHandler) Friends(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")
 
@@ -34,7 +33,7 @@ func (controller *FriendHandler) Friends(c *gin.Context) {
 
 	user := u.(entities.GetUserByIdRow)
 
-	friends, err := controller.FriendRepository.GetFriendsByUser(ctx, user.ID)
+	friends, err := handler.FriendRepository.GetFriendsByUser(ctx, user.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error getting friends"})
 		return
@@ -42,7 +41,7 @@ func (controller *FriendHandler) Friends(c *gin.Context) {
 	c.HTML(http.StatusOK, "", templates.Friend(friends))
 }
 
-func (controller *FriendHandler) SearchFriends(c *gin.Context) {
+func (handler *FriendHandler) SearchFriends(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")
 
@@ -63,14 +62,14 @@ func (controller *FriendHandler) SearchFriends(c *gin.Context) {
 		Userid: user.ID,
 	}
 
-	results, err := controller.UserRepository.GetUsersBySearchTerm(ctx, searchParams)
+	results, err := handler.UserRepository.GetUsersBySearchTerm(ctx, searchParams)
 	if err != nil {
 		log.Panic("Error searching")
 	}
 	c.HTML(http.StatusOK, "", templates.FriendSearchResults(results))
 }
 
-func (controller *FriendHandler) AddFriend(c *gin.Context) {
+func (handler *FriendHandler) AddFriend(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")
 
@@ -80,22 +79,22 @@ func (controller *FriendHandler) AddFriend(c *gin.Context) {
 	}
 
 	user := u.(entities.GetUserByIdRow)
-	friendId, ok := c.GetQuery("userID")
+	profileID, ok := c.GetQuery("profileId")
 
 	if !ok {
-		log.Panic("Request has no userID")
+		log.Panic("Request has no profileID")
 	}
 
-	friendIdInt, err := strconv.ParseInt(friendId, 10, 63)
+	friendId, err := handler.UserRepository.GetUserIdByProfileId(ctx, profileID)
 	if err != nil {
 		log.Panic("Cannot parse friendId")
 	}
 
 	addFriendParams := &entities.AddFriendParams{
 		UserID:       user.ID,
-		FriendID:     friendIdInt,
+		FriendID:     friendId,
 		FriendStatus: "REQUESTED",
 	}
 
-	controller.FriendRepository.AddFriend(ctx, *addFriendParams)
+	handler.FriendRepository.AddFriend(ctx, *addFriendParams)
 }

@@ -41,6 +41,7 @@ func main() {
 
 	router.POST("/signup", authHandler.Signup)
 	router.POST("/login", authHandler.LoginForm)
+	router.POST("/logout", authHandler.CheckAccessToken, authHandler.Logout)
 
 	router.HTMLRender = &TemplRender{}
 

@@ -41,6 +41,10 @@ nav ul li a {
     text-decoration: none;
 }
 
+#logout {
+    float: right;
+}
+
 /* Sign Up Page */
 
 #signup-page {

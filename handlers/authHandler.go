@@ -139,6 +139,11 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
+func (handler *AuthHandler) Logout(c *gin.Context) {
+	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	c.Redirect(http.StatusSeeOther, "/login")
+}
+
 func (handler *AuthHandler) CheckAccessToken(c *gin.Context) {
 	ctx := context.Background()
 

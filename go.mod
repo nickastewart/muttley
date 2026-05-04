@@ -6,7 +6,7 @@ require (
 	github.com/a-h/templ v0.3.960
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/nickastewart/muttley-parser v0.0.0-20251229190818-c748d3322dbb
+	github.com/nickastewart/muttley-parser v0.0.0-20260504142442-7be88cd01193
 	golang.org/x/crypto v0.42.0
 	modernc.org/sqlite v1.39.0
 )

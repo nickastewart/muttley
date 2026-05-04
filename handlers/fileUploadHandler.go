@@ -57,6 +57,8 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 		return
 	}
 
+	location := form.Value["file-location"][0]
+
 	multipartFile := form.File["file"]
 	log.Println(multipartFile)
 	file, err := multipartFile[0].Open()
@@ -66,7 +68,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 	}
 	defer file.Close()
 
-	event, err := parser.ParseFile(file)
+	event, err := parser.ParseFile(location, file)
 	if err != nil {
 		log.Println("Failed to parse file")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

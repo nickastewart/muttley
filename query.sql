@@ -43,7 +43,7 @@ SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.e
 INSERT INTO friend (user_id, friend_id, friend_status) VALUES (?, ?, ?) RETURNING *; 
 
 -- name: GetFriendsByUser :many 
-SELECT user.id, user.first_name, user.last_name, COALESCE(friend.friend_status, 'NONE') AS friend_status,
+SELECT user.id, user.first_name, user.last_name, user.profile_id, COALESCE(friend.friend_status, 'NONE') AS friend_status,
         CASE 
             WHEN friend.friend_id = sqlc.arg(userId) AND COALESCE(friend.friend_status, 'NONE') = 'REQUESTED' THEN 'true'
             ELSE 'false'
@@ -51,11 +51,20 @@ SELECT user.id, user.first_name, user.last_name, COALESCE(friend.friend_status, 
     FROM user
     LEFT JOIN friend ON (user.id = friend.user_id OR user.id = friend.friend_id)
     WHERE user.id in (
-        SELECT friend.user_id FROM friend WHERE friend.friend_id = sqlc.arg(userId) 
+        SELECT friend.user_id FROM friend WHERE friend.friend_id = sqlc.arg(userId) AND friend_status != 'CANCELLED'
         UNION
-        SELECT friend.friend_id FROM friend WHERE friend.user_id = sqlc.arg(userId)
+        SELECT friend.friend_id FROM friend WHERE friend.user_id = sqlc.arg(userId) AND friend_status != 'CANCELLED'
     ) AND user.id != sqlc.arg(userId); 
 
+-- name: GetFriendByUserIdAndFriendId :one 
+SELECT *
+FROM friend
+WHERE 
+    (friend_id = sqlc.arg(userId) AND user_id = sqlc.arg(friendId))
+    OR
+    (user_id = sqlc.arg(userId) AND friend_id = sqlc.arg(friendId))
+LIMIT 1;
+    
 -- name: GetUserFriendsResults :many
 SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.embed(user) FROM event
     LEFT JOIN location ON event.location_id = location.id
@@ -71,3 +80,6 @@ SELECT user.id, user.first_name, user.last_name, user.profile_id, COALESCE(f1.fr
 
 -- name: GetUserIdByProfileId :one
 SELECT user.id FROM user WHERE user.profile_id = ?;
+
+-- name: UpdateFriendStatus :one 
+UPDATE friend SET friend_status = ? WHERE id = ? RETURNING *;

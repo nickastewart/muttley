@@ -1,6 +1,9 @@
 package templates
 
-import "muttley/sqlite/entities"
+import (
+	"fmt"
+	"muttley/sqlite/entities"
+)
 
 templ Friend(friends []entities.GetFriendsByUserRow) {
 	@Head()
@@ -26,8 +29,8 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 				for _, friend := range friends {
 					<div class="friend-card">
 						<h3>{ friend.FirstName + " " + friend.LastName } </h3>
-						if friend.FriendStatus == "ACCEPTED" {
-							<button disabled>Accepted</button>
+						if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
+							<button hx-post={ fmt.Sprintf("/removeFriend?profileId=%s", friend.ProfileID) }>Remove</button>
 						} else if friend.ConfirmationRequired == "true" {
 							<button>Accept</button>
 						}

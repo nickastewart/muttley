@@ -272,8 +272,39 @@ func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEvents
 	return items, nil
 }
 
+const getFriendByUserIdAndFriendId = `-- name: GetFriendByUserIdAndFriendId :one
+SELECT id, user_id, friend_id, friend_status, accepted_date, created_at, updated_at, row_version
+FROM friend
+WHERE 
+    (friend_id = ?1 AND user_id = ?2)
+    OR
+    (user_id = ?1 AND friend_id = ?2)
+LIMIT 1
+`
+
+type GetFriendByUserIdAndFriendIdParams struct {
+	Userid   int64
+	Friendid int64
+}
+
+func (q *Queries) GetFriendByUserIdAndFriendId(ctx context.Context, arg GetFriendByUserIdAndFriendIdParams) (Friend, error) {
+	row := q.db.QueryRowContext(ctx, getFriendByUserIdAndFriendId, arg.Userid, arg.Friendid)
+	var i Friend
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FriendID,
+		&i.FriendStatus,
+		&i.AcceptedDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RowVersion,
+	)
+	return i, err
+}
+
 const getFriendsByUser = `-- name: GetFriendsByUser :many
-SELECT user.id, user.first_name, user.last_name, COALESCE(friend.friend_status, 'NONE') AS friend_status,
+SELECT user.id, user.first_name, user.last_name, user.profile_id, COALESCE(friend.friend_status, 'NONE') AS friend_status,
         CASE 
             WHEN friend.friend_id = ?1 AND COALESCE(friend.friend_status, 'NONE') = 'REQUESTED' THEN 'true'
             ELSE 'false'
@@ -281,9 +312,9 @@ SELECT user.id, user.first_name, user.last_name, COALESCE(friend.friend_status, 
     FROM user
     LEFT JOIN friend ON (user.id = friend.user_id OR user.id = friend.friend_id)
     WHERE user.id in (
-        SELECT friend.user_id FROM friend WHERE friend.friend_id = ?1 
+        SELECT friend.user_id FROM friend WHERE friend.friend_id = ?1 AND friend_status != 'CANCELLED'
         UNION
-        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?1
+        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?1 AND friend_status != 'CANCELLED'
     ) AND user.id != ?1
 `
 
@@ -291,6 +322,7 @@ type GetFriendsByUserRow struct {
 	ID                   int64
 	FirstName            string
 	LastName             string
+	ProfileID            string
 	FriendStatus         string
 	ConfirmationRequired string
 }
@@ -308,6 +340,7 @@ func (q *Queries) GetFriendsByUser(ctx context.Context, userid int64) ([]GetFrie
 			&i.ID,
 			&i.FirstName,
 			&i.LastName,
+			&i.ProfileID,
 			&i.FriendStatus,
 			&i.ConfirmationRequired,
 		); err != nil {
@@ -522,4 +555,29 @@ func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearch
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateFriendStatus = `-- name: UpdateFriendStatus :one
+UPDATE friend SET friend_status = ? WHERE id = ? RETURNING id, user_id, friend_id, friend_status, accepted_date, created_at, updated_at, row_version
+`
+
+type UpdateFriendStatusParams struct {
+	FriendStatus string
+	ID           int64
+}
+
+func (q *Queries) UpdateFriendStatus(ctx context.Context, arg UpdateFriendStatusParams) (Friend, error) {
+	row := q.db.QueryRowContext(ctx, updateFriendStatus, arg.FriendStatus, arg.ID)
+	var i Friend
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FriendID,
+		&i.FriendStatus,
+		&i.AcceptedDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RowVersion,
+	)
+	return i, err
 }

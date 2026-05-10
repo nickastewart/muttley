@@ -31,3 +31,19 @@ func (r *FriendRepositorySqlite) GetFriendsByUser(ctx context.Context, userId in
 	}
 	return friends, err
 }
+
+func (r *FriendRepositorySqlite) UpdateFriendStatus(ctx context.Context, params entities.UpdateFriendStatusParams) (entities.Friend, error) {
+	friend, err := r.queries.UpdateFriendStatus(ctx, params)
+	if err != nil {
+		log.Println(err)
+	}
+	return friend, err
+}
+
+func (r *FriendRepositorySqlite) GetFriendByUserIdAndFriendId(ctx context.Context, params entities.GetFriendByUserIdAndFriendIdParams) (entities.Friend, error) {
+	friend, err := r.queries.GetFriendByUserIdAndFriendId(ctx, params)
+	if err != nil {
+		log.Println(err)
+	}
+	return friend, err
+}

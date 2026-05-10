@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"log"
 	"muttley/repository"
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type FriendHandler struct {
@@ -92,11 +93,69 @@ func (handler *FriendHandler) AddFriend(c *gin.Context) {
 		log.Panic("Cannot parse friendId")
 	}
 
-	addFriendParams := &entities.AddFriendParams{
-		UserID:       user.ID,
-		FriendID:     friendId,
-		FriendStatus: "REQUESTED",
+	params := entities.GetFriendByUserIdAndFriendIdParams{
+		Userid:   user.ID,
+		Friendid: friendId,
+	}
+	friend, err := handler.FriendRepository.GetFriendByUserIdAndFriendId(ctx, params)
+	if err != nil {
+		log.Panic("Cannot friend from user and id")
 	}
 
-	handler.FriendRepository.AddFriend(ctx, *addFriendParams)
+	if friend.ID != 0 {
+		handler.updateFriendStatus(ctx, friend.ID, "REQUESTED")
+	} else {
+		addFriendParams := &entities.AddFriendParams{
+			UserID:       user.ID,
+			FriendID:     friendId,
+			FriendStatus: "REQUESTED",
+		}
+
+		handler.FriendRepository.AddFriend(ctx, *addFriendParams)
+	}
+}
+
+func (handler *FriendHandler) RemoveFriend(c *gin.Context) {
+	ctx := context.Background()
+	u, exists := c.Get("currentUser")
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not authenticated"})
+		return
+	}
+
+	user := u.(entities.GetUserByIdRow)
+	profileID, ok := c.GetQuery("profileId")
+
+	if !ok {
+		log.Panic("Request has no profileID")
+	}
+
+	friendId, err := handler.UserRepository.GetUserIdByProfileId(ctx, profileID)
+	if err != nil {
+		log.Panic("Cannot parse friendId")
+	}
+
+	params := entities.GetFriendByUserIdAndFriendIdParams{
+		Userid:   user.ID,
+		Friendid: friendId,
+	}
+
+	friend, err := handler.FriendRepository.GetFriendByUserIdAndFriendId(ctx, params)
+	if err != nil {
+		log.Panic("Cannot friend from user and id")
+	}
+
+	if friend.FriendStatus != "CANCELLED" {
+		handler.updateFriendStatus(ctx, friend.ID, "CANCELLED")
+	}
+}
+
+func (handler *FriendHandler) updateFriendStatus(ctx context.Context, friendId int64, status string) {
+
+	updateStatusParams := entities.UpdateFriendStatusParams{
+		FriendStatus: status,
+		ID:           friendId,
+	}
+	handler.FriendRepository.UpdateFriendStatus(ctx, updateStatusParams)
 }

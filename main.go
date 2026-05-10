@@ -15,8 +15,6 @@ import (
 )
 
 func main() {
-	// TODO: Add testing to parser
-
 	db, err := sql.Open("sqlite", "./sqlite/racer.db")
 	if err != nil {
 		log.Panic(err)
@@ -65,8 +63,7 @@ func main() {
 	router.GET("/friends", authHandler.CheckAccessToken, friendHandler.Friends)
 	router.GET("/search/friends", authHandler.CheckAccessToken, friendHandler.SearchFriends)
 
-	// TODO: Add endpoint to remove friends
-
+	router.POST("/removeFriend", authHandler.CheckAccessToken, friendHandler.RemoveFriend)
 	router.POST("/addFriend", authHandler.CheckAccessToken, friendHandler.AddFriend)
 
 	router.Run()

@@ -43,11 +43,12 @@ type Location struct {
 }
 
 type User struct {
-	ID        int64
-	FirstName string
-	LastName  string
-	Email     string
-	ProfileID string
-	Password  string
-	CreatedAt sql.NullString
+	ID          int64
+	FirstName   string
+	LastName    string
+	Email       string
+	ProfileID   string
+	Password    string
+	DisplayName string
+	CreatedAt   sql.NullString
 }

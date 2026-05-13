@@ -33,6 +33,7 @@ type SignupForm struct {
 	LastName             string `form:"last-name"`
 	Password             string `form:"password"`
 	ConfirmationPassword string `form:"password-confirm"`
+	DisplayName          string `form:"display-name"`
 }
 
 func NewAuthHandler(userRepository repository.UserRepository) *AuthHandler {
@@ -59,11 +60,12 @@ func (handler *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 	createUserParams := entities.CreateUserParams{
-		FirstName: signupForm.FirstName,
-		LastName:  signupForm.LastName,
-		Email:     signupForm.Email,
-		Password:  string(passwordHash),
-		ProfileID: generateProfileId(signupForm.FirstName, signupForm.LastName),
+		FirstName:   signupForm.FirstName,
+		LastName:    signupForm.LastName,
+		Email:       signupForm.Email,
+		Password:    string(passwordHash),
+		ProfileID:   generateProfileId(signupForm.FirstName, signupForm.LastName),
+		DisplayName: signupForm.DisplayName,
 	}
 
 	_, err = handler.UserRepository.CreateUser(ctx, createUserParams)

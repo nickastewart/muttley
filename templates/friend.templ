@@ -28,6 +28,7 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 			<div id="friend-list">
 				for _, friend := range friends {
 					<div class="friend-card">
+						<h2>{ friend.DisplayName }</h2>
 						<h3>{ friend.FirstName + " " + friend.LastName } </h3>
 						if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
 							<button hx-post={ fmt.Sprintf("/removeFriend?profileId=%s", friend.ProfileID) }>Remove</button>

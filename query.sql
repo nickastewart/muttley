@@ -2,8 +2,8 @@
 SELECT id, first_name, last_name, email, profile_id, created_at FROM user WHERE id = ?;
 
 -- name: CreateUser :one
-INSERT INTO user (first_name, last_name, email, password, profile_id) VALUES (?, ?, ?, ?, ?)
-    RETURNING first_name, last_name, email, profile_id, created_at;
+INSERT INTO user (first_name, last_name, email, password, profile_id, display_name) VALUES (?, ?, ?, ?, ?, ?)
+    RETURNING first_name, last_name, email, profile_id, display_name, created_at;
 
 -- name: GetUserByEmail :one
 SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?;
@@ -43,7 +43,7 @@ SELECT sqlc.embed(event), sqlc.embed(location), sqlc.embed(event_result), sqlc.e
 INSERT INTO friend (user_id, friend_id, friend_status) VALUES (?, ?, ?) RETURNING *; 
 
 -- name: GetFriendsByUser :many 
-SELECT user.id, user.first_name, user.last_name, user.profile_id, COALESCE(friend.friend_status, 'NONE') AS friend_status,
+SELECT user.id, user.first_name, user.last_name, user.profile_id, user.display_name, COALESCE(friend.friend_status, 'NONE') AS friend_status,
         CASE 
             WHEN friend.friend_id = sqlc.arg(userId) AND COALESCE(friend.friend_status, 'NONE') = 'REQUESTED' THEN 'true'
             ELSE 'false'

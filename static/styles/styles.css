@@ -203,6 +203,19 @@ nav ul li a {
     height:50px;
 }
 
+#login-error {
+    background-color: #FFBABA;
+    margin-top: 20px;
+    width:425px;
+    padding-top:10px;
+    padding-bottom:10px;
+    color: #D8000C;
+    border-radius: 5px;
+}
+
+#login-error span{
+    margin-left:10px;
+}
 
 /* Leaderboard */
 

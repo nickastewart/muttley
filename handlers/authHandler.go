@@ -75,7 +75,7 @@ func (handler *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "", templates.Login())
+	c.HTML(http.StatusOK, "", templates.Login(false))
 }
 
 func generateProfileId(firstName string, lastName string) string {
@@ -92,13 +92,11 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, loginForm.Email)
 
 	if userFound.ID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
-		return
+		c.HTML(http.StatusOK, "", templates.Login(true))
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(loginForm.Password)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		c.HTML(http.StatusOK, "", templates.Login(true))
 	}
 
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

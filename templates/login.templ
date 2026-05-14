@@ -1,6 +1,6 @@
 package templates
 
-templ Login() {
+templ Login(failedAuth bool) {
 	<!DOCTYPE html>
 	<html>
 		@Head()
@@ -27,8 +27,12 @@ templ Login() {
 								<input type="submit" id="login-form-create-account" class="input-full-width submit-button" value="Create Account"/>
 							</form>
 						</div>
-						<div hidden id="login-error">
-							<span>Username or password not recognized</span>
+						<div id="login-error">
+							if failedAuth == true {
+								<span>
+									Invalid username or password. Please try again.
+								</span>
+							}
 						</div>
 					</div>
 				</div>

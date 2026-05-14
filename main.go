@@ -48,7 +48,7 @@ func main() {
 	})
 
 	router.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", templates.Login())
+		c.HTML(http.StatusOK, "", templates.Login(false))
 	})
 
 	router.GET("/signup", func(c *gin.Context) {

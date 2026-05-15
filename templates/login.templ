@@ -27,13 +27,13 @@ templ Login(failedAuth bool) {
 								<input type="submit" id="login-form-create-account" class="input-full-width submit-button" value="Create Account"/>
 							</form>
 						</div>
-						<div id="login-error">
-							if failedAuth == true {
+						if failedAuth == true {
+							<div id="login-error">
 								<span>
 									Invalid username or password. Please try again.
 								</span>
-							}
-						</div>
+							</div>
+						}
 					</div>
 				</div>
 			</div>

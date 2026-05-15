@@ -37,17 +37,17 @@ func Login(failedAuth bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"login-page\"><div id=\"login-page-left\" class=\"login-split\"></div><div id=\"login-page-right\" class=\"login-split\"><div id=\"login-form-section\"><form id=\"login-form\" action=\"login\" method=\"POST\"><div><label for=\"email\">Email</label> <input class=\"input-full-width\" type=\"email\" name=\"email\"></div><div><label for=\"password\">Password</label> <input class=\"input-full-width\" type=\"password\" name=\"password\"></div><div><input class=\"input-full-width submit-button\" type=\"submit\" value=\"Login\"></div></form><div><form id=\"login-form\" action=\"signup\" method=\"GET\"><input type=\"submit\" id=\"login-form-create-account\" class=\"input-full-width submit-button\" value=\"Create Account\"></form></div><div id=\"login-error\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"login-page\"><div id=\"login-page-left\" class=\"login-split\"></div><div id=\"login-page-right\" class=\"login-split\"><div id=\"login-form-section\"><form id=\"login-form\" action=\"login\" method=\"POST\"><div><label for=\"email\">Email</label> <input class=\"input-full-width\" type=\"email\" name=\"email\"></div><div><label for=\"password\">Password</label> <input class=\"input-full-width\" type=\"password\" name=\"password\"></div><div><input class=\"input-full-width submit-button\" type=\"submit\" value=\"Login\"></div></form><div><form id=\"login-form\" action=\"signup\" method=\"GET\"><input type=\"submit\" id=\"login-form-create-account\" class=\"input-full-width submit-button\" value=\"Create Account\"></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if failedAuth == true {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<span>Invalid username or password. Please try again.</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"login-error\"><span>Invalid username or password. Please try again.</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div></div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

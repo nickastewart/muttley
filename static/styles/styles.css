@@ -213,8 +213,13 @@ nav ul li a {
     color: #991B1B;
 }
 
-#login-error span{
+#login-error #login-error-title, #login-error-message{
     margin-left:10px;
+    margin-bottom: 5px;
+}
+
+#login-error-title span{
+    font-weight: bold;
 }
 
 /* Leaderboard */

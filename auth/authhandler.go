@@ -1,39 +1,22 @@
-package handlers
+package auth
 
 import (
 	"context"
 	"fmt"
 	"muttley/repository"
 	"muttley/sqlite/entities"
-	"muttley/templates"
 	"net/http"
 	"strconv"
 	"time"
 
-	"math/rand"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
+	"math/rand"
 )
 
 type AuthHandler struct {
 	UserRepository repository.UserRepository
-}
-
-type LoginForm struct {
-	Email    string `form:"email"`
-	Password string `form:"password"`
-}
-
-type SignupForm struct {
-	Email                string `form:"email"`
-	ConfirmationEmail    string `form:"email-confirm"`
-	FirstName            string `form:"first-name"`
-	LastName             string `form:"last-name"`
-	Password             string `form:"password"`
-	ConfirmationPassword string `form:"password-confirm"`
-	DisplayName          string `form:"display-name"`
 }
 
 func NewAuthHandler(userRepository repository.UserRepository) *AuthHandler {
@@ -75,7 +58,7 @@ func (handler *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "", templates.Login(false))
+	c.HTML(http.StatusOK, "", Login(nil))
 }
 
 func generateProfileId(firstName string, lastName string) string {
@@ -92,11 +75,19 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, loginForm.Email)
 
 	if userFound.ID == 0 {
-		c.HTML(http.StatusOK, "", templates.Login(true))
+		loginErr := &LoginError{
+			Message: "Invalid username or password. Please try again.",
+			Type:    "Authentication",
+		}
+		c.HTML(http.StatusForbidden, "", Login(loginErr))
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(loginForm.Password)); err != nil {
-		c.HTML(http.StatusOK, "", templates.Login(true))
+		loginErr := &LoginError{
+			Message: "Invalid username or password. Please try again.",
+			Type:    "Authentication",
+		}
+		c.HTML(http.StatusForbidden, "", Login(loginErr))
 	}
 
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -108,7 +99,11 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	token, err := generateToken.SignedString([]byte("SECRET"))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
+		loginErr := &LoginError{
+			Message: "There was a technical error. Please try again.",
+			Type:    "Technical",
+		}
+		c.HTML(http.StatusBadRequest, "", Login(loginErr))
 	}
 
 	cookieName := "access_token"

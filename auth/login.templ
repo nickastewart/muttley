@@ -1,14 +1,26 @@
-package templates
+package auth
 
-templ Login(failedAuth bool) {
+import "muttley/templates"
+
+templ Login(err *LoginError) {
 	<!DOCTYPE html>
 	<html>
-		@Head()
+		@templates.Head()
 		<body>
 			<div id="login-page">
 				<div id="login-page-left" class="login-split"></div>
 				<div id="login-page-right" class="login-split">
 					<div id="login-form-section">
+						if err != nil {
+							<div id="login-error">
+								<div id="login-error-title">
+									<span>{ err.Type }</span>
+								</div>
+								<div id="login-error-message">
+									<span>{ err.Message }</span>
+								</div>
+							</div>
+						}
 						<form id="login-form" action="login" method="POST">
 							<div>
 								<label for="email">Email</label>
@@ -27,13 +39,6 @@ templ Login(failedAuth bool) {
 								<input type="submit" id="login-form-create-account" class="input-full-width submit-button" value="Create Account"/>
 							</form>
 						</div>
-						if failedAuth == true {
-							<div id="login-error">
-								<span>
-									Invalid username or password. Please try again.
-								</span>
-							</div>
-						}
 					</div>
 				</div>
 			</div>

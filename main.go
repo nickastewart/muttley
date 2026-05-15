@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"log"
+	"muttley/auth"
 	"muttley/handlers"
 	"muttley/repository"
 	"muttley/sqlite/entities"
@@ -28,7 +29,7 @@ func main() {
 	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
 	var friendRepository repository.FriendRepository = repository.NewFriendRepository(queries)
 
-	authHandler := handlers.NewAuthHandler(userRepository)
+	authHandler := auth.NewAuthHandler(userRepository)
 	fileUploadHandler := handlers.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
 	eventHandler := handlers.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := handlers.NewFriendHandler(friendRepository, userRepository)
@@ -48,7 +49,7 @@ func main() {
 	})
 
 	router.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", templates.Login(false))
+		c.HTML(http.StatusOK, "", auth.Login(nil))
 	})
 
 	router.GET("/signup", func(c *gin.Context) {

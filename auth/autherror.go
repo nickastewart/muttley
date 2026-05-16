@@ -1,10 +1,10 @@
 package auth
 
-type LoginError struct {
+type AuthError struct {
 	Type    string
 	Message string
 }
 
-func (e *LoginError) Error() string {
+func (e *AuthError) Error() string {
 	return e.Message
 }

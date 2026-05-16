@@ -5,6 +5,9 @@ SELECT id, first_name, last_name, email, profile_id, created_at FROM user WHERE 
 INSERT INTO user (first_name, last_name, email, password, profile_id, display_name) VALUES (?, ?, ?, ?, ?, ?)
     RETURNING first_name, last_name, email, profile_id, display_name, created_at;
 
+-- name: ResetPassword :exec 
+UPDATE user SET password = ? WHERE email = ?; 
+
 -- name: GetUserByEmail :one
 SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?;
 

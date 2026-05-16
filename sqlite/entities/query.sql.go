@@ -565,6 +565,20 @@ func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearch
 	return items, nil
 }
 
+const resetPassword = `-- name: ResetPassword :exec
+UPDATE user SET password = ? WHERE email = ?
+`
+
+type ResetPasswordParams struct {
+	Password string
+	Email    string
+}
+
+func (q *Queries) ResetPassword(ctx context.Context, arg ResetPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, resetPassword, arg.Password, arg.Email)
+	return err
+}
+
 const updateFriendStatus = `-- name: UpdateFriendStatus :one
 UPDATE friend SET friend_status = ? WHERE id = ? RETURNING id, user_id, friend_id, friend_status, accepted_date, created_at, updated_at, row_version
 `

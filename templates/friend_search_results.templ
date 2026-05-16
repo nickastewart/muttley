@@ -12,7 +12,7 @@ templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 			} else if user.FriendStatus == "REQUEST_PENDING" {
 				<button>Pending Request</button>
 			} else {
-				<button hx-post={ fmt.Sprintf("/addFriend?profileId=%s", user.ProfileID) }>Add</button>
+				<button hx-post={ fmt.Sprintf("/add-friend?profileId=%s", user.ProfileID) }>Add</button>
 			}
 		</div>
 	}

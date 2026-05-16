@@ -75,7 +75,7 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, loginForm.Email)
 
 	if userFound.ID == 0 {
-		loginErr := &LoginError{
+		loginErr := &AuthError{
 			Message: "Invalid username or password. Please try again.",
 			Type:    "Authentication",
 		}
@@ -83,7 +83,7 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(loginForm.Password)); err != nil {
-		loginErr := &LoginError{
+		loginErr := &AuthError{
 			Message: "Invalid username or password. Please try again.",
 			Type:    "Authentication",
 		}
@@ -99,7 +99,7 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 	token, err := generateToken.SignedString([]byte("SECRET"))
 
 	if err != nil {
-		loginErr := &LoginError{
+		loginErr := &AuthError{
 			Message: "There was a technical error. Please try again.",
 			Type:    "Technical",
 		}
@@ -191,8 +191,42 @@ func (handler *AuthHandler) CheckAccessToken(c *gin.Context) {
 	c.Next()
 }
 
-// TODO: delete func when profile functionality is added as this is a test func
-func (handler *AuthHandler) GetUser(c *gin.Context) {
-	user, _ := c.Get("currentUser")
-	c.JSON(200, gin.H{"user": user})
+func (handler *AuthHandler) ResetPassword(c *gin.Context) {
+	ctx := context.Background()
+
+	var resetPassword ResetPassword
+	c.Bind(&resetPassword)
+
+	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, resetPassword.Email)
+
+	if userFound.ID == 0 {
+		authErr := &AuthError{
+			Message: "Invalid username. Please try again.",
+			Type:    "Authentication",
+		}
+		c.HTML(http.StatusForbidden, "", ForgottenPassword(authErr))
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(resetPassword.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resetPasswordParams := entities.ResetPasswordParams{
+		Email:    resetPassword.Email,
+		Password: string(passwordHash),
+	}
+
+	resetErr := handler.UserRepository.ResetPassword(ctx, resetPasswordParams)
+
+	if resetErr != nil {
+		authErr := &AuthError{
+			Message: "Unable to reset password. Please try again.",
+			Type:    "Technical",
+		}
+		c.HTML(http.StatusForbidden, "", ForgottenPassword(authErr))
+	}
+
+	c.HTML(http.StatusOK, "", ResetPasswordSuccess())
 }

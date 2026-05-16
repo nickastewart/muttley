@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "muttley/templates"
 
-func Login(err *AuthError) templ.Component {
+func ForgottenPassword(err *AuthError) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -51,7 +51,7 @@ func Login(err *AuthError) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(err.Type)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/login.templ`, Line: 17, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/forgottenpassword.templ`, Line: 17, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -64,7 +64,7 @@ func Login(err *AuthError) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(err.Message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/login.templ`, Line: 20, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/forgottenpassword.templ`, Line: 20, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -75,7 +75,7 @@ func Login(err *AuthError) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form id=\"auth-form\" action=\"login\" method=\"POST\"><div><label for=\"email\">Email</label> <input class=\"input-full-width\" type=\"email\" name=\"email\"></div><div><label for=\"password\">Password</label> <input class=\"input-full-width\" type=\"password\" name=\"password\"></div><div><input class=\"input-full-width submit-button\" type=\"submit\" value=\"Login\"></div></form><div><form id=\"auth-form\" action=\"signup\" method=\"GET\"><input type=\"submit\" id=\"auth-create-account-submit\" class=\"input-full-width submit-button\" value=\"Create Account\"></form></div><div id=\"forgotten-password\"><a href=\"/forgotten-password\">Forgotten Password? </a></div></div></div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form id=\"auth-form\" hx-post=\"/reset-password\" hx-swap=\"innerHTML\" hx-target=\"#auth-form\" hx-indicator=\".loading\"><div><label for=\"email\">Email</label> <input class=\"input-full-width\" type=\"email\" name=\"email\"></div><div><label for=\"password\">Password</label> <input class=\"input-full-width\" type=\"password\" name=\"password\"></div><div><label for=\"password\">Confirm Password</label> <input class=\"input-full-width\" type=\"password\" name=\"confirm-password\"></div><div><input class=\"input-full-width submit-button\" type=\"submit\" value=\"Reset\"></div></form><div class=\"loading\" style=\"display:none;\">Loading...</div></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

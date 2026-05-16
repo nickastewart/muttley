@@ -73,57 +73,8 @@ nav ul li a {
 #profile-actions-container:hover #profile-actions{display: block;}
 #profile-actions-container:hover #profile-dropdown-button {background-color: black;}
 
-/* Sign Up Page */
 
-#signup-page {
-    width:100%;
-}
-
-.signup-split {
-    height: 100%;
-    position: fixed;
-    z-index: 1;
-    top: 0;
-    overflow-x: hidden;
-    padding-top: 20px;
-}
-
-#signup-page-left {
-  left: 0;
-  width: 35%;
-  background-color: #111;
-}
-
-#signup-page-right {
-  right: 0;
-  width:65%;
-}
-
-#signup-form-section {
-    width: 80%;
-    margin: 0 auto;
-    margin-left: 25%;
-    margin-top: 20%;
-}
-
-#signup-form input, label {
-    display: block;
-    margin-right:20px;
-}
-
-#signup-form input {
-    height:50px;
-    border-radius: 10px; 
-    box-shadow:none;
-    font-size: 1.25em;
-}
-
-#signup-form label {
-    margin-top:20px;
-    margin-bottom:5px;
-}
-
-/* Login Page */
+/* Auth Pages */
 
 .input-full-width {
     border: 1px solid #CCCCCC;
@@ -135,11 +86,11 @@ nav ul li a {
     width:200px;
 }
 
-#login-page {
+#auth-page {
     width:100%;
 }
 
-.login-split {
+.auth-split {
     height: 100%;
     position: fixed;
     z-index: 1;
@@ -148,37 +99,37 @@ nav ul li a {
     padding-top: 20px;
 }
 
-#login-page-left {
+#auth-page-left {
   left: 0;
   width: 35%;
   background-color: #111;
 }
 
-#login-page-right {
+#auth-page-right {
   right: 0;
   width:65%;
 }
 
-#login-form-section {
+#auth-form-section {
     width: 80%;
     margin: 0 auto;
     margin-left: 25%;
     margin-top: 20%;
 }
 
-#login-form input, label {
+#auth-form input, label {
     display: block;
     margin-right:20px;
 }
 
-#login-form input {
+#auth-form input {
     height:50px;
     border-radius: 10px; 
     box-shadow:none;
     font-size: 1.25em;
 }
 
-#login-form label {
+#auth-form label {
     margin-top:20px;
     margin-bottom:5px;
 }
@@ -203,7 +154,7 @@ nav ul li a {
     height:50px;
 }
 
-#login-error {
+#auth-error {
     background-color: #FFBABA;
     margin-top: 20px;
     width:425px;
@@ -213,12 +164,12 @@ nav ul li a {
     color: #991B1B;
 }
 
-#login-error #login-error-title, #login-error-message{
+#auth-error #auth-error-title, #auth-error-message{
     margin-left:10px;
     margin-bottom: 5px;
 }
 
-#login-error-title span{
+#auth-error-title span{
     font-weight: bold;
 }
 

@@ -66,9 +66,9 @@ func FriendSearchResults(users []entities.GetUsersBySearchTermRow) templ.Compone
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/addFriend?profileId=%s", user.ProfileID))
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/add-friend?profileId=%s", user.ProfileID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend_search_results.templ`, Line: 15, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend_search_results.templ`, Line: 15, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {

@@ -56,6 +56,12 @@ func main() {
 		c.HTML(http.StatusOK, "", templates.Signup())
 	})
 
+	router.GET("/forgotten-password", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "", auth.ForgottenPassword(nil))
+	})
+
+	router.POST("/reset-password", authHandler.ResetPassword)
+
 	router.GET("/leaderboard", authHandler.CheckAccessToken, eventHandler.Leaderboard)
 
 	router.GET("/upload", authHandler.CheckAccessToken, fileUploadHandler.UploadFile)
@@ -64,8 +70,8 @@ func main() {
 	router.GET("/friends", authHandler.CheckAccessToken, friendHandler.Friends)
 	router.GET("/search/friends", authHandler.CheckAccessToken, friendHandler.SearchFriends)
 
-	router.POST("/removeFriend", authHandler.CheckAccessToken, friendHandler.RemoveFriend)
-	router.POST("/addFriend", authHandler.CheckAccessToken, friendHandler.AddFriend)
+	router.POST("/remove-friend", authHandler.CheckAccessToken, friendHandler.RemoveFriend)
+	router.POST("/add-friend", authHandler.CheckAccessToken, friendHandler.AddFriend)
 
 	router.Run()
 }

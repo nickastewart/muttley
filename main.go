@@ -37,6 +37,7 @@ func main() {
 	router := gin.Default()
 	router.Static("/styles", "./static/styles")
 	router.Static("/images", "./static/images")
+	router.Static("/icons", "./static/icons")
 
 	router.POST("/signup", authHandler.Signup)
 	router.POST("/login", authHandler.LoginForm)

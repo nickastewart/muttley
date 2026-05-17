@@ -137,7 +137,6 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 func (handler *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("access_token", "", -1, "/", "", false, true)
 	c.Header("HX-Redirect", "/login")
-	c.Redirect(http.StatusAccepted, "/login")
 }
 
 func (handler *AuthHandler) CheckAccessToken(c *gin.Context) {

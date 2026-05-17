@@ -1,21 +1,18 @@
 package templates
 
 templ Nav() {
-	<nav>
-		<ul>
+	<nav class="sidebar">
+		<ul class="nav-menu">
 			<li><a href="/"><h1>Muttley</h1></a></li>
 			<li><a href="/leaderboard">Leaderboard</a></li>
 			<li><a href="/friends">Friends</a></li>
 			<li><a href="/upload">Upload</a></li>
 			<li>
-				<div id="profile-actions-container">
-					<button id="profile-dropdown-button">Profile</button>
-					<div id="profile-actions">
-						<form id="logout" action="/logout" method="post">
-							<button type="submit">Logout</button>
-						</form>
-					</div>
-				</div>
+				<a
+					style="cursor:pointer;"
+					hx-post="/logout"
+					hx-swap="none"
+				>Logout</a>
 			</li>
 		</ul>
 	</nav>

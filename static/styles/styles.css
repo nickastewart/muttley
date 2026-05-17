@@ -13,31 +13,56 @@ header {
     padding:0;
 }
 
+.main-content {
+    margin-left: 260px;
+    padding: 40px;
+    flex: 1;
+}
+
 /* Nav */
-
-nav {
-    margin:0;
-    padding:0;
-    width: 100%;
-    position:sticky;
-    top:0;
+.sidebar {
+    width: 260px;
     background-color: black;
-    color: white; }
+    color: white;
+    padding: 20px 0;
+    position: fixed;
+    top:0;
+    height: 100vh;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
 
-nav ul {
-    margin-top: 0;
-    margin-left 20px;
+.sidebar-header {
+    padding: 0 20px 20px 20px;
+    border-bottom: 1px solid #34495e;
+    margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.nav-menu {
     list-style: none;
 }
 
-nav ul li {
-    display: inline-block;
-    margin-right: 20px;
+.nav-menu li {
+    margin-bottom: 4px;
 }
 
-nav ul li a {
-    color: white; 
+.nav-menu a {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    color: #bdc3c7;
     text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.nav-menu a i {
+    margin-right: 12px;
+    width: 20px;
 }
 
 #profile-dropdown-button {

@@ -41,6 +41,7 @@ func (handler *FriendHandler) Friends(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error getting friends"})
 		return
 	}
+	c.Header("HX-Redirect", "/friends")
 	c.HTML(http.StatusOK, "", templates.Friend(friends))
 }
 

@@ -17,35 +17,37 @@ templ Leaderboard(events []entities.GetEventsByUserRow) {
 	@Head()
 	@Header()
 	<body>
-		<div class="main-content" id="leaderboard-container">
-			<table id="leaderboard-table">
-				<thead>
-					<th class="leaderboard-header-cell">Pos</th>
-					<th class="leaderboard-header-cell">Driver</th>
-					<th class="leaderboard-header-cell">Date</th>
-					<th class="leaderboard-header-cell">Location</th>
-					<th class="leaderboard-header-cell">Event Type</th>
-					<th class="leaderboard-header-cell">Best Lap Time</th>
-					<th class="leaderboard-header-cell">Average Lap Time</th>
-					<th class="leaderboard-header-cell">Position</th>
-					<th class="leaderboard-header-cell">Number Of Laps</th>
-				</thead>
-				<tbody>
-					for index, event := range events {
-						<tr class="leaderboard-row">
-							<td class="leaderboard-cell">{ index + 1 }</td>
-							<td class="leaderboard-cell">{ event.User.FirstName + " " + event.User.LastName }</td>
-							<td class="leaderboard-cell">{ event.Event.Date }</td>
-							<td class="leaderboard-cell">{ event.Location.Name }</td>
-							<td class="leaderboard-cell">{ event.Event.Type }</td>
-							<td class="leaderboard-cell">{ formatTime(event.EventResult.BestLapTime) }</td>
-							<td class="leaderboard-cell">{ formatTime(event.EventResult.AverageLapTime) }</td>
-							<td class="leaderboard-cell">{ event.EventResult.Position }</td>
-							<td class="leaderboard-cell">{ event.EventResult.NumberOfLaps }</td>
-						</tr>
-					}
-				</tbody>
-			</table>
+		<div class="main-container">
+			<div id="leaderboard-container">
+				<table id="leaderboard-table">
+					<thead>
+						<th class="leaderboard-header-cell">Pos</th>
+						<th class="leaderboard-header-cell">Driver</th>
+						<th class="leaderboard-header-cell">Date</th>
+						<th class="leaderboard-header-cell">Location</th>
+						<th class="leaderboard-header-cell">Event Type</th>
+						<th class="leaderboard-header-cell">Best Lap Time</th>
+						<th class="leaderboard-header-cell">Average Lap Time</th>
+						<th class="leaderboard-header-cell">Position</th>
+						<th class="leaderboard-header-cell">Number Of Laps</th>
+					</thead>
+					<tbody>
+						for index, event := range events {
+							<tr class="leaderboard-row">
+								<td class="leaderboard-cell">{ index + 1 }</td>
+								<td class="leaderboard-cell">{ event.User.FirstName + " " + event.User.LastName }</td>
+								<td class="leaderboard-cell">{ event.Event.Date }</td>
+								<td class="leaderboard-cell">{ event.Location.Name }</td>
+								<td class="leaderboard-cell">{ event.Event.Type }</td>
+								<td class="leaderboard-cell">{ formatTime(event.EventResult.BestLapTime) }</td>
+								<td class="leaderboard-cell">{ formatTime(event.EventResult.AverageLapTime) }</td>
+								<td class="leaderboard-cell">{ event.EventResult.Position }</td>
+								<td class="leaderboard-cell">{ event.EventResult.NumberOfLaps }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</body>
 }

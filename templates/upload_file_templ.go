@@ -41,7 +41,7 @@ func UploadFile() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div class=\"main-content\" id=\"upload-file-container\"><div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div id=\"upload-file-location\"><label for=\"file-location\">Track:</label> <select name=\"file-location\"><option value=\"Daytona Milton Keynes\">Daytona Milton Keynes</option> <option value=\"Daytona Sandown Park\">Daytona Sandown Park</option></select></div><div id=\"upload-file-file\"><input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div class=\"main-container\"><div id=\"upload-file-container\"><div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div id=\"upload-file-location\"><label for=\"file-location\">Track:</label> <select name=\"file-location\"><option value=\"Daytona Milton Keynes\">Daytona Milton Keynes</option> <option value=\"Daytona Sandown Park\">Daytona Sandown Park</option></select></div><div id=\"upload-file-file\"><input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></div></body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -42,7 +42,7 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<body><div class=\"main-content\" id=\"friend-container\"><div id=\"friend-actions\"><ul id=\"friend-actions\"><input hx-get=\"/search/friends\" hx-target=\"#friend-list\" hx-trigger=\"keyup changed delay:500ms\" type=\"search\" id=\"friends-search-input\" name=\"searchTerm\" placeholder=\"Search...\" minlength=\"3\" maxlength=\"20\"></ul></div><div id=\"friend-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<body><div class=\"main-container\"><div id=\"friend-container\"><div id=\"friend-actions\"><ul id=\"friend-actions\"><input hx-get=\"/search/friends\" hx-target=\"#friend-list\" hx-trigger=\"keyup changed delay:500ms\" type=\"search\" id=\"friends-search-input\" name=\"searchTerm\" placeholder=\"Search...\" minlength=\"3\" maxlength=\"20\"></ul></div><div id=\"friend-list\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -54,7 +54,7 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(friend.DisplayName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend.templ`, Line: 31, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend.templ`, Line: 32, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -67,7 +67,7 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(friend.FirstName + " " + friend.LastName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend.templ`, Line: 32, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend.templ`, Line: 33, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -85,7 +85,7 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/remove-friend?profileId=%s", friend.ProfileID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend.templ`, Line: 34, Col: 85}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/friend.templ`, Line: 35, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -106,7 +106,7 @@ func Friend(friends []entities.GetFriendsByUserRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></div></body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></div></div></body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

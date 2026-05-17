@@ -59,6 +59,7 @@ func (handler *EventsHandler) Leaderboard(c *gin.Context) {
 		return events[i].EventResult.BestLapTime < events[j].EventResult.BestLapTime
 	})
 
+	c.Header("HX-Redirect", "/leaderboard")
 	c.HTML(http.StatusOK, "", templates.Leaderboard(events))
 }
 

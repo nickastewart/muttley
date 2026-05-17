@@ -36,6 +36,7 @@ func NewFileUploadHandler(userRepository repository.UserRepository,
 }
 
 func (handler *FileUploadHandler) UploadFile(c *gin.Context) {
+	c.Header("HX-Redirect", "/upload")
 	c.HTML(http.StatusOK, "", templates.UploadFile())
 }
 

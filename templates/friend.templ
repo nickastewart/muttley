@@ -9,34 +9,36 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 	@Head()
 	@Header()
 	<body>
-		<div class="main-content" id="friend-container">
-			<div id="friend-actions">
-				<ul id="friend-actions">
-					<input
-						hx-get="/search/friends"
-						hx-target="#friend-list"
-						hx-trigger="keyup changed delay:500ms"
-						type="search"
-						id="friends-search-input"
-						name="searchTerm"
-						placeholder="Search..."
-						minlength="3"
-						maxlength="20"
-					/>
-				</ul>
-			</div>
-			<div id="friend-list">
-				for _, friend := range friends {
-					<div class="friend-card">
-						<h2>{ friend.DisplayName }</h2>
-						<h3>{ friend.FirstName + " " + friend.LastName } </h3>
-						if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
-							<button hx-post={ fmt.Sprintf("/remove-friend?profileId=%s", friend.ProfileID) }>Remove</button>
-						} else if friend.ConfirmationRequired == "true" {
-							<button>Accept</button>
-						}
-					</div>
-				}
+		<div class="main-container">
+			<div id="friend-container">
+				<div id="friend-actions">
+					<ul id="friend-actions">
+						<input
+							hx-get="/search/friends"
+							hx-target="#friend-list"
+							hx-trigger="keyup changed delay:500ms"
+							type="search"
+							id="friends-search-input"
+							name="searchTerm"
+							placeholder="Search..."
+							minlength="3"
+							maxlength="20"
+						/>
+					</ul>
+				</div>
+				<div id="friend-list">
+					for _, friend := range friends {
+						<div class="friend-card">
+							<h2>{ friend.DisplayName }</h2>
+							<h3>{ friend.FirstName + " " + friend.LastName } </h3>
+							if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
+								<button hx-post={ fmt.Sprintf("/remove-friend?profileId=%s", friend.ProfileID) }>Remove</button>
+							} else if friend.ConfirmationRequired == "true" {
+								<button>Accept</button>
+							}
+						</div>
+					}
+				</div>
 			</div>
 		</div>
 	</body>

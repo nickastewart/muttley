@@ -243,6 +243,121 @@ header {
     font-weight: bold;
 }
 
+/* Dashboard */
+
+.dashboard{
+    width: 1500px;
+}
+
+.dashboard-row{
+    margin-bottom: 20px;
+}
+
+.dashboard-row-flex {
+    display: inline-flex;
+}
+
+.dashboard-top-row {
+    width:100%;
+}
+
+.dashboard-top-row-item-half-flex {
+    flex:0.5;
+}
+
+.dashboard-top-row-item-one-flex {
+    flex:0.75;
+}
+
+.dashboard-top-row-item {
+    display: inline-block;
+    vertical-align: top;
+    width: 150px;
+    height: 110px;
+    background-color: var(--bg);
+    margin-right: 25px;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid var(--border);
+}
+
+.dashboard-top-row-item-title {
+    padding: 10px;
+    margin-bottom:10px;
+    font-weight:bold;
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-top-row-item-content {
+    text-align:center;
+    padding: 10px;
+    padding-bottom: 20px;
+    font-size: 2em;
+    display: inline-block;
+    vertical-align: top;
+    width: 90%;
+}
+
+.dashboard-top-row-item-content span {
+    width: 45%;
+    display: inline-block;
+}
+
+.dashboard-top-row-item-content-best-track {
+    display: block;
+    font-size: 1em;
+}
+
+.dashboard-top-row-item-percentage {
+    font-size: 0.65em;
+}
+
+.dashboard-list{
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+#dashboard-table {
+    border-collapse: collapse;
+    width:100%;
+    border-radius:7px;
+    overflow: hidden;
+}
+
+#dashboard-table thead {
+    background-color: var(--bg-light);
+    color: var(--text);
+}
+
+#dashboard-table tr {
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border)
+}
+
+.dashboard-header-cell {
+    padding: 10px;
+    text-align:center;
+    border: none;
+}
+
+.dashboard-cell {
+    padding: 10px;
+    text-align:center;
+    border: none;
+}
+#dashboard-track-count-bar-chart-container{
+    margin-right: 56px;
+}
+
+#dashboard-track-count-bar-chart-container, #dashboard-position-line-chart-container {
+    padding: 10px;
+    background-color: var(--bg);
+    width: 700px;
+    border-radius: 10px;
+    border: 1px solid var(--border)
+}
+
+
 /* Leaderboard */
 
 #leaderboard-container {

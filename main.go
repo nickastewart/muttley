@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"log"
 	"muttley/auth"
+	"muttley/dashboard"
 	"muttley/handlers"
 	"muttley/repository"
 	"muttley/sqlite/entities"
@@ -46,7 +47,7 @@ func main() {
 	router.HTMLRender = &TemplRender{}
 
 	router.GET("/", authHandler.CheckAccessToken, func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", templates.Home())
+		c.HTML(http.StatusOK, "", dashboard.Dashboard())
 	})
 
 	router.GET("/login", func(c *gin.Context) {

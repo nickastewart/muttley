@@ -29,11 +29,13 @@ func main() {
 	var eventRepository repository.EventRepository = repository.NewEventRepository(queries)
 	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
 	var friendRepository repository.FriendRepository = repository.NewFriendRepository(queries)
+	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 
 	authHandler := auth.NewAuthHandler(userRepository)
 	fileUploadHandler := handlers.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
 	eventHandler := handlers.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := handlers.NewFriendHandler(friendRepository, userRepository)
+	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository)
 
 	router := gin.Default()
 	router.Static("/styles", "./static/styles")
@@ -46,9 +48,7 @@ func main() {
 
 	router.HTMLRender = &TemplRender{}
 
-	router.GET("/", authHandler.CheckAccessToken, func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", dashboard.Dashboard())
-	})
+	router.GET("/", authHandler.CheckAccessToken, dashboardHandler.GetDashboard)
 
 	router.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "", auth.Login(nil))

@@ -246,7 +246,7 @@ header {
 /* Dashboard */
 
 .dashboard{
-    width: 1500px;
+    padding-right:20px;
 }
 
 .dashboard-row{

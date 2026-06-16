@@ -159,6 +159,74 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const getBestTrack = `-- name: GetBestTrack :one
+WITH location_stats AS (
+    SELECT 
+        location.name,
+        AVG(event_result.position) AS avgPosition,
+        COUNT(*) as totalRaces
+    FROM event_result
+    JOIN event ON event.id = event_result.event_id
+    JOIN location ON location.id = event.location_id
+    WHERE event_result.user_id = ?1
+    GROUP BY location.name
+    HAVING COUNT(*) >= 3) 
+SELECT 
+    name, 
+    CEIL(avgPosition) AS avgPosition 
+FROM location_stats ORDER BY avgPosition ASC LIMIT 1
+`
+
+type GetBestTrackRow struct {
+	Name        string
+	Avgposition int64
+}
+
+func (q *Queries) GetBestTrack(ctx context.Context, userid int64) (GetBestTrackRow, error) {
+	row := q.db.QueryRowContext(ctx, getBestTrack, userid)
+	var i GetBestTrackRow
+	err := row.Scan(&i.Name, &i.Avgposition)
+	return i, err
+}
+
+const getDashboard = `-- name: GetDashboard :one
+SELECT 
+    COUNT(*) as totalRaces,
+    CEIL(SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END)) as totalWins,
+    ROUND(100.0 * SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as winRate,
+    CEIL(SUM(CASE WHEN position <= 3 THEN 1 ELSE 0 END)) as totalPodiums,
+    ROUND(100.0 * SUM(CASE WHEN position <= 3 THEN 1 ELSE 0 END) / COUNT(*), 1) as podiumRate,
+    CEIL(MIN(position)) as bestPosition,
+    CEIL(AVG(position)) as avgPosition
+FROM event_result
+WHERE user_id = ?1
+`
+
+type GetDashboardRow struct {
+	Totalraces   int64
+	Totalwins    int64
+	Winrate      float64
+	Totalpodiums int64
+	Podiumrate   float64
+	Bestposition int64
+	Avgposition  int64
+}
+
+func (q *Queries) GetDashboard(ctx context.Context, userid int64) (GetDashboardRow, error) {
+	row := q.db.QueryRowContext(ctx, getDashboard, userid)
+	var i GetDashboardRow
+	err := row.Scan(
+		&i.Totalraces,
+		&i.Totalwins,
+		&i.Winrate,
+		&i.Totalpodiums,
+		&i.Podiumrate,
+		&i.Bestposition,
+		&i.Avgposition,
+	)
+	return i, err
+}
+
 const getEventByLocationAndTypeAndDate = `-- name: GetEventByLocationAndTypeAndDate :one
 SELECT id, location_id, type, date, total_drivers FROM event WHERE location_id = ? AND type = ? AND date = ?
 `
@@ -373,6 +441,129 @@ func (q *Queries) GetLocationByName(ctx context.Context, name string) (Location,
 	var i Location
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const getLocationStats = `-- name: GetLocationStats :many
+SELECT location.name, COUNT(*) FROM event 
+JOIN location ON event.location_id = location.id
+JOIN event_result ON event.id = event_result.event_id
+WHERE event_result.user_id = ?1
+GROUP BY location.name
+ORDER BY COUNT(*) DESC 
+LIMIT 3
+`
+
+type GetLocationStatsRow struct {
+	Name  string
+	Count int64
+}
+
+func (q *Queries) GetLocationStats(ctx context.Context, userid int64) ([]GetLocationStatsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLocationStats, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLocationStatsRow
+	for rows.Next() {
+		var i GetLocationStatsRow
+		if err := rows.Scan(&i.Name, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRecentEvents = `-- name: GetRecentEvents :many
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, location.id, location.name
+FROM event 
+JOIN event_result on event.id = event_result.event_id
+JOIN location on location.id = event.location_id
+WHERE event_result.user_id = ?1
+ORDER BY event.date DESC
+LIMIT 10
+`
+
+type GetRecentEventsRow struct {
+	Event       Event
+	EventResult EventResult
+	Location    Location
+}
+
+func (q *Queries) GetRecentEvents(ctx context.Context, userid int64) ([]GetRecentEventsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getRecentEvents, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRecentEventsRow
+	for rows.Next() {
+		var i GetRecentEventsRow
+		if err := rows.Scan(
+			&i.Event.ID,
+			&i.Event.LocationID,
+			&i.Event.Type,
+			&i.Event.Date,
+			&i.Event.TotalDrivers,
+			&i.EventResult.ID,
+			&i.EventResult.EventID,
+			&i.EventResult.UserID,
+			&i.EventResult.BestLapTime,
+			&i.EventResult.AverageLapTime,
+			&i.EventResult.Position,
+			&i.EventResult.NumberOfLaps,
+			&i.Location.ID,
+			&i.Location.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRecentPositions = `-- name: GetRecentPositions :many
+SELECT position FROM event_result
+JOIN event ON event_result.event_id = event.id
+WHERE user_id = ?1 
+ORDER BY event.date DESC
+LIMIT 20
+`
+
+func (q *Queries) GetRecentPositions(ctx context.Context, userid int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, getRecentPositions, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var position int64
+		if err := rows.Scan(&position); err != nil {
+			return nil, err
+		}
+		items = append(items, position)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one

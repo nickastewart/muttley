@@ -1,8 +1,11 @@
 package dashboard 
 
-import "muttley/templates"
+import (
+	"muttley/sqlite/entities"
+	"muttley/templates"
+)
 
-templ Dashboard() {
+templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationStats []entities.GetLocationStatsRow, recentPositions []int64, recentEvents []entities.GetRecentEventsRow) {
 	@templates.Head()
 	@templates.Header()
 	<div class="main-container">
@@ -10,23 +13,23 @@ templ Dashboard() {
 			<div class="dashboard-top-row dashboard-row dashboard-row-flex">
 				<div class="dashboard-top-row-item dashboard-top-row-item-half-flex">
 					<div class="dashboard-top-row-item-title"><span>Races</span></div>
-					<div class="dashboard-top-row-item-content"><span>10</span></div>
+					<div class="dashboard-top-row-item-content"><span>{ dashboard.Totalraces }</span></div>
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex">
 					<div class="dashboard-top-row-item-title"><span>Wins</span></div>
-					<div class="dashboard-top-row-item-content"><span><sup>1</sup>/<sub>10</sub></span> <span class="dashboard-top-row-item-percentage">10%</span></div>
+					<div class="dashboard-top-row-item-content"><span><sup>{ dashboard.Totalwins }</sup>/<sub>{ dashboard.Totalraces }</sub></span> <span class="dashboard-top-row-item-percentage">{ dashboard.Winrate }%</span></div>
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex">
 					<div class="dashboard-top-row-item-title"><span>Podiums</span></div>
-					<div class="dashboard-top-row-item-content"><span><sup>4</sup>/<sub>10</sub></span> <span class="dashboard-top-row-item-percentage">40%</span></div>
+					<div class="dashboard-top-row-item-content"><span><sup>{ dashboard.Totalpodiums }</sup>/<sub>{ dashboard.Totalraces }</sub></span> <span class="dashboard-top-row-item-percentage">{ dashboard.Podiumrate }%</span></div>
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex">
 					<div class="dashboard-top-row-item-title "><span>Best Place</span></div>
-					<div class="dashboard-top-row-item-content"><span>5<sup style="font-size:0.5em">th</sup></span></div>
+					<div class="dashboard-top-row-item-content"><span>{ dashboard.Bestposition }<sup style="font-size:0.5em">th</sup></span></div>
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex">
 					<div class="dashboard-top-row-item-title"><span>Average Place</span></div>
-					<div class="dashboard-top-row-item-content"><span>10<sup style="font-size:0.5em">th</sup></span></div>
+					<div class="dashboard-top-row-item-content"><span>{ dashboard.Avgposition }<sup style="font-size:0.5em">th</sup></span></div>
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex">
 					<div class="dashboard-top-row-item-title"><span>Head To Head Wins</span></div>
@@ -34,7 +37,13 @@ templ Dashboard() {
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex" style="margin-right:0;">
 					<div class="dashboard-top-row-item-title"><span>Best Track</span></div>
-					<div class="dashboard-top-row-item-content dashboard-top-row-item-content-best-track">Daytona Milton Keynes</div>
+					<div class="dashboard-top-row-item-content dashboard-top-row-item-content-best-track">
+						if bestTrack == "" {
+							{ "-" }
+						} else {
+							{ bestTrack }
+						}
+					</div>
 				</div>
 			</div>
 			<div class="dashboard-row dashboard-row-flex">
@@ -57,42 +66,17 @@ templ Dashboard() {
 						<th class="dashboard-header-cell">Number Of Laps</th>
 					</thead>
 					<tbody>
-						<tr class="dashboard-row">
-							<td class="dashboard-cell">20th Sep 2026</td>
-							<td class="dashboard-cell">Daytona Milton Keynes</td>
-							<td class="dashboard-cell">2025 SODI 40 Race</td>
-							<td class="dashboard-cell">01:20.741</td>
-							<td class="dashboard-cell">01:24.667</td>
-							<td class="dashboard-cell">17th</td>
-							<td class="dashboard-cell">14</td>
-						</tr>
-						<tr class="dashboard-row">
-							<td class="dashboard-cell">20th Sep 2026</td>
-							<td class="dashboard-cell">Daytona Milton Keynes</td>
-							<td class="dashboard-cell">2025 SODI 40 Race</td>
-							<td class="dashboard-cell">01:20.741</td>
-							<td class="dashboard-cell">01:24.667</td>
-							<td class="dashboard-cell">17th</td>
-							<td class="dashboard-cell">14</td>
-						</tr>
-						<tr class="dashboard-row">
-							<td class="dashboard-cell">20th Sep 2026</td>
-							<td class="dashboard-cell">Daytona Milton Keynes</td>
-							<td class="dashboard-cell">2025 SODI 40 Race</td>
-							<td class="dashboard-cell">01:20.741</td>
-							<td class="dashboard-cell">01:24.667</td>
-							<td class="dashboard-cell">17th</td>
-							<td class="dashboard-cell">14</td>
-						</tr>
-						<tr class="dashboard-row">
-							<td class="dashboard-cell">20th Sep 2026</td>
-							<td class="dashboard-cell">Daytona Milton Keynes</td>
-							<td class="dashboard-cell">2025 SODI 40 Race</td>
-							<td class="dashboard-cell">01:20.741</td>
-							<td class="dashboard-cell">01:24.667</td>
-							<td class="dashboard-cell">17th</td>
-							<td class="dashboard-cell">14</td>
-						</tr>
+						for _, event := range recentEvents {
+							<tr class="dashboard-row">
+								<td class="dashboard-cell">{ event.Event.Date }</td>
+								<td class="dashboard-cell">{ event.Location.Name }</td>
+								<td class="dashboard-cell">{ event.Event.Type }</td>
+								<td class="dashboard-cell">{ event.EventResult.BestLapTime }</td>
+								<td class="dashboard-cell">{ event.EventResult.AverageLapTime }</td>
+								<td class="dashboard-cell">{ event.EventResult.Position }</td>
+								<td class="dashboard-cell">{ event.EventResult.NumberOfLaps }</td>
+							</tr>
+						}
 					</tbody>
 				</table>
 			</div>
@@ -100,14 +84,16 @@ templ Dashboard() {
 	</div>
 	<script>
         const trackChart = document.getElementById('dashboard-track-count-bar-chart');
+        const trackChartLabels = {{ getTrackChartDataLabel(locationStats) }}
+        const trackChartData = {{ getTrackChartData(locationStats) }}
 
         document.addEventListener('DOMContentLoaded',function() {
             new Chart(trackChart, {
                 type: 'bar',
                 data: {
-                    labels: ['Daytona Milton Keynes', 'Daytona Sandown Park'],
+                    labels: trackChartLabels,
                     datasets: [{
-                        data: [5, 4],
+                        data: trackChartData,
                         backgroundColor: '#3b82f6',
                         borderColor: '#2563eb',
                         borderWidth: 0,
@@ -147,7 +133,7 @@ templ Dashboard() {
                 data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
                 datasets: [{
-                    data: [17, 10, 13, 15, 18, 6, 8],
+                    data: {{ recentPositions }},
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 3,
@@ -183,6 +169,9 @@ templ Dashboard() {
                             reverse: true,
                             border: { display: false },   // Y axis line removed
                             grid: { display: false },
+                            ticks: {
+                                    stepSize: 1
+                                }
                         }
                     }
                 },
@@ -190,4 +179,20 @@ templ Dashboard() {
         });
 
     </script>
+}
+
+func getTrackChartDataLabel(locationStats []entities.GetLocationStatsRow) []string {
+	labels := []string{}
+	for _, locationStat := range locationStats {
+		labels = append(labels, locationStat.Name)
+	}
+	return labels
+}
+
+func getTrackChartData(locationStats []entities.GetLocationStatsRow) []int64 {
+	data := []int64{}
+	for _, locationStat := range locationStats {
+		data = append(data, locationStat.Count)
+	}
+	return data
 }

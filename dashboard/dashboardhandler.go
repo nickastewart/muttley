@@ -63,5 +63,6 @@ func (handler *DashboardHandler) GetDashboard(c *gin.Context) {
 		// TODO handle erorr in UI
 	}
 
+	c.Header("HX-Redirect", "/dashboard")
 	c.HTML(http.StatusOK, "", Dashboard(dashboard, bestTrack.Name, locationStats, recentPositions, recentEvents))
 }

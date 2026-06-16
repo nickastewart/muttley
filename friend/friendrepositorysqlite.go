@@ -1,8 +1,8 @@
-package repository
+package friend
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"muttley/sqlite/entities"
 )
 
@@ -19,7 +19,7 @@ func NewFriendRepository(queries *entities.Queries) *FriendRepositorySqlite {
 func (r *FriendRepositorySqlite) AddFriend(ctx context.Context, addFriendParams entities.AddFriendParams) (entities.Friend, error) {
 	friend, err := r.queries.AddFriend(ctx, addFriendParams)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 	return friend, nil
 }
@@ -27,7 +27,7 @@ func (r *FriendRepositorySqlite) AddFriend(ctx context.Context, addFriendParams 
 func (r *FriendRepositorySqlite) GetFriendsByUser(ctx context.Context, userId int64) ([]entities.GetFriendsByUserRow, error) {
 	friends, err := r.queries.GetFriendsByUser(ctx, userId)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 	return friends, err
 }
@@ -35,7 +35,7 @@ func (r *FriendRepositorySqlite) GetFriendsByUser(ctx context.Context, userId in
 func (r *FriendRepositorySqlite) UpdateFriendStatus(ctx context.Context, params entities.UpdateFriendStatusParams) (entities.Friend, error) {
 	friend, err := r.queries.UpdateFriendStatus(ctx, params)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 	return friend, err
 }
@@ -43,7 +43,7 @@ func (r *FriendRepositorySqlite) UpdateFriendStatus(ctx context.Context, params 
 func (r *FriendRepositorySqlite) GetFriendByUserIdAndFriendId(ctx context.Context, params entities.GetFriendByUserIdAndFriendIdParams) (entities.Friend, error) {
 	friend, err := r.queries.GetFriendByUserIdAndFriendId(ctx, params)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 	return friend, err
 }

@@ -1,22 +1,22 @@
-package handlers
+package friend
 
 import (
 	"context"
 	"log"
-	"muttley/repository"
 	"muttley/sqlite/entities"
 	"muttley/templates"
+	"muttley/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type FriendHandler struct {
-	FriendRepository repository.FriendRepository
-	UserRepository   repository.UserRepository
+	FriendRepository FriendRepository
+	UserRepository   user.UserRepository
 }
 
-func NewFriendHandler(friendRepository repository.FriendRepository, userRepository repository.UserRepository) *FriendHandler {
+func NewFriendHandler(friendRepository FriendRepository, userRepository user.UserRepository) *FriendHandler {
 	return &FriendHandler{
 		FriendRepository: friendRepository,
 		UserRepository:   userRepository,

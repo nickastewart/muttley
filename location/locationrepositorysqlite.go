@@ -1,8 +1,8 @@
-package repository
+package location
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"muttley/sqlite/entities"
 )
 
@@ -20,7 +20,7 @@ func (r *LocationRepositorySqlite) CreateLocation(ctx context.Context, name stri
 	location, err := r.queries.CreateLocation(ctx, name)
 
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 
 	return location, err
@@ -30,7 +30,7 @@ func (r *LocationRepositorySqlite) GetLocationByName(ctx context.Context, name s
 	location, err := r.queries.GetLocationByName(ctx, name)
 
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 
 	return location, err

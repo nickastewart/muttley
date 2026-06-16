@@ -1,12 +1,15 @@
-package handlers
+package fileupload
 
 import (
 	"database/sql"
 	"errors"
 	"log"
-	"muttley/repository"
+	"muttley/event"
+	"muttley/eventresult"
+	"muttley/location"
 	"muttley/sqlite/entities"
 	"muttley/templates"
+	"muttley/user"
 
 	"context"
 	"net/http"
@@ -17,16 +20,16 @@ import (
 )
 
 type FileUploadHandler struct {
-	UserRepository         repository.UserRepository
-	LocationRepository     repository.LocationRepository
-	EventRepository        repository.EventRepository
-	EventResultRespository repository.EventResultRepository
+	UserRepository         user.UserRepository
+	LocationRepository     location.LocationRepository
+	EventRepository        event.EventRepository
+	EventResultRespository eventresult.EventResultRepository
 }
 
-func NewFileUploadHandler(userRepository repository.UserRepository,
-	eventRepository repository.EventRepository,
-	locationRepository repository.LocationRepository,
-	eventResultRespository repository.EventResultRepository) *FileUploadHandler {
+func NewFileUploadHandler(userRepository user.UserRepository,
+	eventRepository event.EventRepository,
+	locationRepository location.LocationRepository,
+	eventResultRespository eventresult.EventResultRepository) *FileUploadHandler {
 	return &FileUploadHandler{
 		UserRepository:         userRepository,
 		EventRepository:        eventRepository,

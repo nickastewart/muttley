@@ -1,11 +1,14 @@
-package handlers
+package event
 
 import (
 	"context"
 	"log"
-	"muttley/repository"
+	"muttley/eventresult"
+	"muttley/friend"
+	"muttley/location"
 	"muttley/sqlite/entities"
 	"muttley/templates"
+	"muttley/user"
 	"net/http"
 	"sort"
 
@@ -13,18 +16,18 @@ import (
 )
 
 type EventsHandler struct {
-	UserRepository         repository.UserRepository
-	LocationRepository     repository.LocationRepository
-	EventRepository        repository.EventRepository
-	EventResultRespository repository.EventResultRepository
-	FriendRepository       repository.FriendRepository
+	UserRepository         user.UserRepository
+	LocationRepository     location.LocationRepository
+	EventRepository        EventRepository
+	EventResultRespository eventresult.EventResultRepository
+	FriendRepository       friend.FriendRepository
 }
 
-func NewEventsHandler(userRepository repository.UserRepository,
-	eventRepository repository.EventRepository,
-	locationRepository repository.LocationRepository,
-	eventResultRespository repository.EventResultRepository,
-	friendRepository repository.FriendRepository) *EventsHandler {
+func NewEventsHandler(userRepository user.UserRepository,
+	eventRepository EventRepository,
+	locationRepository location.LocationRepository,
+	eventResultRespository eventresult.EventResultRepository,
+	friendRepository friend.FriendRepository) *EventsHandler {
 	return &EventsHandler{
 		UserRepository:         userRepository,
 		EventRepository:        eventRepository,

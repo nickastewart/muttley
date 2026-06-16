@@ -6,10 +6,14 @@ import (
 	"log"
 	"muttley/auth"
 	"muttley/dashboard"
-	"muttley/handlers"
-	"muttley/repository"
+	"muttley/event"
+	"muttley/eventresult"
+	"muttley/fileupload"
+	"muttley/friend"
+	"muttley/location"
 	"muttley/sqlite/entities"
 	"muttley/templates"
+	"muttley/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,17 +28,17 @@ func main() {
 	defer db.Close()
 
 	queries := entities.New(db)
-	var userRepository repository.UserRepository = repository.NewUserRepository(queries)
-	var locationRepository repository.LocationRepository = repository.NewLocationRepository(queries)
-	var eventRepository repository.EventRepository = repository.NewEventRepository(queries)
-	var eventResultRepository repository.EventResultRepository = repository.NewEventResultRepository(queries)
-	var friendRepository repository.FriendRepository = repository.NewFriendRepository(queries)
+	var userRepository user.UserRepository = user.NewUserRepository(queries)
+	var locationRepository location.LocationRepository = location.NewLocationRepository(queries)
+	var eventRepository event.EventRepository = event.NewEventRepository(queries)
+	var eventResultRepository eventresult.EventResultRepository = eventresult.NewEventResultRepository(queries)
+	var friendRepository friend.FriendRepository = friend.NewFriendRepository(queries)
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 
 	authHandler := auth.NewAuthHandler(userRepository)
-	fileUploadHandler := handlers.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
-	eventHandler := handlers.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
-	friendHandler := handlers.NewFriendHandler(friendRepository, userRepository)
+	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
+	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
+	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)
 	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository)
 
 	router := gin.Default()

@@ -3,7 +3,7 @@ package dashboard
 import (
 	"context"
 	"log/slog"
-	"muttley/repository"
+	"muttley/event"
 	"muttley/sqlite/entities"
 	"net/http"
 
@@ -12,10 +12,10 @@ import (
 
 type DashboardHandler struct {
 	DashboardRepository DashboardRepository
-	EventRepository     repository.EventRepository
+	EventRepository     event.EventRepository
 }
 
-func NewDashboardHander(dashboardRepository DashboardRepository, eventRepository repository.EventRepository) *DashboardHandler {
+func NewDashboardHander(dashboardRepository DashboardRepository, eventRepository event.EventRepository) *DashboardHandler {
 	return &DashboardHandler{
 		DashboardRepository: dashboardRepository,
 		EventRepository:     eventRepository,

@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"fmt"
-	"muttley/repository"
 	"muttley/sqlite/entities"
+	"muttley/user"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,10 +16,10 @@ import (
 )
 
 type AuthHandler struct {
-	UserRepository repository.UserRepository
+	UserRepository user.UserRepository
 }
 
-func NewAuthHandler(userRepository repository.UserRepository) *AuthHandler {
+func NewAuthHandler(userRepository user.UserRepository) *AuthHandler {
 	return &AuthHandler{
 		UserRepository: userRepository,
 	}

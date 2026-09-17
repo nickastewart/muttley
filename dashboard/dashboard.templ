@@ -46,12 +46,16 @@ templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSt
 					</div>
 				</div>
 			</div>
-			<div class="dashboard-row dashboard-row-flex">
+			<div class="dashboard-row dashboard-row-flex dashboard-top-row">
 				<div id="dashboard-track-count-bar-chart-container" class="dashboard-top-row-item-one-flex">
-					<canvas id="dashboard-track-count-bar-chart" width="600" height="200"></canvas>
+					<div class="dashboard-chart-canvas-wrap">
+						<canvas id="dashboard-track-count-bar-chart"></canvas>
+					</div>
 				</div>
 				<div id="dashboard-position-line-chart-container" class="dashboard-top-row-item-one-flex">
-					<canvas id="dashboard-line-chart" width="600" height="200"></canvas>
+					<div class="dashboard-chart-canvas-wrap">
+						<canvas id="dashboard-line-chart"></canvas>
+					</div>
 				</div>
 			</div>
 			<div class="dashboard-list dashboard-row">
@@ -98,12 +102,12 @@ templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSt
                         borderColor: '#2563eb',
                         borderWidth: 0,
                         borderRadius: 6,
-                        barThickness: 45
+                        maxBarThickness: 45
                     }]
                 },
                 options: {
                     indexAxis:'y',
-                    responsive: false,
+                    responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
@@ -145,7 +149,7 @@ templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSt
                 }]
                 },
                 options: {
-                    responsive: false,        // Important for fixed size
+                    responsive: true,
                     maintainAspectRatio: false,
                     
                     plugins: {

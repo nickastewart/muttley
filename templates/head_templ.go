@@ -29,7 +29,7 @@ func Head() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<head><link rel=\"stylesheet\" type=\"text/css\" href=\"styles/styles.css?v=2\"><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js\"></script><script src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2\"></script></head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<head><link rel=\"stylesheet\" type=\"text/css\" href=\"styles/styles.css\"><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js\"></script><script src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2\"></script></head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

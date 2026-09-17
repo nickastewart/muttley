@@ -382,36 +382,44 @@ header {
 /* Leaderboard */
 
 #leaderboard-container {
-    margin: 0 auto;
-    margin-top: 50px;
-    width: 1280px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 40px;
+}
+
+.leaderboard-list {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 #leaderboard-table {
     border-collapse: collapse;
-    border-radius:7px;
+    width: 100%;
+    border-radius: 7px;
     overflow: hidden;
-    width:100%;
 }
 
 #leaderboard-table thead {
-    background-color: var(--bg);
+    background-color: var(--bg-light);
     color: var(--text);
+}
+
+#leaderboard-table tr {
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
 }
 
 .leaderboard-header-cell {
     padding: 10px;
-    text-align:center;
+    text-align: center;
     border: none;
-}
-
-#leaderboard-table tr:nth-child(even) {
-    background-color: #f2f2f2;
 }
 
 .leaderboard-cell {
     padding: 10px;
-    text-align:center;
+    text-align: center;
     border: none;
 }
 

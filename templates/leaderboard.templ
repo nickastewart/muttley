@@ -13,12 +13,11 @@ func formatTime(time int64) string {
 }
 
 templ Leaderboard(events []entities.GetEventsByUserRow) {
-	<!DOCTYPE html>
 	@Head()
 	@Header()
-	<body>
-		<div class="main-container">
-			<div id="leaderboard-container">
+	<div class="main-container">
+		<div id="leaderboard-container">
+			<div class="leaderboard-list">
 				<table id="leaderboard-table">
 					<thead>
 						<th class="leaderboard-header-cell">Pos</th>
@@ -49,5 +48,5 @@ templ Leaderboard(events []entities.GetEventsByUserRow) {
 				</table>
 			</div>
 		</div>
-	</body>
+	</div>
 }

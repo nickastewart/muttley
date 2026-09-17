@@ -6,45 +6,43 @@ templ Signup() {
 		@Head()
 		<body>
 			<div id="auth-page">
-				<div id="auth-page-left" class="auth-split"></div>
-				<div id="auth-page-right" class="auth-split">
-					<div id="auth-form-section">
-						<form id="auth-form" name="signup" action="/signup" method="POST">
-							<div>
-								<div style="float:left;">
-									<label for="first-name">First Name</label>
-									<input class="input-half-width" type="text" name="first-name"/>
-								</div>
-								<div style="float:left;">
-									<label for="last-name">Last Name</label>
-									<input class="input-half-width" type="text" name="last-name"/>
-								</div>
+				<div class="auth-card">
+					<div class="auth-card-title"><span>Create Account</span></div>
+					<form id="auth-form" name="signup" action="/signup" method="POST">
+						<div class="auth-field-row">
+							<div class="auth-field">
+								<label for="first-name">First Name</label>
+								<input id="first-name" type="text" name="first-name"/>
 							</div>
-							<br style="clear:both;"/>
-							<div>
-								<label for="display-name">Display Name</label>
-								<input class="input-full-width" type="text" name="display-name"/>
+							<div class="auth-field">
+								<label for="last-name">Last Name</label>
+								<input id="last-name" type="text" name="last-name"/>
 							</div>
-							<div>
-								<label for="email">Email</label>
-								<input class="input-full-width" type="email" name="email"/>
-							</div>
-							<div>
-								<label for="email-confirm">Confirm Email</label>
-								<input class="input-full-width" type="email" name="email-confirm"/>
-							</div>
-							<div>
-								<label for="password">Password</label>
-								<input class="input-full-width" type="password" name="password"/>
-							</div>
-							<div>
-								<label for="password-confirm">Confirm Password</label>
-								<input class="input-full-width" type="password" name="password-confirm"/>
-							</div>
-							<div>
-								<input class="input-full-width submit-button" type="submit" value="Sign up"/>
-							</div>
-						</form>
+						</div>
+						<div class="auth-field">
+							<label for="display-name">Display Name</label>
+							<input id="display-name" type="text" name="display-name"/>
+						</div>
+						<div class="auth-field">
+							<label for="email">Email</label>
+							<input id="email" type="email" name="email"/>
+						</div>
+						<div class="auth-field">
+							<label for="email-confirm">Confirm Email</label>
+							<input id="email-confirm" type="email" name="email-confirm"/>
+						</div>
+						<div class="auth-field">
+							<label for="password">Password</label>
+							<input id="password" type="password" name="password"/>
+						</div>
+						<div class="auth-field">
+							<label for="password-confirm">Confirm Password</label>
+							<input id="password-confirm" type="password" name="password-confirm"/>
+						</div>
+						<input class="auth-submit" type="submit" value="Sign up"/>
+					</form>
+					<div class="auth-links">
+						Already have an account? <a href="/login">Log in</a>
 					</div>
 				</div>
 			</div>

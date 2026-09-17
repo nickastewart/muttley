@@ -8,40 +8,34 @@ templ Login(err *AuthError) {
 		@templates.Head()
 		<body>
 			<div id="auth-page">
-				<div id="auth-page-left" class="auth-split"></div>
-				<div id="auth-page-right" class="auth-split">
-					<div id="auth-form-section">
-						if err != nil {
-							<div id="auth-error">
-								<div id="auth-error-title">
-									<span>{ err.Type }</span>
-								</div>
-								<div id="auth-error-message">
-									<span>{ err.Message }</span>
-								</div>
+				<div class="auth-card">
+					<div class="auth-card-title"><span>Login</span></div>
+					if err != nil {
+						<div id="auth-error">
+							<div id="auth-error-title">
+								<span>{ err.Type }</span>
 							</div>
-						}
-						<form id="auth-form" action="login" method="POST">
-							<div>
-								<label for="email">Email</label>
-								<input class="input-full-width" type="email" name="email"/>
+							<div id="auth-error-message">
+								<span>{ err.Message }</span>
 							</div>
-							<div>
-								<label for="password">Password</label>
-								<input class="input-full-width" type="password" name="password"/>
-							</div>
-							<div>
-								<input class="input-full-width submit-button" type="submit" value="Login"/>
-							</div>
-						</form>
-						<div>
-							<form id="auth-form" action="signup" method="GET">
-								<input type="submit" id="auth-create-account-submit" class="input-full-width submit-button" value="Create Account"/>
-							</form>
 						</div>
-						<div id="forgotten-password">
-							<a href="/forgotten-password">Forgotten Password? </a>
+					}
+					<form id="auth-form" action="login" method="POST">
+						<div class="auth-field">
+							<label for="email">Email</label>
+							<input id="email" type="email" name="email"/>
 						</div>
+						<div class="auth-field">
+							<label for="password">Password</label>
+							<input id="password" type="password" name="password"/>
+						</div>
+						<input class="auth-submit" type="submit" value="Login"/>
+					</form>
+					<form id="auth-create-account-form" action="signup" method="GET">
+						<input type="submit" id="auth-create-account-submit" class="auth-submit" value="Create Account"/>
+					</form>
+					<div class="auth-links">
+						Forgot your password? <a href="/forgotten-password">Reset it</a>
 					</div>
 				</div>
 			</div>

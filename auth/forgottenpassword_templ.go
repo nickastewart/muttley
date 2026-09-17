@@ -39,7 +39,7 @@ func ForgottenPassword(err *AuthError) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"auth-page\"><div id=\"auth-page-left\" class=\"auth-split\"></div><div id=\"auth-page-right\" class=\"auth-split\"><div id=\"auth-form-section\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"auth-page\"><div class=\"auth-card\"><div class=\"auth-card-title\"><span>Reset Password</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -51,7 +51,7 @@ func ForgottenPassword(err *AuthError) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(err.Type)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/forgottenpassword.templ`, Line: 17, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/forgottenpassword.templ`, Line: 16, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -64,7 +64,7 @@ func ForgottenPassword(err *AuthError) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(err.Message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/forgottenpassword.templ`, Line: 20, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `auth/forgottenpassword.templ`, Line: 19, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -75,7 +75,7 @@ func ForgottenPassword(err *AuthError) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form id=\"auth-form\" hx-post=\"/reset-password\" hx-swap=\"innerHTML\" hx-target=\"#auth-form\" hx-indicator=\".loading\"><div><label for=\"email\">Email</label> <input class=\"input-full-width\" type=\"email\" name=\"email\"></div><div><label for=\"password\">Password</label> <input class=\"input-full-width\" type=\"password\" name=\"password\"></div><div><label for=\"password\">Confirm Password</label> <input class=\"input-full-width\" type=\"password\" name=\"confirm-password\"></div><div><input class=\"input-full-width submit-button\" type=\"submit\" value=\"Reset\"></div></form><div class=\"loading\" style=\"display:none;\">Loading...</div></div></div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form id=\"auth-form\" hx-post=\"/reset-password\" hx-swap=\"innerHTML\" hx-target=\"#auth-form\" hx-indicator=\".loading\"><div class=\"auth-field\"><label for=\"email\">Email</label> <input id=\"email\" type=\"email\" name=\"email\"></div><div class=\"auth-field\"><label for=\"password\">Password</label> <input id=\"password\" type=\"password\" name=\"password\"></div><div class=\"auth-field\"><label for=\"confirm-password\">Confirm Password</label> <input id=\"confirm-password\" type=\"password\" name=\"confirm-password\"></div><input class=\"auth-submit\" type=\"submit\" value=\"Reset\"></form><div class=\"loading auth-loading\">Loading...</div><div class=\"auth-links\">Already have an account? <a href=\"/login\">Log in</a></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

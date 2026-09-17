@@ -29,10 +29,6 @@ func UploadFile() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
 		templ_7745c5c3_Err = Head().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -41,7 +37,7 @@ func UploadFile() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div class=\"main-container\"><div id=\"upload-file-container\"><div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div id=\"upload-file-location\"><label for=\"file-location\">Track:</label> <select name=\"file-location\"><option value=\"Daytona Milton Keynes\">Daytona Milton Keynes</option> <option value=\"Daytona Sandown Park\">Daytona Sandown Park</option></select></div><div id=\"upload-file-file\"><input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></div></body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"main-container\"><div id=\"upload-file-container\"><div class=\"upload-file-card\"><div class=\"upload-file-card-title\"><span>Upload Result</span></div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div class=\"upload-file-field\"><label for=\"file-location\">Track</label> <select id=\"file-location\" name=\"file-location\"><option value=\"Daytona Milton Keynes\">Daytona Milton Keynes</option> <option value=\"Daytona Sandown Park\">Daytona Sandown Park</option></select></div><div class=\"upload-file-field\"><label for=\"upload-file-input\">Results file</label> <input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

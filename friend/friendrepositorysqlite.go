@@ -20,6 +20,7 @@ func (r *FriendRepositorySqlite) AddFriend(ctx context.Context, addFriendParams 
 	friend, err := r.queries.AddFriend(ctx, addFriendParams)
 	if err != nil {
 		slog.Error(err.Error())
+		return friend, err
 	}
 	return friend, nil
 }

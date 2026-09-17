@@ -6,14 +6,22 @@ import "fmt"
 templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 	for _, user := range users {
 		<div class="friend-card">
-			<h3>{ user.FirstName + " " + user.LastName }</h3>
-			if user.FriendStatus == "ACCEPTED" {
-				<button disabled>Accepted</button>
-			} else if user.FriendStatus == "REQUEST_PENDING" {
-				<button>Pending Request</button>
-			} else {
-				<button hx-post={ fmt.Sprintf("/add-friend?profileId=%s", user.ProfileID) }>Add</button>
-			}
+			<div class="friend-card-info">
+				<div class="friend-card-title">{ user.FirstName + " " + user.LastName }</div>
+			</div>
+			<div class="friend-card-actions">
+				if user.FriendStatus == "ACCEPTED" {
+					<button class="friend-card-button" disabled>Accepted</button>
+				} else if user.FriendStatus == "REQUEST_PENDING" {
+					<button class="friend-card-button">Pending Request</button>
+				} else {
+					<button class="friend-card-button" hx-post={ fmt.Sprintf("/add-friend?profileId=%s", user.ProfileID) } hx-swap="outerHTML">Add</button>
+				}
+			</div>
 		</div>
 	}
+}
+
+templ FriendPendingRequestButton() {
+	<button class="friend-card-button">Pending Request</button>
 }

@@ -2,6 +2,8 @@ package friend
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"muttley/sqlite/entities"
 	"muttley/templates"
@@ -85,13 +87,15 @@ func (handler *FriendHandler) AddFriend(c *gin.Context) {
 	user := u.(entities.GetUserByIdRow)
 	profileID, ok := c.GetQuery("profileId")
 
-	if !ok {
-		log.Panic("Request has no profileID")
+	if !ok || profileID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Request has no profileID"})
+		return
 	}
 
 	friendId, err := handler.UserRepository.GetUserIdByProfileId(ctx, profileID)
 	if err != nil {
-		log.Panic("Cannot parse friendId")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot find user"})
+		return
 	}
 
 	params := entities.GetFriendByUserIdAndFriendIdParams{
@@ -99,21 +103,28 @@ func (handler *FriendHandler) AddFriend(c *gin.Context) {
 		Friendid: friendId,
 	}
 	friend, err := handler.FriendRepository.GetFriendByUserIdAndFriendId(ctx, params)
-	if err != nil {
-		log.Panic("Cannot friend from user and id")
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error looking up friend"})
+		return
 	}
 
-	if friend.ID != 0 {
+	if err == nil && friend.ID != 0 {
 		handler.updateFriendStatus(ctx, friend.ID, "REQUESTED")
 	} else {
-		addFriendParams := &entities.AddFriendParams{
+		addFriendParams := entities.AddFriendParams{
 			UserID:       user.ID,
 			FriendID:     friendId,
 			FriendStatus: "REQUESTED",
 		}
 
-		handler.FriendRepository.AddFriend(ctx, *addFriendParams)
+		_, err = handler.FriendRepository.AddFriend(ctx, addFriendParams)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error adding friend"})
+			return
+		}
 	}
+
+	c.HTML(http.StatusOK, "", templates.FriendPendingRequestButton())
 }
 
 func (handler *FriendHandler) RemoveFriend(c *gin.Context) {

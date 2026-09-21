@@ -1,0 +1,75 @@
+/* Friends */
+
+#friend-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 40px;
+}
+
+#friend-actions {
+    margin-bottom: 20px;
+}
+
+#friends-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 12px;
+    color: var(--text);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+#friends-search-input:focus {
+    outline: none;
+    border-color: var(--highlight);
+}
+
+#friend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.friend-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.friend-card-title {
+    font-weight: bold;
+    color: var(--text);
+}
+
+.friend-card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-top: 4px;
+}
+
+.friend-card-button {
+    padding: 12px 24px;
+    background-color: var(--bg-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.friend-card-button:hover:not(:disabled) {
+    background-color: var(--bg-dark);
+}
+
+.friend-card-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}

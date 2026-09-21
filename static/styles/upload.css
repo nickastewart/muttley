@@ -1,0 +1,89 @@
+/* Upload File */
+
+#upload-file-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 40px;
+}
+
+.upload-file-card {
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.upload-file-card-title {
+    padding: 10px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border);
+}
+
+#upload-file-form {
+    padding: 10px;
+}
+
+.upload-file-field {
+    margin-bottom: 20px;
+}
+
+.upload-file-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+#upload-file-form select,
+#upload-file-form input[type="file"] {
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--text);
+    background-color: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+#upload-file-form select {
+    height: 44px;
+    padding: 0 12px;
+}
+
+#upload-file-form select:focus {
+    outline: none;
+    border-color: var(--highlight);
+}
+
+#upload-file-form input[type="file"] {
+    padding: 10px;
+}
+
+#upload-file-form input[type="file"]::file-selector-button {
+    border-radius: 8px;
+    padding: 0 16px;
+    height: 36px;
+    cursor: pointer;
+    background-color: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    margin-right: 16px;
+}
+
+#upload-file-form input[type="file"]::file-selector-button:hover {
+    background-color: var(--bg-dark);
+}
+
+#file-upload-submit {
+    padding: 12px 24px;
+    background-color: var(--bg-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#file-upload-submit:hover {
+    background-color: var(--bg-dark);
+}

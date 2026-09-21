@@ -6,7 +6,9 @@ import (
 )
 
 templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationStats []entities.GetLocationStatsRow, recentPositions []int64, recentEvents []entities.GetRecentEventsRow) {
-	@templates.Head()
+	@templates.Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/dashboard.css"/>
+	}
 	@templates.Header()
 	<div class="main-container">
 		<div class="dashboard">

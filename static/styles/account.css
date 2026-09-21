@@ -1,0 +1,115 @@
+/* Account */
+
+#account-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.account-card {
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.account-card-title {
+    padding: 10px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border);
+}
+
+#account-form,
+#account-delete-form {
+    padding: 10px;
+}
+
+.account-field-row {
+    display: flex;
+    gap: 16px;
+}
+
+.account-field-row .account-field {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 520px) {
+    .account-field-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+.account-field {
+    margin-bottom: 20px;
+}
+
+.account-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+#account-form input[type="email"],
+#account-form input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 12px;
+    color: var(--text);
+    background-color: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+#account-form input[type="email"]:focus,
+#account-form input[type="text"]:focus {
+    outline: none;
+    border-color: var(--highlight);
+}
+
+.account-notice {
+    margin: 0 10px 10px;
+    padding: 10px 12px;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+}
+
+.account-notice-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.account-notice-message {
+    color: var(--text-muted);
+}
+
+.account-delete-copy {
+    margin: 0 10px 10px;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+#account-submit,
+#account-delete-submit {
+    padding: 12px 24px;
+    background-color: var(--bg-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#account-submit:hover,
+#account-delete-submit:hover {
+    background-color: var(--bg-dark);
+}

@@ -6,7 +6,9 @@ import (
 )
 
 templ Friend(friends []entities.GetFriendsByUserRow) {
-	@Head()
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/friends.css"/>
+	}
 	@Header()
 	<div class="main-container">
 		<div id="friend-container">

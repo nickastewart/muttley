@@ -1,0 +1,43 @@
+/* Leaderboard */
+
+#leaderboard-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 40px;
+}
+
+.leaderboard-list {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#leaderboard-table {
+    border-collapse: collapse;
+    width: 100%;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+#leaderboard-table thead {
+    background-color: var(--bg-light);
+    color: var(--text);
+}
+
+#leaderboard-table tr {
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+.leaderboard-header-cell {
+    padding: 10px;
+    text-align: center;
+    border: none;
+}
+
+.leaderboard-cell {
+    padding: 10px;
+    text-align: center;
+    border: none;
+}

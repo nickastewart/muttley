@@ -13,7 +13,9 @@ func formatTime(time int64) string {
 }
 
 templ Leaderboard(events []entities.GetEventsByUserRow) {
-	@Head()
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/leaderboard.css"/>
+	}
 	@Header()
 	<div class="main-container">
 		<div id="leaderboard-container">

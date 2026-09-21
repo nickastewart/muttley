@@ -33,11 +33,29 @@ func Signup() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Head().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<link rel=\"stylesheet\" type=\"text/css\" href=\"/styles/auth.css\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = Head().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body><div id=\"auth-page\"><div class=\"auth-card\"><div class=\"auth-card-title\"><span>Create Account</span></div><form id=\"auth-form\" name=\"signup\" action=\"/signup\" method=\"POST\"><div class=\"auth-field-row\"><div class=\"auth-field\"><label for=\"first-name\">First Name</label> <input id=\"first-name\" type=\"text\" name=\"first-name\"></div><div class=\"auth-field\"><label for=\"last-name\">Last Name</label> <input id=\"last-name\" type=\"text\" name=\"last-name\"></div></div><div class=\"auth-field\"><label for=\"display-name\">Display Name</label> <input id=\"display-name\" type=\"text\" name=\"display-name\"></div><div class=\"auth-field\"><label for=\"email\">Email</label> <input id=\"email\" type=\"email\" name=\"email\"></div><div class=\"auth-field\"><label for=\"email-confirm\">Confirm Email</label> <input id=\"email-confirm\" type=\"email\" name=\"email-confirm\"></div><div class=\"auth-field\"><label for=\"password\">Password</label> <input id=\"password\" type=\"password\" name=\"password\"></div><div class=\"auth-field\"><label for=\"password-confirm\">Confirm Password</label> <input id=\"password-confirm\" type=\"password\" name=\"password-confirm\"></div><input class=\"auth-submit\" type=\"submit\" value=\"Sign up\"></form><div class=\"auth-links\">Already have an account? <a href=\"/login\">Log in</a></div></div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<body><div id=\"auth-page\"><div class=\"auth-card\"><div class=\"auth-card-title\"><span>Create Account</span></div><form id=\"auth-form\" name=\"signup\" action=\"/signup\" method=\"POST\"><div class=\"auth-field-row\"><div class=\"auth-field\"><label for=\"first-name\">First Name</label> <input id=\"first-name\" type=\"text\" name=\"first-name\"></div><div class=\"auth-field\"><label for=\"last-name\">Last Name</label> <input id=\"last-name\" type=\"text\" name=\"last-name\"></div></div><div class=\"auth-field\"><label for=\"display-name\">Display Name</label> <input id=\"display-name\" type=\"text\" name=\"display-name\"></div><div class=\"auth-field\"><label for=\"email\">Email</label> <input id=\"email\" type=\"email\" name=\"email\"></div><div class=\"auth-field\"><label for=\"email-confirm\">Confirm Email</label> <input id=\"email-confirm\" type=\"email\" name=\"email-confirm\"></div><div class=\"auth-field\"><label for=\"password\">Password</label> <input id=\"password\" type=\"password\" name=\"password\"></div><div class=\"auth-field\"><label for=\"password-confirm\">Confirm Password</label> <input id=\"password-confirm\" type=\"password\" name=\"password-confirm\"></div><input class=\"auth-submit\" type=\"submit\" value=\"Sign up\"></form><div class=\"auth-links\">Already have an account? <a href=\"/login\">Log in</a></div></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

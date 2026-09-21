@@ -50,3 +50,17 @@ func (r *UserRepositorySqlite) ResetPassword(ctx context.Context, params entitie
 	err := r.queries.ResetPassword(ctx, params)
 	return err
 }
+
+func (r *UserRepositorySqlite) UpdateUser(ctx context.Context, params entities.UpdateUserParams) error {
+	return r.queries.UpdateUser(ctx, params)
+}
+
+func (r *UserRepositorySqlite) DeleteUser(ctx context.Context, id int64) error {
+	if err := r.queries.DeleteEventResultsByUserId(ctx, id); err != nil {
+		return err
+	}
+	if err := r.queries.DeleteFriendsByUserId(ctx, id); err != nil {
+		return err
+	}
+	return r.queries.DeleteUser(ctx, id)
+}

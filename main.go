@@ -36,6 +36,7 @@ func main() {
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 
 	authHandler := auth.NewAuthHandler(userRepository)
+	userHandler := user.NewUserHandler(userRepository)
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)
@@ -79,6 +80,10 @@ func main() {
 
 	router.POST("/remove-friend", authHandler.CheckAccessToken, friendHandler.RemoveFriend)
 	router.POST("/add-friend", authHandler.CheckAccessToken, friendHandler.AddFriend)
+
+	router.GET("/account", authHandler.CheckAccessToken, userHandler.Account)
+	router.POST("/account", authHandler.CheckAccessToken, userHandler.UpdateAccount)
+	router.POST("/account/delete", authHandler.CheckAccessToken, userHandler.DeleteAccount)
 
 	router.Run()
 }

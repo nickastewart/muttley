@@ -159,6 +159,33 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const deleteEventResultsByUserId = `-- name: DeleteEventResultsByUserId :exec
+DELETE FROM event_result WHERE user_id = ?
+`
+
+func (q *Queries) DeleteEventResultsByUserId(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteEventResultsByUserId, userID)
+	return err
+}
+
+const deleteFriendsByUserId = `-- name: DeleteFriendsByUserId :exec
+DELETE FROM friend WHERE user_id = ?1 OR friend_id = ?1
+`
+
+func (q *Queries) DeleteFriendsByUserId(ctx context.Context, userid int64) error {
+	_, err := q.db.ExecContext(ctx, deleteFriendsByUserId, userid)
+	return err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM user WHERE id = ?
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
 const getBestTrack = `-- name: GetBestTrack :one
 WITH location_stats AS (
     SELECT 
@@ -609,16 +636,17 @@ func (q *Queries) GetUserByEmailForLogin(ctx context.Context, email string) (Get
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, first_name, last_name, email, profile_id, created_at FROM user WHERE id = ?
+SELECT id, first_name, last_name, email, profile_id, display_name, created_at FROM user WHERE id = ?
 `
 
 type GetUserByIdRow struct {
-	ID        int64
-	FirstName string
-	LastName  string
-	Email     string
-	ProfileID string
-	CreatedAt sql.NullString
+	ID          int64
+	FirstName   string
+	LastName    string
+	Email       string
+	ProfileID   string
+	DisplayName string
+	CreatedAt   sql.NullString
 }
 
 func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
@@ -630,6 +658,7 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 		&i.LastName,
 		&i.Email,
 		&i.ProfileID,
+		&i.DisplayName,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -793,4 +822,27 @@ func (q *Queries) UpdateFriendStatus(ctx context.Context, arg UpdateFriendStatus
 		&i.RowVersion,
 	)
 	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE user SET first_name = ?, last_name = ?, email = ?, display_name = ? WHERE id = ?
+`
+
+type UpdateUserParams struct {
+	FirstName   string
+	LastName    string
+	Email       string
+	DisplayName string
+	ID          int64
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser,
+		arg.FirstName,
+		arg.LastName,
+		arg.Email,
+		arg.DisplayName,
+		arg.ID,
+	)
+	return err
 }

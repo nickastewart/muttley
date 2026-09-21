@@ -13,4 +13,6 @@ type UserRepository interface {
 	GetUsersBySearchTerm(ctx context.Context, params entities.GetUsersBySearchTermParams) ([]entities.GetUsersBySearchTermRow, error)
 	GetUserIdByProfileId(ctx context.Context, profileId string) (int64, error)
 	ResetPassword(ctx context.Context, params entities.ResetPasswordParams) error
+	UpdateUser(ctx context.Context, params entities.UpdateUserParams) error
+	DeleteUser(ctx context.Context, id int64) error
 }

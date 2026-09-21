@@ -1,12 +1,24 @@
 -- name: GetUserById :one
-SELECT id, first_name, last_name, email, profile_id, created_at FROM user WHERE id = ?;
+SELECT id, first_name, last_name, email, profile_id, display_name, created_at FROM user WHERE id = ?;
 
 -- name: CreateUser :one
 INSERT INTO user (first_name, last_name, email, password, profile_id, display_name) VALUES (?, ?, ?, ?, ?, ?)
     RETURNING first_name, last_name, email, profile_id, display_name, created_at;
 
 -- name: ResetPassword :exec 
-UPDATE user SET password = ? WHERE email = ?; 
+UPDATE user SET password = ? WHERE email = ?;
+
+-- name: UpdateUser :exec
+UPDATE user SET first_name = ?, last_name = ?, email = ?, display_name = ? WHERE id = ?;
+
+-- name: DeleteEventResultsByUserId :exec
+DELETE FROM event_result WHERE user_id = ?;
+
+-- name: DeleteFriendsByUserId :exec
+DELETE FROM friend WHERE user_id = sqlc.arg(userId) OR friend_id = sqlc.arg(userId);
+
+-- name: DeleteUser :exec
+DELETE FROM user WHERE id = ?; 
 
 -- name: GetUserByEmail :one
 SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?;

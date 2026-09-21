@@ -54,6 +54,8 @@ github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdh
 github.com/ncruces/go-strftime v0.1.9/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
 github.com/nickastewart/muttley-parser v0.0.0-20260504142442-7be88cd01193 h1:BXFwzvNlZ8M9+ddfAtwbgTgcut7aGxrL7QlUOV5D288=
 github.com/nickastewart/muttley-parser v0.0.0-20260504142442-7be88cd01193/go.mod h1:C3mFJa+cuvcNgoaIYUSK56HI1cMzctV5bE2N84tCq7w=
+github.com/nickastewart/muttley-parser v0.0.0-20260921210531-1c24e8a66602 h1:vfv2royKf/8yEbzPVUB8XBltycOgjvG+YoJTGVmHXE0=
+github.com/nickastewart/muttley-parser v0.0.0-20260921210531-1c24e8a66602/go.mod h1:C3mFJa+cuvcNgoaIYUSK56HI1cMzctV5bE2N84tCq7w=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

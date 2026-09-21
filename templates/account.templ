@@ -1,0 +1,60 @@
+package templates
+
+import "muttley/sqlite/entities"
+
+templ Account(user entities.GetUserByIdRow, success string, errMsg string) {
+	@Head()
+	@Header()
+	<div class="main-container">
+		<div id="account-container">
+			<div class="account-card">
+				<div class="account-card-title"><span>Account</span></div>
+				if errMsg != "" {
+					<div class="account-notice">
+						<div class="account-notice-title">Error</div>
+						<div class="account-notice-message">{ errMsg }</div>
+					</div>
+				}
+				if success != "" {
+					<div class="account-notice">
+						<div class="account-notice-title">Saved</div>
+						<div class="account-notice-message">{ success }</div>
+					</div>
+				}
+				<form id="account-form" method="post" action="/account">
+					<div class="account-field-row">
+						<div class="account-field">
+							<label for="first-name">First Name</label>
+							<input id="first-name" type="text" name="first-name" value={ user.FirstName }/>
+						</div>
+						<div class="account-field">
+							<label for="last-name">Last Name</label>
+							<input id="last-name" type="text" name="last-name" value={ user.LastName }/>
+						</div>
+					</div>
+					<div class="account-field">
+						<label for="display-name">Display Name</label>
+						<input id="display-name" type="text" name="display-name" value={ user.DisplayName }/>
+					</div>
+					<div class="account-field">
+						<label for="email">Email</label>
+						<input id="email" type="email" name="email" value={ user.Email }/>
+					</div>
+					<input id="account-submit" type="submit" value="Save changes"/>
+				</form>
+			</div>
+			<div class="account-card">
+				<div class="account-card-title"><span>Delete account</span></div>
+				<p class="account-delete-copy">This permanently removes your account, friends, and uploaded results.</p>
+				<form id="account-delete-form" method="post" action="/account/delete">
+					<button
+						id="account-delete-submit"
+						type="submit"
+						hx-post="/account/delete"
+						hx-confirm="This will permanently delete your account, friends, and uploaded results. Continue?"
+					>Delete account</button>
+				</form>
+			</div>
+		</div>
+	</div>
+}

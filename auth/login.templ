@@ -5,7 +5,9 @@ import "muttley/templates"
 templ Login(err *AuthError) {
 	<!DOCTYPE html>
 	<html>
-		@templates.Head()
+		@templates.Head() {
+			<link rel="stylesheet" type="text/css" href="/styles/auth.css"/>
+		}
 		<body>
 			<div id="auth-page">
 				<div class="auth-card">

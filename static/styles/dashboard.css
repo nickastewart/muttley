@@ -1,0 +1,133 @@
+/* Dashboard */
+
+.dashboard{
+    padding-right:20px;
+    width:100%;
+    box-sizing: border-box;
+}
+
+.dashboard-row{
+    margin-bottom: 20px;
+}
+
+.dashboard-row-flex {
+    display: inline-flex;
+}
+
+.dashboard-top-row {
+    width:100%;
+}
+
+.dashboard-top-row-item-half-flex {
+    flex:0.5;
+}
+
+.dashboard-top-row-item-one-flex {
+    flex:0.75;
+}
+
+.dashboard-top-row-item {
+    display: inline-block;
+    vertical-align: top;
+    width: 150px;
+    height: 110px;
+    background-color: var(--bg);
+    margin-right: 25px;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid var(--border);
+}
+
+.dashboard-top-row-item-title {
+    padding: 10px;
+    margin-bottom:10px;
+    font-weight:bold;
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-top-row-item-content {
+    text-align:center;
+    padding: 10px;
+    padding-bottom: 20px;
+    font-size: 2em;
+    display: inline-block;
+    vertical-align: top;
+    width: 90%;
+}
+
+.dashboard-top-row-item-content span {
+    width: 45%;
+    display: inline-block;
+}
+
+.dashboard-top-row-item-content-best-track {
+    display: block;
+    font-size: 1em;
+}
+
+.dashboard-top-row-item-percentage {
+    font-size: 0.65em;
+}
+
+.dashboard-list{
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+#dashboard-table {
+    border-collapse: collapse;
+    width:100%;
+    border-radius:7px;
+    overflow: hidden;
+}
+
+#dashboard-table thead {
+    background-color: var(--bg-light);
+    color: var(--text);
+}
+
+#dashboard-table tr {
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border)
+}
+
+.dashboard-header-cell {
+    padding: 10px;
+    text-align:center;
+    border: none;
+}
+
+.dashboard-cell {
+    padding: 10px;
+    text-align:center;
+    border: none;
+}
+#dashboard-track-count-bar-chart-container,
+#dashboard-position-line-chart-container {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    height: 220px;
+    margin-right: 25px;
+    padding: 10px;
+    background-color: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#dashboard-position-line-chart-container {
+    margin-right: 0;
+}
+
+.dashboard-chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#dashboard-track-count-bar-chart-container canvas,
+#dashboard-position-line-chart-container canvas {
+    display: block;
+}

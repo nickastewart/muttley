@@ -3,7 +3,9 @@ package templates
 templ Signup() {
 	<!DOCTYPE html>
 	<html>
-		@Head()
+		@Head() {
+			<link rel="stylesheet" type="text/css" href="/styles/auth.css"/>
+		}
 		<body>
 			<div id="auth-page">
 				<div class="auth-card">

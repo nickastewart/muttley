@@ -1,7 +1,9 @@
 package templates
 
 templ UploadFile() {
-	@Head()
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/upload.css"/>
+	}
 	@Header()
 	<div class="main-container">
 		<div id="upload-file-container">

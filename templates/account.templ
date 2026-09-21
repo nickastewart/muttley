@@ -3,7 +3,9 @@ package templates
 import "muttley/sqlite/entities"
 
 templ Account(user entities.GetUserByIdRow, success string, errMsg string) {
-	@Head()
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/account.css"/>
+	}
 	@Header()
 	<div class="main-container">
 		<div id="account-container">

@@ -7,6 +7,7 @@ import (
 	"muttley/event"
 	"muttley/eventresult"
 	"muttley/location"
+	"muttley/sqlite"
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"muttley/user"
@@ -24,17 +25,20 @@ type FileUploadHandler struct {
 	LocationRepository     location.LocationRepository
 	EventRepository        event.EventRepository
 	EventResultRespository eventresult.EventResultRepository
+	transactor             *sqlite.Transactor
 }
 
 func NewFileUploadHandler(userRepository user.UserRepository,
 	eventRepository event.EventRepository,
 	locationRepository location.LocationRepository,
-	eventResultRespository eventresult.EventResultRepository) *FileUploadHandler {
+	eventResultRespository eventresult.EventResultRepository,
+	transactor *sqlite.Transactor) *FileUploadHandler {
 	return &FileUploadHandler{
 		UserRepository:         userRepository,
 		EventRepository:        eventRepository,
 		LocationRepository:     locationRepository,
 		EventResultRespository: eventResultRespository,
+		transactor:             transactor,
 	}
 }
 
@@ -77,31 +81,42 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 		return
 	}
 
-	locationEntity, err := handler.processLocation(ctx, event)
-
+	eventResultEntity, err := handler.saveEvent(ctx, user, event)
 	if err != nil {
-		log.Println("Failed to process location " + err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	eventEntity, err := handler.processEvent(ctx, event, &locationEntity)
-	if err != nil {
-		log.Println("Failed to process event " + err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	driverTime := event.DriverTimes[event.DriverInfo.Position-1]
-	eventResultEntity, err := handler.processEventResult(ctx, user, &driverTime, &eventEntity)
-
-	if err != nil {
-		log.Println("Failed to process event result " + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"result": eventResultEntity})
+}
+
+// saveEvent writes the location, event, and result together. If a later step
+// fails, the earlier inserts from this upload are rolled back. A location or
+// event that already existed is left in place.
+func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.EventResult, error) {
+	var saved entities.EventResult
+	err := handler.transactor.Within(ctx, func(ctx context.Context) error {
+		locationEntity, err := handler.processLocation(ctx, parsed)
+		if err != nil {
+			log.Println("Failed to process location " + err.Error())
+			return err
+		}
+
+		eventEntity, err := handler.processEvent(ctx, parsed, &locationEntity)
+		if err != nil {
+			log.Println("Failed to process event " + err.Error())
+			return err
+		}
+
+		driverTime := parsed.DriverTimes[parsed.DriverInfo.Position-1]
+		saved, err = handler.processEventResult(ctx, currentUser, &driverTime, &eventEntity)
+		if err != nil {
+			log.Println("Failed to process event result " + err.Error())
+			return err
+		}
+		return nil
+	})
+	return saved, err
 }
 
 func (handler *FileUploadHandler) processLocation(ctx context.Context, event *model.Event) (entities.Location, error) {

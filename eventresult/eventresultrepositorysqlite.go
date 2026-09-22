@@ -3,6 +3,7 @@ package eventresult
 import (
 	"context"
 	"log/slog"
+	"muttley/sqlite"
 	"muttley/sqlite/entities"
 )
 
@@ -16,8 +17,12 @@ func NewEventResultRepository(queries *entities.Queries) *EventResultRepositoryS
 	}
 }
 
+func (r *EventResultRepositorySqlite) q(ctx context.Context) *entities.Queries {
+	return sqlite.Queries(ctx, r.queries)
+}
+
 func (r *EventResultRepositorySqlite) CreateEventResult(ctx context.Context, arg entities.CreateEventResultParams) (entities.EventResult, error) {
-	savedEntity, err := r.queries.CreateEventResult(ctx, arg)
+	savedEntity, err := r.q(ctx).CreateEventResult(ctx, arg)
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -25,7 +30,7 @@ func (r *EventResultRepositorySqlite) CreateEventResult(ctx context.Context, arg
 }
 
 func (r *EventResultRepositorySqlite) GetEventResultByEventIdAndUserId(ctx context.Context, arg entities.GetEventResultByEventIdAndUserIdParams) (entities.EventResult, error) {
-	eventResult, err := r.queries.GetEventResultByEventIdAndUserId(ctx, arg)
+	eventResult, err := r.q(ctx).GetEventResultByEventIdAndUserId(ctx, arg)
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -33,7 +38,7 @@ func (r *EventResultRepositorySqlite) GetEventResultByEventIdAndUserId(ctx conte
 }
 
 func (r *EventResultRepositorySqlite) GetUserFriendsResults(ctx context.Context, userId int64) ([]entities.GetUserFriendsResultsRow, error) {
-	results, err := r.queries.GetUserFriendsResults(ctx, userId)
+	results, err := r.q(ctx).GetUserFriendsResults(ctx, userId)
 	if err != nil {
 		slog.Error(err.Error())
 	}

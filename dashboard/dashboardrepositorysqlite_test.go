@@ -145,7 +145,7 @@ func TestGetRecentPositions(t *testing.T) {
 
 func createUser(t *testing.T, db *sql.DB, firstName, email, profileID string) entities.GetUserByIdRow {
 	t.Helper()
-	repo := user.NewUserRepository(entities.New(db))
+	repo := user.NewUserRepository(db)
 	ctx := context.Background()
 	if _, err := repo.CreateUser(ctx, entities.CreateUserParams{
 		FirstName:   firstName,

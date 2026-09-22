@@ -3,6 +3,7 @@ package location
 import (
 	"context"
 	"log/slog"
+	"muttley/sqlite"
 	"muttley/sqlite/entities"
 )
 
@@ -16,8 +17,12 @@ func NewLocationRepository(queries *entities.Queries) *LocationRepositorySqlite 
 	}
 }
 
+func (r *LocationRepositorySqlite) q(ctx context.Context) *entities.Queries {
+	return sqlite.Queries(ctx, r.queries)
+}
+
 func (r *LocationRepositorySqlite) CreateLocation(ctx context.Context, name string) (entities.Location, error) {
-	location, err := r.queries.CreateLocation(ctx, name)
+	location, err := r.q(ctx).CreateLocation(ctx, name)
 
 	if err != nil {
 		slog.Error(err.Error())
@@ -27,7 +32,7 @@ func (r *LocationRepositorySqlite) CreateLocation(ctx context.Context, name stri
 }
 
 func (r *LocationRepositorySqlite) GetLocationByName(ctx context.Context, name string) (entities.Location, error) {
-	location, err := r.queries.GetLocationByName(ctx, name)
+	location, err := r.q(ctx).GetLocationByName(ctx, name)
 
 	if err != nil {
 		slog.Error(err.Error())

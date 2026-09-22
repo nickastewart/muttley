@@ -11,6 +11,7 @@ import (
 	"muttley/fileupload"
 	"muttley/friend"
 	"muttley/location"
+	"muttley/sqlite"
 	"muttley/sqlite/entities"
 	"muttley/templates"
 	"muttley/user"
@@ -28,7 +29,7 @@ func main() {
 	defer db.Close()
 
 	queries := entities.New(db)
-	var userRepository user.UserRepository = user.NewUserRepository(queries)
+	var userRepository user.UserRepository = user.NewUserRepository(db)
 	var locationRepository location.LocationRepository = location.NewLocationRepository(queries)
 	var eventRepository event.EventRepository = event.NewEventRepository(queries)
 	var eventResultRepository eventresult.EventResultRepository = eventresult.NewEventResultRepository(queries)
@@ -37,7 +38,7 @@ func main() {
 
 	authHandler := auth.NewAuthHandler(userRepository)
 	userHandler := user.NewUserHandler(userRepository)
-	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository)
+	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)
 	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository)

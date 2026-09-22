@@ -3,6 +3,7 @@ package event
 import (
 	"context"
 	"log/slog"
+	"muttley/sqlite"
 	"muttley/sqlite/entities"
 )
 
@@ -16,8 +17,12 @@ func NewEventRepository(queries *entities.Queries) *EventRepositorySqlite {
 	}
 }
 
+func (r *EventRepositorySqlite) q(ctx context.Context) *entities.Queries {
+	return sqlite.Queries(ctx, r.queries)
+}
+
 func (r *EventRepositorySqlite) CreateEvent(ctx context.Context, arg entities.CreateEventParams) (entities.Event, error) {
-	event, err := r.queries.CreateEvent(ctx, arg)
+	event, err := r.q(ctx).CreateEvent(ctx, arg)
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -26,7 +31,7 @@ func (r *EventRepositorySqlite) CreateEvent(ctx context.Context, arg entities.Cr
 }
 
 func (r *EventRepositorySqlite) GetEventByLocationAndTypeAndDate(ctx context.Context, arg entities.GetEventByLocationAndTypeAndDateParams) (entities.Event, error) {
-	event, err := r.queries.GetEventByLocationAndTypeAndDate(ctx, arg)
+	event, err := r.q(ctx).GetEventByLocationAndTypeAndDate(ctx, arg)
 
 	if err != nil {
 		slog.Error(err.Error())
@@ -36,7 +41,7 @@ func (r *EventRepositorySqlite) GetEventByLocationAndTypeAndDate(ctx context.Con
 }
 
 func (r *EventRepositorySqlite) GetEventsByUser(ctx context.Context, userID []int64) ([]entities.GetEventsByUserRow, error) {
-	events, err := r.queries.GetEventsByUser(ctx, userID)
+	events, err := r.q(ctx).GetEventsByUser(ctx, userID)
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -44,7 +49,7 @@ func (r *EventRepositorySqlite) GetEventsByUser(ctx context.Context, userID []in
 }
 
 func (r *EventRepositorySqlite) GetRecentEvents(ctx context.Context, userId int64) ([]entities.GetRecentEventsRow, error) {
-	events, err := r.queries.GetRecentEvents(ctx, userId)
+	events, err := r.q(ctx).GetRecentEvents(ctx, userId)
 	if err != nil {
 		slog.Error(err.Error())
 	}

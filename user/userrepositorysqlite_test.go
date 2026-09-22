@@ -127,7 +127,7 @@ func TestResetPassword(t *testing.T) {
 
 func TestSearchUsersByName(t *testing.T) {
 	db := testdb.Open(t)
-	repo := user.NewUserRepository(entities.New(db))
+	repo := user.NewUserRepository(db)
 	friends := friend.NewFriendRepository(entities.New(db))
 	ctx := context.Background()
 
@@ -181,7 +181,7 @@ func TestSearchUsersByName(t *testing.T) {
 func TestDeleteUserRemovesResultsAndFriendships(t *testing.T) {
 	db := testdb.Open(t)
 	ctx := context.Background()
-	users := user.NewUserRepository(entities.New(db))
+	users := user.NewUserRepository(db)
 	locations := location.NewLocationRepository(entities.New(db))
 	events := event.NewEventRepository(entities.New(db))
 	results := eventresult.NewEventResultRepository(entities.New(db))
@@ -291,6 +291,80 @@ func TestDeleteUserRemovesResultsAndFriendships(t *testing.T) {
 	}
 }
 
+func TestDeleteUserRollsBackWhenUserDeleteFails(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	users := user.NewUserRepository(db)
+	locations := location.NewLocationRepository(entities.New(db))
+	events := event.NewEventRepository(entities.New(db))
+	results := eventresult.NewEventResultRepository(entities.New(db))
+	friends := friend.NewFriendRepository(entities.New(db))
+
+	owner := createUser(t, users, "Ada", "Lovelace", "ada@example.com", "ada")
+	other := createUser(t, users, "Grace", "Hopper", "grace@example.com", "grace")
+
+	track, err := locations.CreateLocation(ctx, "Whilton Mill")
+	if err != nil {
+		t.Fatalf("create location: %v", err)
+	}
+	race, err := events.CreateEvent(ctx, entities.CreateEventParams{
+		LocationID:   track.ID,
+		Type:         "Rental",
+		Date:         "2024-06-01",
+		TotalDrivers: 8,
+	})
+	if err != nil {
+		t.Fatalf("create event: %v", err)
+	}
+	if _, err := results.CreateEventResult(ctx, entities.CreateEventResultParams{
+		EventID:        race.ID,
+		UserID:         owner.ID,
+		BestLapTime:    45000,
+		AverageLapTime: 47000,
+		Position:       1,
+		NumberOfLaps:   10,
+	}); err != nil {
+		t.Fatalf("create result: %v", err)
+	}
+	if _, err := friends.AddFriend(ctx, entities.AddFriendParams{
+		UserID:       owner.ID,
+		FriendID:     other.ID,
+		FriendStatus: "ACCEPTED",
+	}); err != nil {
+		t.Fatalf("add friend: %v", err)
+	}
+
+	// The user delete is the last statement. Forcing it to fail must restore
+	// the result and friendship deleted earlier in the same transaction.
+	if _, err := db.Exec(`
+		CREATE TRIGGER fail_user_delete BEFORE DELETE ON user
+		BEGIN
+			SELECT RAISE(ABORT, 'forced failure');
+		END`); err != nil {
+		t.Fatalf("create trigger: %v", err)
+	}
+
+	if err := users.DeleteUser(ctx, owner.ID); err == nil {
+		t.Fatal("expected delete to fail")
+	}
+
+	if _, err := users.GetUserById(ctx, owner.ID); err != nil {
+		t.Fatalf("user was removed: %v", err)
+	}
+	if _, err := results.GetEventResultByEventIdAndUserId(ctx, entities.GetEventResultByEventIdAndUserIdParams{
+		EventID: race.ID,
+		UserID:  owner.ID,
+	}); err != nil {
+		t.Fatalf("result was removed: %v", err)
+	}
+	if _, err := friends.GetFriendByUserIdAndFriendId(ctx, entities.GetFriendByUserIdAndFriendIdParams{
+		Userid:   owner.ID,
+		Friendid: other.ID,
+	}); err != nil {
+		t.Fatalf("friendship was removed: %v", err)
+	}
+}
+
 func TestGetMissingUser(t *testing.T) {
 	repo := newUserRepo(t)
 	ctx := context.Background()
@@ -315,7 +389,7 @@ func TestGetMissingUser(t *testing.T) {
 
 func newUserRepo(t *testing.T) user.UserRepository {
 	t.Helper()
-	return user.NewUserRepository(entities.New(testdb.Open(t)))
+	return user.NewUserRepository(testdb.Open(t))
 }
 
 func createUser(t *testing.T, repo user.UserRepository, firstName, lastName, email, profileID string) entities.GetUserByIdRow {

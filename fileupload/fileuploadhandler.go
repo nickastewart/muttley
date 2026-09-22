@@ -25,7 +25,7 @@ type FileUploadHandler struct {
 	LocationRepository     location.LocationRepository
 	EventRepository        event.EventRepository
 	EventResultRespository eventresult.EventResultRepository
-	transactor             *sqlite.Transactor
+	Transactor             *sqlite.Transactor
 }
 
 func NewFileUploadHandler(userRepository user.UserRepository,
@@ -38,7 +38,7 @@ func NewFileUploadHandler(userRepository user.UserRepository,
 		EventRepository:        eventRepository,
 		LocationRepository:     locationRepository,
 		EventResultRespository: eventResultRespository,
-		transactor:             transactor,
+		Transactor:             transactor,
 	}
 }
 
@@ -95,7 +95,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 // event that already existed is left in place.
 func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.EventResult, error) {
 	var saved entities.EventResult
-	err := handler.transactor.Within(ctx, func(ctx context.Context) error {
+	err := handler.Transactor.Within(ctx, func(ctx context.Context) error {
 		locationEntity, err := handler.processLocation(ctx, parsed)
 		if err != nil {
 			log.Println("Failed to process location " + err.Error())

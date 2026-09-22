@@ -334,8 +334,6 @@ func TestDeleteUserRollsBackWhenUserDeleteFails(t *testing.T) {
 		t.Fatalf("add friend: %v", err)
 	}
 
-	// The user delete is the last statement. Forcing it to fail must restore
-	// the result and friendship deleted earlier in the same transaction.
 	if _, err := db.Exec(`
 		CREATE TRIGGER fail_user_delete BEFORE DELETE ON user
 		BEGIN

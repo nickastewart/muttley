@@ -63,8 +63,6 @@ func (r *UserRepositorySqlite) UpdateUser(ctx context.Context, params entities.U
 	return r.q(ctx).UpdateUser(ctx, params)
 }
 
-// DeleteUser removes the user's results, friendships, and account in one
-// transaction. A failure on any step puts the earlier deletes back.
 func (r *UserRepositorySqlite) DeleteUser(ctx context.Context, id int64) error {
 	return r.transactor.Within(ctx, func(ctx context.Context) error {
 		q := r.q(ctx)

@@ -90,9 +90,6 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"result": eventResultEntity})
 }
 
-// saveEvent writes the location, event, and result together. If a later step
-// fails, the earlier inserts from this upload are rolled back. A location or
-// event that already existed is left in place.
 func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.EventResult, error) {
 	var saved entities.EventResult
 	err := handler.Transactor.Within(ctx, func(ctx context.Context) error {

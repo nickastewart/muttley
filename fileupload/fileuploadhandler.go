@@ -87,7 +87,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"result": eventResultEntity})
+	c.HTML(http.StatusOK, "", templates.UploadSuccess(locationEntity, eventEntity, eventResultEntity))
 }
 
 func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.EventResult, error) {

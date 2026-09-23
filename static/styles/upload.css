@@ -87,3 +87,53 @@
 #file-upload-submit:hover {
     background-color: var(--bg-dark);
 }
+
+.upload-success-copy {
+    margin: 0 10px 16px;
+    color: var(--text);
+}
+
+.upload-success-details {
+    margin: 0 10px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.upload-success-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px;
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+.upload-success-row:last-child {
+    border-bottom: none;
+}
+
+.upload-success-row dt {
+    margin: 0;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.upload-success-row dd {
+    margin: 0;
+    text-align: right;
+    color: var(--text);
+}
+
+@media (max-width: 520px) {
+    .upload-success-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .upload-success-row dd {
+        text-align: left;
+    }
+}

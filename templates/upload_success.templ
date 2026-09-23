@@ -1,0 +1,48 @@
+package templates
+
+import "muttley/sqlite/entities"
+
+templ UploadSuccess(location entities.Location, event entities.Event, result entities.EventResult) {
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/upload.css"/>
+	}
+	@Header()
+	<div class="main-container">
+		<div id="upload-file-container">
+			<div class="upload-file-card">
+				<div class="upload-file-card-title"><span>Upload successful</span></div>
+				<p class="upload-success-copy">Your result was saved.</p>
+				<dl class="upload-success-details">
+					<div class="upload-success-row">
+						<dt>Date</dt>
+						<dd>{ event.Date }</dd>
+					</div>
+					<div class="upload-success-row">
+						<dt>Location</dt>
+						<dd>{ location.Name }</dd>
+					</div>
+					<div class="upload-success-row">
+						<dt>Event Type</dt>
+						<dd>{ event.Type }</dd>
+					</div>
+					<div class="upload-success-row">
+						<dt>Best Lap Time</dt>
+						<dd>{ formatTime(result.BestLapTime) }</dd>
+					</div>
+					<div class="upload-success-row">
+						<dt>Average Lap Time</dt>
+						<dd>{ formatTime(result.AverageLapTime) }</dd>
+					</div>
+					<div class="upload-success-row">
+						<dt>Position</dt>
+						<dd>{ result.Position }</dd>
+					</div>
+					<div class="upload-success-row">
+						<dt>Number Of Laps</dt>
+						<dd>{ result.NumberOfLaps }</dd>
+					</div>
+				</dl>
+			</div>
+		</div>
+	</div>
+}

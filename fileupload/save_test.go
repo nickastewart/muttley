@@ -23,7 +23,7 @@ func TestSaveEventCommitsLocationEventAndResult(t *testing.T) {
 	currentUser := createUploadUser(t, db)
 	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
 
-	saved, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
+	_, _, saved, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
 	if err != nil {
 		t.Fatalf("save event: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestSaveEventCommitsLocationEventAndResult(t *testing.T) {
 		t.Fatalf("results = %d, want 1", got)
 	}
 
-	again, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
+	_, _, again, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
 	if err != nil {
 		t.Fatalf("save event again: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestSaveEventRollsBackNewLocationAndEvent(t *testing.T) {
 	db := testdb.Open(t)
 	handler := newUploadHandler(db, failingResults{})
 
-	_, err := handler.saveEvent(context.Background(), entities.GetUserByIdRow{ID: 1}, parsedEvent("New Track"))
+	_, _, _, err := handler.saveEvent(context.Background(), entities.GetUserByIdRow{ID: 1}, parsedEvent("New Track"))
 	if err == nil {
 		t.Fatal("expected save to fail")
 	}
@@ -85,7 +85,7 @@ func TestSaveEventKeepsExistingLocationWhenResultFails(t *testing.T) {
 	}
 	handler := newUploadHandler(db, failingResults{})
 
-	_, err := handler.saveEvent(ctx, entities.GetUserByIdRow{ID: 1}, parsedEvent("Whilton Mill"))
+	_, _, _, err := handler.saveEvent(ctx, entities.GetUserByIdRow{ID: 1}, parsedEvent("Whilton Mill"))
 	if err == nil {
 		t.Fatal("expected save to fail")
 	}

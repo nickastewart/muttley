@@ -81,7 +81,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 		return
 	}
 
-	eventResultEntity, err := handler.saveEvent(ctx, user, event)
+	locationEntity, eventEntity, eventResultEntity, err := handler.saveEvent(ctx, user, event)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -90,7 +90,9 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 	c.HTML(http.StatusOK, "", templates.UploadSuccess(locationEntity, eventEntity, eventResultEntity))
 }
 
-func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.EventResult, error) {
+func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.Location, entities.Event, entities.EventResult, error) {
+	var savedLocation entities.Location
+	var savedEvent entities.Event
 	var saved entities.EventResult
 	err := handler.Transactor.Within(ctx, func(ctx context.Context) error {
 		locationEntity, err := handler.processLocation(ctx, parsed)
@@ -106,14 +108,17 @@ func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser ent
 		}
 
 		driverTime := parsed.DriverTimes[parsed.DriverInfo.Position-1]
-		saved, err = handler.processEventResult(ctx, currentUser, &driverTime, &eventEntity)
+		savedResult, err := handler.processEventResult(ctx, currentUser, &driverTime, &eventEntity)
 		if err != nil {
 			log.Println("Failed to process event result " + err.Error())
 			return err
 		}
+		savedLocation = locationEntity
+		savedEvent = eventEntity
+		saved = savedResult
 		return nil
 	})
-	return saved, err
+	return savedLocation, savedEvent, saved, err
 }
 
 func (handler *FileUploadHandler) processLocation(ctx context.Context, event *model.Event) (entities.Location, error) {

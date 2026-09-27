@@ -1,0 +1,44 @@
+package templates
+
+import "muttley/sqlite/entities"
+
+templ HeadToHead(results []entities.GetHeadToHeadRow) {
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/headtohead.css"/>
+	}
+	@Header()
+	<div class="main-container">
+		<div id="head-to-head-container">
+			<div class="head-to-head-list">
+				<table id="head-to-head-table">
+					<thead>
+						<tr>
+							<th class="head-to-head-header-cell head-to-head-friend">Friend</th>
+							<th class="head-to-head-header-cell">Your wins</th>
+							<th class="head-to-head-header-cell">Their wins</th>
+							<th class="head-to-head-header-cell">Races</th>
+						</tr>
+					</thead>
+					<tbody>
+						if len(results) == 0 {
+							<tr class="head-to-head-row">
+								<td class="head-to-head-cell head-to-head-empty" colspan="4">No shared races with friends yet.</td>
+							</tr>
+						}
+						for _, result := range results {
+							<tr class="head-to-head-row">
+								<td class="head-to-head-cell head-to-head-friend">
+									<div class="head-to-head-name">{ result.DisplayName }</div>
+									<div class="head-to-head-subname">{ result.FirstName + " " + result.LastName }</div>
+								</td>
+								<td class="head-to-head-cell">{ result.UserWins }</td>
+								<td class="head-to-head-cell">{ result.FriendWins }</td>
+								<td class="head-to-head-cell">{ result.SharedRaces }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+}

@@ -6,7 +6,9 @@ import (
 	"muttley/sqlite/entities"
 	"muttley/user"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,12 +18,24 @@ import (
 )
 
 type AuthHandler struct {
-	UserRepository user.UserRepository
+	UserRepository      user.UserRepository
+	MagicLinkRepository MagicLinkRepository
+	Mailer              Mailer
+	BaseURL             string
 }
 
 func NewAuthHandler(userRepository user.UserRepository) *AuthHandler {
 	return &AuthHandler{
 		UserRepository: userRepository,
+	}
+}
+
+func NewAuthHandlerWithMagicLink(userRepository user.UserRepository, magicLinks MagicLinkRepository, mailer Mailer, baseURL string) *AuthHandler {
+	return &AuthHandler{
+		UserRepository:      userRepository,
+		MagicLinkRepository: magicLinks,
+		Mailer:              mailer,
+		BaseURL:             strings.TrimRight(baseURL, "/"),
 	}
 }
 
@@ -66,48 +80,27 @@ func generateProfileId(firstName string, lastName string) string {
 	return firstName + "-" + lastName + "-" + strconv.Itoa(randomInt)
 }
 
-func (handler *AuthHandler) LoginForm(c *gin.Context) {
-	ctx := context.Background()
-	var loginForm LoginForm
-
-	c.Bind(&loginForm)
-
-	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, loginForm.Email)
-
-	if userFound.ID == 0 {
-		loginErr := &AuthError{
-			Message: "Invalid username or password. Please try again.",
-			Type:    "Authentication",
-		}
-		c.HTML(http.StatusForbidden, "", Login(loginErr))
+func jwtSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "SECRET"
 	}
+	return []byte(secret)
+}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(loginForm.Password)); err != nil {
-		loginErr := &AuthError{
-			Message: "Invalid username or password. Please try again.",
-			Type:    "Authentication",
-		}
-		c.HTML(http.StatusForbidden, "", Login(loginErr))
-	}
-
+func (handler *AuthHandler) issueSession(c *gin.Context, userID int64) error {
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  userFound.ID,
+		"id":  userID,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	// TODO: Use a real secret from env variables for signing jwt
-	token, err := generateToken.SignedString([]byte("SECRET"))
-
+	token, err := generateToken.SignedString(jwtSecret())
 	if err != nil {
-		loginErr := &AuthError{
-			Message: "There was a technical error. Please try again.",
-			Type:    "Technical",
-		}
-		c.HTML(http.StatusBadRequest, "", Login(loginErr))
+		return err
 	}
 
 	cookieName := "access_token"
-	cookieMaxAge := 15 * 60
+	cookieMaxAge := 24 * 60 * 60
 	secure := false
 	sameSite := http.SameSiteLaxMode
 
@@ -123,13 +116,117 @@ func (handler *AuthHandler) LoginForm(c *gin.Context) {
 		Name:     cookieName,
 		Value:    token,
 		Path:     "/",
-		Expires:  time.Now().Add(15 * time.Minute),
+		Expires:  time.Now().Add(24 * time.Hour),
 		MaxAge:   cookieMaxAge,
 		HttpOnly: true,
 		Secure:   secure,
 		SameSite: sameSite,
 	}
 	http.SetCookie(c.Writer, cookie)
+	return nil
+}
+
+func (handler *AuthHandler) LoginForm(c *gin.Context) {
+	ctx := context.Background()
+	var loginForm LoginForm
+
+	c.Bind(&loginForm)
+
+	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, loginForm.Email)
+
+	if userFound.ID == 0 {
+		loginErr := &AuthError{
+			Message: "Invalid username or password. Please try again.",
+			Type:    "Authentication",
+		}
+		c.HTML(http.StatusForbidden, "", Login(loginErr))
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(loginForm.Password)); err != nil {
+		loginErr := &AuthError{
+			Message: "Invalid username or password. Please try again.",
+			Type:    "Authentication",
+		}
+		c.HTML(http.StatusForbidden, "", Login(loginErr))
+		return
+	}
+
+	if err := handler.issueSession(c, userFound.ID); err != nil {
+		loginErr := &AuthError{
+			Message: "There was a technical error. Please try again.",
+			Type:    "Technical",
+		}
+		c.HTML(http.StatusBadRequest, "", Login(loginErr))
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/")
+}
+
+func (handler *AuthHandler) RequestMagicLink(c *gin.Context) {
+	ctx := context.Background()
+	var form LoginForm
+	c.Bind(&form)
+
+	// Always show the same response so the form cannot be used to probe emails.
+	defer func() {
+		c.HTML(http.StatusOK, "", MagicLinkSent())
+	}()
+
+	if form.Email == "" || handler.MagicLinkRepository == nil || handler.Mailer == nil {
+		return
+	}
+
+	userFound, err := handler.UserRepository.GetUserByEmail(ctx, form.Email)
+	if err != nil || userFound.ID == 0 {
+		return
+	}
+
+	raw, hash, err := generateMagicToken()
+	if err != nil {
+		return
+	}
+
+	_ = handler.MagicLinkRepository.InvalidateUnusedForUser(ctx, userFound.ID)
+	if err := handler.MagicLinkRepository.Create(ctx, userFound.ID, hash, time.Now().Add(15*time.Minute)); err != nil {
+		return
+	}
+
+	baseURL := handler.BaseURL
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+	loginURL := fmt.Sprintf("%s/login/magic?token=%s", baseURL, raw)
+	_ = handler.Mailer.SendMagicLink(form.Email, loginURL)
+}
+
+func (handler *AuthHandler) ConsumeMagicLink(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" || handler.MagicLinkRepository == nil {
+		c.HTML(http.StatusForbidden, "", Login(&AuthError{
+			Type:    "Authentication",
+			Message: "That sign-in link is invalid or has expired. Please request a new one.",
+		}))
+		return
+	}
+
+	userID, err := handler.MagicLinkRepository.Consume(c.Request.Context(), hashMagicToken(token))
+	if err != nil {
+		c.HTML(http.StatusForbidden, "", Login(&AuthError{
+			Type:    "Authentication",
+			Message: "That sign-in link is invalid or has expired. Please request a new one.",
+		}))
+		return
+	}
+
+	if err := handler.issueSession(c, userID); err != nil {
+		c.HTML(http.StatusBadRequest, "", Login(&AuthError{
+			Type:    "Technical",
+			Message: "There was a technical error. Please try again.",
+		}))
+		return
+	}
 
 	c.Redirect(http.StatusSeeOther, "/")
 }
@@ -154,8 +251,7 @@ func (handler *AuthHandler) CheckAccessToken(c *gin.Context) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		// TODO: Use a real secret from env variables for signing jwt
-		return []byte("SECRET"), nil
+		return jwtSecret(), nil
 	})
 
 	if err != nil || !token.Valid {

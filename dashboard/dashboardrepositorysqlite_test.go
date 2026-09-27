@@ -35,6 +35,20 @@ func TestGetDashboard(t *testing.T) {
 	}
 }
 
+func TestGetDashboardWithNoRaces(t *testing.T) {
+	db := testdb.Open(t)
+	repo := dashboard.NewDashboardRepository(entities.New(db))
+	ada := createUser(t, db, "Ada", "ada@example.com", "ada")
+
+	stats, err := repo.GetDashboard(context.Background(), ada.ID)
+	if err != nil {
+		t.Fatalf("get dashboard: %v", err)
+	}
+	if stats.Totalraces != 0 || stats.Totalwins != 0 || stats.Winrate != 0 || stats.Totalpodiums != 0 || stats.Podiumrate != 0 || stats.Bestposition != 0 || stats.Avgposition != 0 {
+		t.Fatalf("dashboard = %+v", stats)
+	}
+}
+
 func TestGetBestTrack(t *testing.T) {
 	db := testdb.Open(t)
 	repo := dashboard.NewDashboardRepository(entities.New(db))

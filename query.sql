@@ -102,12 +102,12 @@ UPDATE friend SET friend_status = ? WHERE id = ? RETURNING *;
 -- name: GetDashboard :one
 SELECT 
     COUNT(*) as totalRaces,
-    CEIL(SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END)) as totalWins,
-    ROUND(100.0 * SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as winRate,
-    CEIL(SUM(CASE WHEN position <= 3 THEN 1 ELSE 0 END)) as totalPodiums,
-    ROUND(100.0 * SUM(CASE WHEN position <= 3 THEN 1 ELSE 0 END) / COUNT(*), 1) as podiumRate,
-    CEIL(MIN(position)) as bestPosition,
-    CEIL(AVG(position)) as avgPosition
+    CAST(COALESCE(CEIL(SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END)), 0) AS INTEGER) as totalWins,
+    CAST(COALESCE(ROUND(100.0 * SUM(CASE WHEN position = 1 THEN 1 ELSE 0 END) / COUNT(*), 1), 0) AS REAL) as winRate,
+    CAST(COALESCE(CEIL(SUM(CASE WHEN position <= 3 THEN 1 ELSE 0 END)), 0) AS INTEGER) as totalPodiums,
+    CAST(COALESCE(ROUND(100.0 * SUM(CASE WHEN position <= 3 THEN 1 ELSE 0 END) / COUNT(*), 1), 0) AS REAL) as podiumRate,
+    CAST(COALESCE(CEIL(MIN(position)), 0) AS INTEGER) as bestPosition,
+    CAST(COALESCE(CEIL(AVG(position)), 0) AS INTEGER) as avgPosition
 FROM event_result
 WHERE user_id = sqlc.arg(userId);
 

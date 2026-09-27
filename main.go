@@ -10,6 +10,7 @@ import (
 	"muttley/eventresult"
 	"muttley/fileupload"
 	"muttley/friend"
+	"muttley/headtohead"
 	"muttley/location"
 	"muttley/mailer"
 	"muttley/sqlite"
@@ -34,6 +35,7 @@ func main() {
 	var eventResultRepository eventresult.EventResultRepository = eventresult.NewEventResultRepository(queries)
 	var friendRepository friend.FriendRepository = friend.NewFriendRepository(queries)
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
+	var headToHeadRepository headtohead.HeadToHeadRepository = headtohead.NewHeadToHeadRepository(queries)
 
 	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mailer.NewLogMailer(), sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)
@@ -41,6 +43,7 @@ func main() {
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)
 	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository)
+	headToHeadHandler := headtohead.NewHeadToHeadHandler(headToHeadRepository)
 
 	router := gin.Default()
 	router.Static("/styles", "./static/styles")
@@ -67,6 +70,7 @@ func main() {
 	router.POST("/upload/process", authHandler.CheckAccessToken, fileUploadHandler.ProcessFile)
 
 	router.GET("/friends", authHandler.CheckAccessToken, friendHandler.Friends)
+	router.GET("/head-to-head", authHandler.CheckAccessToken, headToHeadHandler.HeadToHead)
 	router.GET("/search/friends", authHandler.CheckAccessToken, friendHandler.SearchFriends)
 
 	router.POST("/remove-friend", authHandler.CheckAccessToken, friendHandler.RemoveFriend)

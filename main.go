@@ -37,7 +37,12 @@ func main() {
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 	var headToHeadRepository headtohead.HeadToHeadRepository = headtohead.NewHeadToHeadRepository(queries)
 
-	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mailer.NewLogMailer(), sqlite.NewTransactor(db))
+	mail, err := mailer.NewFromEnv()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mail, sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)

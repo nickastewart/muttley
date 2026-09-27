@@ -5,7 +5,7 @@ import (
 	"muttley/templates"
 )
 
-templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationStats []entities.GetLocationStatsRow, recentPositions []int64, recentEvents []entities.GetRecentEventsRow) {
+templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationStats []entities.GetLocationStatsRow, recentPositions []int64, recentEvents []entities.GetRecentEventsRow, headToHeadWins int64) {
 	@templates.Head() {
 		<link rel="stylesheet" type="text/css" href="/styles/dashboard.css"/>
 	}
@@ -35,7 +35,7 @@ templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSt
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex">
 					<div class="dashboard-top-row-item-title"><span>Head To Head Wins</span></div>
-					<div class="dashboard-top-row-item-content"><span>1</span></div>
+					<div class="dashboard-top-row-item-content"><span>{ headToHeadWins }</span></div>
 				</div>
 				<div class="dashboard-top-row-item dashboard-top-row-item-one-flex" style="margin-right:0;">
 					<div class="dashboard-top-row-item-title"><span>Best Track</span></div>

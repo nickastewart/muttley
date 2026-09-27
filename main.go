@@ -42,7 +42,7 @@ func main() {
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)
-	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository)
+	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository, headToHeadRepository)
 	headToHeadHandler := headtohead.NewHeadToHeadHandler(headToHeadRepository)
 
 	router := gin.Default()

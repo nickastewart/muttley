@@ -13,7 +13,7 @@ import (
 	"muttley/templates"
 )
 
-func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationStats []entities.GetLocationStatsRow, recentPositions []int64, recentEvents []entities.GetRecentEventsRow) templ.Component {
+func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationStats []entities.GetLocationStatsRow, recentPositions []int64, recentEvents []entities.GetRecentEventsRow, headToHeadWins int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -177,57 +177,57 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<sup style=\"font-size:0.5em\">th</sup></span></div></div><div class=\"dashboard-top-row-item dashboard-top-row-item-one-flex\"><div class=\"dashboard-top-row-item-title\"><span>Head To Head Wins</span></div><div class=\"dashboard-top-row-item-content\"><span>1</span></div></div><div class=\"dashboard-top-row-item dashboard-top-row-item-one-flex\" style=\"margin-right:0;\"><div class=\"dashboard-top-row-item-title\"><span>Best Track</span></div><div class=\"dashboard-top-row-item-content dashboard-top-row-item-content-best-track\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<sup style=\"font-size:0.5em\">th</sup></span></div></div><div class=\"dashboard-top-row-item dashboard-top-row-item-one-flex\"><div class=\"dashboard-top-row-item-title\"><span>Head To Head Wins</span></div><div class=\"dashboard-top-row-item-content\"><span>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(headToHeadWins)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 38, Col: 71}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></div></div><div class=\"dashboard-top-row-item dashboard-top-row-item-one-flex\" style=\"margin-right:0;\"><div class=\"dashboard-top-row-item-title\"><span>Best Track</span></div><div class=\"dashboard-top-row-item-content dashboard-top-row-item-content-best-track\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if bestTrack == "" {
-			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("-")
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("-")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 44, Col: 12}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		} else {
-			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(bestTrack)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 46, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div></div></div><div class=\"dashboard-row dashboard-row-flex dashboard-top-row\"><div id=\"dashboard-track-count-bar-chart-container\" class=\"dashboard-top-row-item-one-flex\"><div class=\"dashboard-chart-canvas-wrap\"><canvas id=\"dashboard-track-count-bar-chart\"></canvas></div></div><div id=\"dashboard-position-line-chart-container\" class=\"dashboard-top-row-item-one-flex\"><div class=\"dashboard-chart-canvas-wrap\"><canvas id=\"dashboard-line-chart\"></canvas></div></div></div><div class=\"dashboard-list dashboard-row\"><table id=\"dashboard-table\"><thead><th class=\"dashboard-header-cell\">Date</th><th class=\"dashboard-header-cell\">Location</th><th class=\"dashboard-header-cell\">Event Type</th><th class=\"dashboard-header-cell\">Best Lap Time</th><th class=\"dashboard-header-cell\">Average Lap Time</th><th class=\"dashboard-header-cell\">Position</th><th class=\"dashboard-header-cell\">Number Of Laps</th></thead> <tbody>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		for _, event := range recentEvents {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<tr class=\"dashboard-row\"><td class=\"dashboard-cell\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
+		} else {
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(event.Event.Date)
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(bestTrack)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 77, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 46, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</td><td class=\"dashboard-cell\">")
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div></div></div><div class=\"dashboard-row dashboard-row-flex dashboard-top-row\"><div id=\"dashboard-track-count-bar-chart-container\" class=\"dashboard-top-row-item-one-flex\"><div class=\"dashboard-chart-canvas-wrap\"><canvas id=\"dashboard-track-count-bar-chart\"></canvas></div></div><div id=\"dashboard-position-line-chart-container\" class=\"dashboard-top-row-item-one-flex\"><div class=\"dashboard-chart-canvas-wrap\"><canvas id=\"dashboard-line-chart\"></canvas></div></div></div><div class=\"dashboard-list dashboard-row\"><table id=\"dashboard-table\"><thead><th class=\"dashboard-header-cell\">Date</th><th class=\"dashboard-header-cell\">Location</th><th class=\"dashboard-header-cell\">Event Type</th><th class=\"dashboard-header-cell\">Best Lap Time</th><th class=\"dashboard-header-cell\">Average Lap Time</th><th class=\"dashboard-header-cell\">Position</th><th class=\"dashboard-header-cell\">Number Of Laps</th></thead> <tbody>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, event := range recentEvents {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<tr class=\"dashboard-row\"><td class=\"dashboard-cell\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
-			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(event.Location.Name)
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(event.Event.Date)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 78, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 77, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -238,9 +238,9 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(event.Event.Type)
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(event.Location.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 79, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 78, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -251,9 +251,9 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var17 string
-			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.BestLapTime)
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(event.Event.Type)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 80, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 79, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -264,9 +264,9 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var18 string
-			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.AverageLapTime)
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.BestLapTime)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 81, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 80, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -277,9 +277,9 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.Position)
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.AverageLapTime)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 82, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 81, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -290,56 +290,69 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.NumberOfLaps)
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.Position)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 83, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 82, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</td><td class=\"dashboard-cell\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.NumberOfLaps)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 83, Col: 67}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</tbody></table></div></div></div><script>\n        const trackChart = document.getElementById('dashboard-track-count-bar-chart');\n        const trackChartLabels = ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</tbody></table></div></div></div><script>\n        const trackChart = document.getElementById('dashboard-track-count-bar-chart');\n        const trackChartLabels = ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var21, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(getTrackChartDataLabel(locationStats))
+		templ_7745c5c3_Var22, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(getTrackChartDataLabel(locationStats))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 93, Col: 73}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\n        const trackChartData = ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var22, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(getTrackChartData(locationStats))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 94, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\n\n        document.addEventListener('DOMContentLoaded',function() {\n            new Chart(trackChart, {\n                type: 'bar',\n                data: {\n                    labels: trackChartLabels,\n                    datasets: [{\n                        data: trackChartData,\n                        backgroundColor: '#3b82f6',\n                        borderColor: '#2563eb',\n                        borderWidth: 0,\n                        borderRadius: 6,\n                        maxBarThickness: 45\n                    }]\n                },\n                options: {\n                    indexAxis:'y',\n                    responsive: true,\n                    maintainAspectRatio: false,\n                    plugins: {\n                        legend: {\n                            display: false,\n                        },\n                        title: {\n                            display: false\n                        }\n                    },\n                    scales: {\n                        x: {\n                            display: false,\n                            grid: { display: false },\n                        },\n                        y: {\n                            grid: { display: false },\n                            border: { display: false }\n                        }\n                    }\n                },\n            });\n\n            const ctx = document.getElementById('dashboard-line-chart');\n                \n             new Chart(ctx, {\n                type: 'line',\n                data: {\n                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],\n                datasets: [{\n                    data: ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\n        const trackChartData = ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var23, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(recentPositions)
+		templ_7745c5c3_Var23, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(getTrackChartData(locationStats))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 142, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 94, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, ",\n                    borderColor: '#3b82f6',\n                    backgroundColor: 'rgba(59, 130, 246, 0.1)',\n                    borderWidth: 3,\n                    tension: 0.4,           // Smooth curve\n                    pointRadius: 5,\n                    pointHoverRadius: 7,\n                    pointBackgroundColor: '#fff',\n                    pointBorderWidth: 2\n                }]\n                },\n                options: {\n                    responsive: true,\n                    maintainAspectRatio: false,\n                    \n                    plugins: {\n                        legend: { display: false},\n                    },\n                     tooltip: {\n                        callbacks: {\n                            title: function() {\n                            return '';        // Removes the X-axis label (Jan, Feb, etc.)\n                            }\n                        }\n                    },\n                    scales: {\n                        x: { \n                            display: false,           // X axis hidden\n                            grid: { display: false },\n                            ticks: { display: false}\n\n                        },\n                        y: { \n                            reverse: true,\n                            border: { display: false },   // Y axis line removed\n                            grid: { display: false },\n                            ticks: {\n                                    stepSize: 1\n                                }\n                        }\n                    }\n                },\n            });\n        });\n\n    </script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\n\n        document.addEventListener('DOMContentLoaded',function() {\n            new Chart(trackChart, {\n                type: 'bar',\n                data: {\n                    labels: trackChartLabels,\n                    datasets: [{\n                        data: trackChartData,\n                        backgroundColor: '#3b82f6',\n                        borderColor: '#2563eb',\n                        borderWidth: 0,\n                        borderRadius: 6,\n                        maxBarThickness: 45\n                    }]\n                },\n                options: {\n                    indexAxis:'y',\n                    responsive: true,\n                    maintainAspectRatio: false,\n                    plugins: {\n                        legend: {\n                            display: false,\n                        },\n                        title: {\n                            display: false\n                        }\n                    },\n                    scales: {\n                        x: {\n                            display: false,\n                            grid: { display: false },\n                        },\n                        y: {\n                            grid: { display: false },\n                            border: { display: false }\n                        }\n                    }\n                },\n            });\n\n            const ctx = document.getElementById('dashboard-line-chart');\n                \n             new Chart(ctx, {\n                type: 'line',\n                data: {\n                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],\n                datasets: [{\n                    data: ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var24, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(recentPositions)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 142, Col: 44}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, ",\n                    borderColor: '#3b82f6',\n                    backgroundColor: 'rgba(59, 130, 246, 0.1)',\n                    borderWidth: 3,\n                    tension: 0.4,           // Smooth curve\n                    pointRadius: 5,\n                    pointHoverRadius: 7,\n                    pointBackgroundColor: '#fff',\n                    pointBorderWidth: 2\n                }]\n                },\n                options: {\n                    responsive: true,\n                    maintainAspectRatio: false,\n                    \n                    plugins: {\n                        legend: { display: false},\n                    },\n                     tooltip: {\n                        callbacks: {\n                            title: function() {\n                            return '';        // Removes the X-axis label (Jan, Feb, etc.)\n                            }\n                        }\n                    },\n                    scales: {\n                        x: { \n                            display: false,           // X axis hidden\n                            grid: { display: false },\n                            ticks: { display: false}\n\n                        },\n                        y: { \n                            reverse: true,\n                            border: { display: false },   // Y axis line removed\n                            grid: { display: false },\n                            ticks: {\n                                    stepSize: 1\n                                }\n                        }\n                    }\n                },\n            });\n        });\n\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

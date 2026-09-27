@@ -62,7 +62,7 @@ func TestSaveEventRollsBackNewLocationAndEvent(t *testing.T) {
 	db := testdb.Open(t)
 	handler := newUploadHandler(db, failingResults{})
 
-	_, _, _, err := handler.saveEvent(context.Background(), entities.GetUserByIdRow{ID: 1}, parsedEvent("New Track"))
+	_, _, _, err := handler.saveEvent(context.Background(), entities.User{ID: 1}, parsedEvent("New Track"))
 	if err == nil {
 		t.Fatal("expected save to fail")
 	}
@@ -85,7 +85,7 @@ func TestSaveEventKeepsExistingLocationWhenResultFails(t *testing.T) {
 	}
 	handler := newUploadHandler(db, failingResults{})
 
-	_, _, _, err := handler.saveEvent(ctx, entities.GetUserByIdRow{ID: 1}, parsedEvent("Whilton Mill"))
+	_, _, _, err := handler.saveEvent(ctx, entities.User{ID: 1}, parsedEvent("Whilton Mill"))
 	if err == nil {
 		t.Fatal("expected save to fail")
 	}
@@ -130,7 +130,7 @@ func parsedEvent(locationName string) *model.Event {
 	}
 }
 
-func createUploadUser(t *testing.T, db *sql.DB) entities.GetUserByIdRow {
+func createUploadUser(t *testing.T, db *sql.DB) entities.User {
 	t.Helper()
 	repo := user.NewUserRepository(db)
 	ctx := context.Background()
@@ -138,7 +138,6 @@ func createUploadUser(t *testing.T, db *sql.DB) entities.GetUserByIdRow {
 		FirstName:   "Ada",
 		LastName:    "Lovelace",
 		Email:       "ada@example.com",
-		Password:    "secret",
 		ProfileID:   "ada",
 		DisplayName: "Ada",
 	}); err != nil {

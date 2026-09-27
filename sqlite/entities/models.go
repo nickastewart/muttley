@@ -42,13 +42,22 @@ type Location struct {
 	Name string
 }
 
+type MagicLink struct {
+	ID        int64
+	Email     string
+	TokenHash string
+	Purpose   string
+	ExpiresAt string
+	UsedAt    sql.NullString
+	CreatedAt string
+}
+
 type User struct {
 	ID          int64
 	FirstName   string
 	LastName    string
 	Email       string
 	ProfileID   string
-	Password    string
 	DisplayName string
 	CreatedAt   sql.NullString
 }

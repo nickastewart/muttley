@@ -23,7 +23,6 @@ func TestCreateAndGetUser(t *testing.T) {
 		FirstName:   "Ada",
 		LastName:    "Lovelace",
 		Email:       "ada@example.com",
-		Password:    "secret",
 		ProfileID:   "ada",
 		DisplayName: "Ada",
 	})
@@ -51,14 +50,6 @@ func TestCreateAndGetUser(t *testing.T) {
 	}
 	if byID.Email != "ada@example.com" || byID.DisplayName != "Ada" || !byID.CreatedAt.Valid {
 		t.Fatalf("user by id = %+v", byID)
-	}
-
-	login, err := repo.GetUserByEmailForLogin(ctx, "ada@example.com")
-	if err != nil {
-		t.Fatalf("get user for login: %v", err)
-	}
-	if login.ID != byEmail.ID || login.Email != "ada@example.com" || login.Password != "secret" {
-		t.Fatalf("login row = %+v", login)
 	}
 
 	profileID, err := repo.GetUserIdByProfileId(ctx, "ada")
@@ -92,36 +83,6 @@ func TestUpdateUser(t *testing.T) {
 	}
 	if updated.FirstName != "Augusta" || updated.LastName != "King" || updated.Email != "augusta@example.com" || updated.DisplayName != "Countess" || updated.ProfileID != "ada" {
 		t.Fatalf("updated user = %+v", updated)
-	}
-
-	login, err := repo.GetUserByEmailForLogin(ctx, "augusta@example.com")
-	if err != nil {
-		t.Fatalf("get login after update: %v", err)
-	}
-	if login.Password != "secret" {
-		t.Fatalf("password = %q, want it unchanged", login.Password)
-	}
-}
-
-func TestResetPassword(t *testing.T) {
-	repo := newUserRepo(t)
-	ctx := context.Background()
-	createUser(t, repo, "Ada", "Lovelace", "ada@example.com", "ada")
-
-	err := repo.ResetPassword(ctx, entities.ResetPasswordParams{
-		Password: "new-secret",
-		Email:    "ada@example.com",
-	})
-	if err != nil {
-		t.Fatalf("reset password: %v", err)
-	}
-
-	login, err := repo.GetUserByEmailForLogin(ctx, "ada@example.com")
-	if err != nil {
-		t.Fatalf("get login: %v", err)
-	}
-	if login.Password != "new-secret" {
-		t.Fatalf("password = %q, want new-secret", login.Password)
 	}
 }
 
@@ -375,10 +336,6 @@ func TestGetMissingUser(t *testing.T) {
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("get by email error = %v, want sql.ErrNoRows", err)
 	}
-	_, err = repo.GetUserByEmailForLogin(ctx, "missing@example.com")
-	if !errors.Is(err, sql.ErrNoRows) {
-		t.Fatalf("get for login error = %v, want sql.ErrNoRows", err)
-	}
 	_, err = repo.GetUserIdByProfileId(ctx, "missing")
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("get by profile error = %v, want sql.ErrNoRows", err)
@@ -390,14 +347,13 @@ func newUserRepo(t *testing.T) user.UserRepository {
 	return user.NewUserRepository(testdb.Open(t))
 }
 
-func createUser(t *testing.T, repo user.UserRepository, firstName, lastName, email, profileID string) entities.GetUserByIdRow {
+func createUser(t *testing.T, repo user.UserRepository, firstName, lastName, email, profileID string) entities.User {
 	t.Helper()
 	ctx := context.Background()
 	_, err := repo.CreateUser(ctx, entities.CreateUserParams{
 		FirstName:   firstName,
 		LastName:    lastName,
 		Email:       email,
-		Password:    "secret",
 		ProfileID:   profileID,
 		DisplayName: firstName,
 	})

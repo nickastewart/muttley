@@ -33,7 +33,7 @@ func (handler *FriendHandler) Friends(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 
 	friends, err := handler.FriendRepository.GetFriendsByUser(ctx, user.ID)
 	for _, friend := range friends {
@@ -62,7 +62,7 @@ func (handler *FriendHandler) SearchFriends(c *gin.Context) {
 		log.Panic("Search Term is empty")
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	searchParams := entities.GetUsersBySearchTermParams{
 		Name:   "%" + searchTerm + "%",
 		Userid: user.ID,
@@ -84,7 +84,7 @@ func (handler *FriendHandler) AddFriend(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	profileID, ok := c.GetQuery("profileId")
 
 	if !ok || profileID == "" {
@@ -136,7 +136,7 @@ func (handler *FriendHandler) RemoveFriend(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	profileID, ok := c.GetQuery("profileId")
 
 	if !ok {

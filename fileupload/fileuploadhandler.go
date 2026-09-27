@@ -56,7 +56,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 
 	form, err := c.MultipartForm()
 
@@ -90,7 +90,7 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 	c.HTML(http.StatusOK, "", templates.UploadSuccess(locationEntity, eventEntity, eventResultEntity))
 }
 
-func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.GetUserByIdRow, parsed *model.Event) (entities.Location, entities.Event, entities.EventResult, error) {
+func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.User, parsed *model.Event) (entities.Location, entities.Event, entities.EventResult, error) {
 	var savedLocation entities.Location
 	var savedEvent entities.Event
 	var saved entities.EventResult
@@ -164,7 +164,7 @@ func (handler *FileUploadHandler) processEvent(ctx context.Context, event *model
 	return eventEntity, err
 }
 
-func (handler *FileUploadHandler) processEventResult(ctx context.Context, user entities.GetUserByIdRow, driverResult *model.DriverTime, event *entities.Event) (entities.EventResult, error) {
+func (handler *FileUploadHandler) processEventResult(ctx context.Context, user entities.User, driverResult *model.DriverTime, event *entities.Event) (entities.EventResult, error) {
 
 	getEventResultByEventIdAndUserIdParams := entities.GetEventResultByEventIdAndUserIdParams{
 		EventID: event.ID,

@@ -1,0 +1,36 @@
+package auth
+
+import "muttley/templates"
+
+templ VerifyLink(page VerifyPage) {
+	<!DOCTYPE html>
+	<html>
+		@templates.Head() {
+			<link rel="stylesheet" type="text/css" href="/styles/auth.css"/>
+		}
+		<body>
+			<div id="auth-page">
+				<div class="auth-card">
+					if page.IsSignup {
+						<div class="auth-card-title"><span>Create Account</span></div>
+						<p class="auth-note">This link creates your account and signs you in. It can only be used once.</p>
+					} else {
+						<div class="auth-card-title"><span>Sign in</span></div>
+						<p class="auth-note">This link signs you in. It can only be used once.</p>
+					}
+					<form id="auth-form" action="/login/verify" method="POST">
+						<input type="hidden" name="token" value={ page.Token }/>
+						<input class="auth-submit" type="submit" value="Continue"/>
+					</form>
+					<div class="auth-links">
+						if page.IsSignup {
+							Need a new link? <a href="/signup">Request one</a>
+						} else {
+							Need a new link? <a href="/login">Request one</a>
+						}
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+}

@@ -2,11 +2,8 @@
 SELECT id, first_name, last_name, email, profile_id, display_name, created_at FROM user WHERE id = ?;
 
 -- name: CreateUser :one
-INSERT INTO user (first_name, last_name, email, password, profile_id, display_name) VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO user (first_name, last_name, email, profile_id, display_name) VALUES (?, ?, ?, ?, ?)
     RETURNING first_name, last_name, email, profile_id, display_name, created_at;
-
--- name: ResetPassword :exec 
-UPDATE user SET password = ? WHERE email = ?;
 
 -- name: UpdateUser :exec
 UPDATE user SET first_name = ?, last_name = ?, email = ?, display_name = ? WHERE id = ?;
@@ -23,8 +20,25 @@ DELETE FROM user WHERE id = ?;
 -- name: GetUserByEmail :one
 SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?;
 
--- name: GetUserByEmailForLogin :one
-SELECT id, email, password FROM user WHERE email = ?;
+-- name: CreateMagicLink :one
+INSERT INTO magic_link (email, token_hash, purpose, expires_at)
+VALUES (?, ?, ?, ?)
+RETURNING id, email, token_hash, purpose, expires_at, used_at, created_at;
+
+-- name: InvalidateUnusedMagicLinks :exec
+UPDATE magic_link
+SET used_at = CURRENT_TIMESTAMP
+WHERE email = ? AND used_at IS NULL;
+
+-- name: GetActiveMagicLinkByTokenHash :one
+SELECT id, email, token_hash, purpose, expires_at, used_at, created_at
+FROM magic_link
+WHERE token_hash = ? AND used_at IS NULL AND expires_at > sqlc.arg(now);
+
+-- name: ConsumeMagicLink :execrows
+UPDATE magic_link
+SET used_at = CURRENT_TIMESTAMP
+WHERE id = ? AND used_at IS NULL;
 
 -- name: GetLocationByName :one 
 SELECT id, name FROM location WHERE name = ?;

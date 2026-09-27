@@ -31,7 +31,7 @@ func (handler *DashboardHandler) GetDashboard(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	dashboard, err := handler.DashboardRepository.GetDashboard(ctx, user.ID)
 
 	if err != nil {

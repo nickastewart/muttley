@@ -2,7 +2,7 @@ package auth
 
 import "muttley/templates"
 
-templ Login(page Page) {
+templ Signup(page Page) {
 	<!DOCTYPE html>
 	<html>
 		@templates.Head() {
@@ -11,7 +11,7 @@ templ Login(page Page) {
 		<body>
 			<div id="auth-page">
 				<div class="auth-card">
-					<div class="auth-card-title"><span>Login</span></div>
+					<div class="auth-card-title"><span>Create Account</span></div>
 					if page.Error != nil {
 						<div id="auth-error">
 							<div id="auth-error-title">
@@ -26,22 +26,23 @@ templ Login(page Page) {
 						<div id="auth-form">
 							<div class="auth-success">
 								<div class="auth-success-title">Check your email</div>
-								<div class="auth-success-message">We sent a sign-in link to { page.SentEmail }. It expires in 15 minutes and can only be used once.</div>
+								<div class="auth-success-message">We sent a link to { page.SentEmail } to create your account. It expires in 15 minutes and can only be used once.</div>
 							</div>
 						</div>
 						<div class="auth-links">
-							Wrong email? <a href="/login">Try again</a>
+							Wrong email? <a href="/signup">Try again</a>
 						</div>
 					} else {
-						<form id="auth-form" action="/login" method="POST">
+						<p class="auth-note">We'll email you a link to create your account. You can add your name after you sign in.</p>
+						<form id="auth-form" action="/signup" method="POST">
 							<div class="auth-field">
 								<label for="email">Email</label>
 								<input id="email" type="email" name="email" value={ page.Email } required/>
 							</div>
-							<input class="auth-submit" type="submit" value="Email me a sign-in link"/>
+							<input class="auth-submit" type="submit" value="Email me a sign-up link"/>
 						</form>
 						<div class="auth-links">
-							New here? <a href={ signupLink(page.Email) }>Create an account</a>
+							Already have an account? <a href="/login">Log in</a>
 						</div>
 					}
 				</div>

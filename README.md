@@ -12,19 +12,25 @@ Magic-link email uses the log mailer unless `MAILER=resend`. Local development
 should leave `MAILER` unset so the link is printed to the server log instead of
 being sent.
 
-Load tests can set `MAILER=test`. That still creates the magic link the same
-way as a real sign-in, logs it, and saves the raw token on that database row.
-Fetch it with:
+Load tests set the test profile:
 
 ```
-GET /test/magic-link?email=ada@example.com
+PROFILE=test
+```
+
+That still creates the magic link the same way as a real sign-in, logs it, and
+saves the raw token on that database row. The token route is registered only
+while `PROFILE=test`. Fetch the token with the email as a path parameter:
+
+```
+GET /test/magic-link/ada@example.com
 ```
 
 ```json
 {"token":"..."}
 ```
 
-Do not enable `MAILER=test` outside a test environment. The endpoint returns a
+Do not set `PROFILE=test` outside a test environment. The endpoint returns a
 token that signs that user in.
 
 To deliver mail with [Resend](https://resend.com/docs/introduction):

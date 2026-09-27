@@ -64,9 +64,7 @@ func main() {
 	router.GET("/login/verify", authHandler.ShowVerify)
 	router.POST("/login/verify", authHandler.VerifyMagicLink)
 	router.POST("/logout", authHandler.CheckAccessToken, authHandler.Logout)
-	if _, ok := mail.(*mailer.TestMailer); ok {
-		router.GET("/test/magic-link", auth.TestMagicLink(magicLinks))
-	}
+	auth.RegisterTestMagicLink(router, magicLinks)
 
 	router.HTMLRender = &TemplRender{}
 

@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewFromEnvDefaultsToLogMailer(t *testing.T) {
+	t.Setenv("PROFILE", "")
 	t.Setenv("MAILER", "")
 	got, err := mailer.NewFromEnv()
 	if err != nil {
@@ -18,6 +19,7 @@ func TestNewFromEnvDefaultsToLogMailer(t *testing.T) {
 }
 
 func TestNewFromEnvTestMailer(t *testing.T) {
+	t.Setenv("PROFILE", "")
 	t.Setenv("MAILER", "test")
 	got, err := mailer.NewFromEnv()
 	if err != nil {
@@ -28,7 +30,20 @@ func TestNewFromEnvTestMailer(t *testing.T) {
 	}
 }
 
+func TestNewFromEnvTestProfileUsesTestMailer(t *testing.T) {
+	t.Setenv("PROFILE", "test")
+	t.Setenv("MAILER", "")
+	got, err := mailer.NewFromEnv()
+	if err != nil {
+		t.Fatalf("new from env: %v", err)
+	}
+	if _, ok := got.(*mailer.TestMailer); !ok {
+		t.Fatalf("mailer = %T", got)
+	}
+}
+
 func TestNewFromEnvResend(t *testing.T) {
+	t.Setenv("PROFILE", "")
 	t.Setenv("MAILER", "resend")
 	t.Setenv("RESEND_API_KEY", "re_test")
 	t.Setenv("RESEND_FROM", "login@example.com")
@@ -42,6 +57,7 @@ func TestNewFromEnvResend(t *testing.T) {
 }
 
 func TestNewFromEnvResendRequiresCredentials(t *testing.T) {
+	t.Setenv("PROFILE", "")
 	t.Setenv("MAILER", "resend")
 	t.Setenv("RESEND_API_KEY", "")
 	t.Setenv("RESEND_FROM", "login@example.com")
@@ -51,6 +67,7 @@ func TestNewFromEnvResendRequiresCredentials(t *testing.T) {
 }
 
 func TestNewFromEnvRejectsUnknownDriver(t *testing.T) {
+	t.Setenv("PROFILE", "")
 	t.Setenv("MAILER", "smtp")
 	if _, err := mailer.NewFromEnv(); err == nil {
 		t.Fatal("expected unknown driver to fail")

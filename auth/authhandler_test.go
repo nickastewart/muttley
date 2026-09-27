@@ -179,12 +179,13 @@ func TestSignupMagicLinkCreatesTheAccount(t *testing.T) {
 }
 
 func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
+	t.Setenv("PROFILE", "test")
 	tokens := mailer.NewTestMailer(nil)
 	handler, db := newAuthHandler(t, tokens)
 	repo := auth.NewMagicLinkRepository(db)
 	tokens.Store = repo
 	router := testRouter(handler)
-	router.GET("/test/magic-link", auth.TestMagicLink(repo))
+	auth.RegisterTestMagicLink(router, repo)
 	createAuthUser(t, db, "ada@example.com")
 
 	requestHTML(t, router, http.MethodPost, "/login", url.Values{"email": {"Ada@Example.com"}}, nil)
@@ -194,16 +195,16 @@ func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
 		t.Fatalf("stored token: %v", err)
 	}
 
-	missing := request(t, router, http.MethodGet, "/test/magic-link", nil, nil)
-	if missing.Code != http.StatusBadRequest {
-		t.Fatalf("missing email status = %d body = %s", missing.Code, missing.Body.String())
+	invalid := request(t, router, http.MethodGet, "/test/magic-link/"+url.PathEscape("not-an-email"), nil, nil)
+	if invalid.Code != http.StatusBadRequest {
+		t.Fatalf("invalid email status = %d body = %s", invalid.Code, invalid.Body.String())
 	}
-	unknown := request(t, router, http.MethodGet, "/test/magic-link?email=missing@example.com", nil, nil)
+	unknown := request(t, router, http.MethodGet, "/test/magic-link/"+url.PathEscape("missing@example.com"), nil, nil)
 	if unknown.Code != http.StatusNotFound {
 		t.Fatalf("unknown email status = %d body = %s", unknown.Code, unknown.Body.String())
 	}
 
-	rec := request(t, router, http.MethodGet, "/test/magic-link?email=ada@example.com", nil, nil)
+	rec := request(t, router, http.MethodGet, "/test/magic-link/"+url.PathEscape("ada@example.com"), nil, nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("token status = %d body = %s", rec.Code, rec.Body.String())
 	}
@@ -220,6 +221,35 @@ func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
 	verified := request(t, router, http.MethodPost, "/login/verify", url.Values{"token": {payload.Token}}, nil)
 	if verified.Code != http.StatusSeeOther {
 		t.Fatalf("verify status = %d body = %s", verified.Code, verified.Body.String())
+	}
+}
+
+func TestTestMagicLinkRouteHiddenUnlessTestProfile(t *testing.T) {
+	t.Setenv("PROFILE", "")
+	tokens := mailer.NewTestMailer(nil)
+	handler, db := newAuthHandler(t, tokens)
+	repo := auth.NewMagicLinkRepository(db)
+	tokens.Store = repo
+	router := testRouter(handler)
+	auth.RegisterTestMagicLink(router, repo)
+	createAuthUser(t, db, "ada@example.com")
+	requestHTML(t, router, http.MethodPost, "/login", url.Values{"email": {"ada@example.com"}}, nil)
+
+	var stored string
+	if err := db.QueryRow(`SELECT token FROM magic_link WHERE email = ? AND used_at IS NULL`, "ada@example.com").Scan(&stored); err != nil {
+		t.Fatalf("stored token: %v", err)
+	}
+	hidden := request(t, router, http.MethodGet, "/test/magic-link/"+url.PathEscape("ada@example.com"), nil, nil)
+	if hidden.Code != http.StatusNotFound || strings.Contains(hidden.Body.String(), stored) {
+		t.Fatalf("hidden status = %d body = %s", hidden.Code, hidden.Body.String())
+	}
+
+	t.Setenv("PROFILE", "test")
+	visible := gin.New()
+	auth.RegisterTestMagicLink(visible, repo)
+	found := request(t, visible, http.MethodGet, "/test/magic-link/"+url.PathEscape("ada@example.com"), nil, nil)
+	if found.Code != http.StatusOK || !strings.Contains(found.Body.String(), stored) {
+		t.Fatalf("visible status = %d body = %s", found.Code, found.Body.String())
 	}
 }
 

@@ -32,11 +32,12 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 							<div class="friend-card-title">{ friend.DisplayName }</div>
 							<div class="friend-card-subtitle">{ friend.FirstName + " " + friend.LastName }</div>
 						</div>
-						<div class="friend-card-actions">
+						<div class="friend-card-actions" id={ fmt.Sprintf("friend-card-actions-%s", friend.ProfileID) }>
+							if friend.ConfirmationRequired == "true" {
+								<button class="friend-card-button" hx-post={ fmt.Sprintf("/accept-friend?profileId=%s", friend.ProfileID) } hx-target={ fmt.Sprintf("#friend-card-actions-%s", friend.ProfileID) } hx-swap="innerHTML">Accept</button>
+							}
 							if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
-								<button class="friend-card-button" hx-post={ fmt.Sprintf("/remove-friend?profileId=%s", friend.ProfileID) }>Remove</button>
-							} else if friend.ConfirmationRequired == "true" {
-								<button class="friend-card-button">Accept</button>
+								@FriendRemoveButton(friend.ProfileID)
 							}
 						</div>
 					</div>
@@ -44,4 +45,8 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 			</div>
 		</div>
 	</div>
+}
+
+templ FriendRemoveButton(profileID string) {
+	<button class="friend-card-button" hx-post={ fmt.Sprintf("/remove-friend?profileId=%s", profileID) }>Remove</button>
 }

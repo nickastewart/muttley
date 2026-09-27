@@ -127,6 +127,59 @@ func (handler *FriendHandler) AddFriend(c *gin.Context) {
 	c.HTML(http.StatusOK, "", templates.FriendPendingRequestButton())
 }
 
+func (handler *FriendHandler) AcceptFriend(c *gin.Context) {
+	ctx := context.Background()
+	u, exists := c.Get("currentUser")
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not authenticated"})
+		return
+	}
+
+	user := u.(entities.User)
+	profileID, ok := c.GetQuery("profileId")
+
+	if !ok || profileID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Request has no profileID"})
+		return
+	}
+
+	friendUserID, err := handler.UserRepository.GetUserIdByProfileId(ctx, profileID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot find user"})
+		return
+	}
+
+	friend, err := handler.FriendRepository.GetFriendByUserIdAndFriendId(ctx, entities.GetFriendByUserIdAndFriendIdParams{
+		Userid:   user.ID,
+		Friendid: friendUserID,
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No friend request"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error looking up friend"})
+		return
+	}
+
+	if friend.FriendID != user.ID || friend.FriendStatus != "REQUESTED" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Friend request cannot be accepted"})
+		return
+	}
+
+	_, err = handler.FriendRepository.UpdateFriendStatus(ctx, entities.UpdateFriendStatusParams{
+		FriendStatus: "ACCEPTED",
+		ID:           friend.ID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error accepting friend"})
+		return
+	}
+
+	c.HTML(http.StatusOK, "", templates.FriendRemoveButton(profileID))
+}
+
 func (handler *FriendHandler) RemoveFriend(c *gin.Context) {
 	ctx := context.Background()
 	u, exists := c.Get("currentUser")

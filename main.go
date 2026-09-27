@@ -71,6 +71,7 @@ func main() {
 
 	router.POST("/remove-friend", authHandler.CheckAccessToken, friendHandler.RemoveFriend)
 	router.POST("/add-friend", authHandler.CheckAccessToken, friendHandler.AddFriend)
+	router.POST("/accept-friend", authHandler.CheckAccessToken, friendHandler.AcceptFriend)
 
 	router.GET("/account", authHandler.CheckAccessToken, userHandler.Account)
 	router.POST("/account", authHandler.CheckAccessToken, userHandler.UpdateAccount)

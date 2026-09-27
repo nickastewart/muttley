@@ -1,0 +1,25 @@
+package auth
+
+import "muttley/templates"
+
+templ MagicLinkSent() {
+	<!DOCTYPE html>
+	<html>
+		@templates.Head() {
+			<link rel="stylesheet" type="text/css" href="/styles/auth.css"/>
+		}
+		<body>
+			<div id="auth-page">
+				<div class="auth-card">
+					<div class="auth-card-title"><span>Check your email</span></div>
+					<div class="auth-success">
+						<div class="auth-success-message">If that email is registered, we sent a sign-in link. It expires in 15 minutes.</div>
+					</div>
+					<div class="auth-links">
+						<a href="/login">Back to login</a>
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+}

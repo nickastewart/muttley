@@ -33,6 +33,13 @@ templ Login(err *AuthError) {
 						</div>
 						<input class="auth-submit" type="submit" value="Login"/>
 					</form>
+					<form id="magic-link-form" action="/login/magic" method="POST">
+						<div class="auth-field">
+							<label for="magic-email">Email me a sign-in link</label>
+							<input id="magic-email" type="email" name="email" required/>
+						</div>
+						<input class="auth-submit" type="submit" value="Send magic link"/>
+					</form>
 					<form id="auth-create-account-form" action="signup" method="GET">
 						<input type="submit" id="auth-create-account-submit" class="auth-submit" value="Create Account"/>
 					</form>

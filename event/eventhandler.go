@@ -46,7 +46,7 @@ func (handler *EventsHandler) Leaderboard(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 
 	userIds := []int64{}
 	userIds = append(userIds, user.ID)

@@ -168,7 +168,7 @@ func TestUpdateFriendStatus(t *testing.T) {
 	}
 }
 
-func createUser(t *testing.T, db *sql.DB, firstName, email, profileID string) entities.GetUserByIdRow {
+func createUser(t *testing.T, db *sql.DB, firstName, email, profileID string) entities.User {
 	t.Helper()
 	repo := user.NewUserRepository(db)
 	ctx := context.Background()
@@ -176,7 +176,6 @@ func createUser(t *testing.T, db *sql.DB, firstName, email, profileID string) en
 		FirstName:   firstName,
 		LastName:    "Racer",
 		Email:       email,
-		Password:    "secret",
 		ProfileID:   profileID,
 		DisplayName: firstName,
 	}); err != nil {

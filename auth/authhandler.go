@@ -2,136 +2,282 @@ package auth
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"muttley/mailer"
+	"muttley/sqlite"
 	"muttley/sqlite/entities"
 	"muttley/user"
-	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
-	"math/rand"
 )
 
 type AuthHandler struct {
-	UserRepository user.UserRepository
+	UserRepository      user.UserRepository
+	MagicLinkRepository MagicLinkRepository
+	Mailer              mailer.Mailer
+	Transactor          *sqlite.Transactor
 }
 
-func NewAuthHandler(userRepository user.UserRepository) *AuthHandler {
+func NewAuthHandler(userRepository user.UserRepository, magicLinks MagicLinkRepository, mailer mailer.Mailer, transactor *sqlite.Transactor) *AuthHandler {
 	return &AuthHandler{
-		UserRepository: userRepository,
+		UserRepository:      userRepository,
+		MagicLinkRepository: magicLinks,
+		Mailer:              mailer,
+		Transactor:          transactor,
 	}
 }
 
-func (handler *AuthHandler) Signup(c *gin.Context) {
-	ctx := context.Background()
+func (handler *AuthHandler) ShowLogin(c *gin.Context) {
+	c.HTML(http.StatusOK, "", Login(Page{}))
+}
 
-	var signupForm SignupForm
-	c.Bind(&signupForm)
+func (handler *AuthHandler) ShowSignup(c *gin.Context) {
+	email, ok := normalizeEmail(c.Query("email"))
+	if !ok {
+		email = ""
+	}
+	c.HTML(http.StatusOK, "", Signup(Page{Email: email}))
+}
 
-	userFound, err := handler.UserRepository.GetUserByEmail(ctx, signupForm.Email)
-	if userFound.ID != 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User with this email already exists"})
+func (handler *AuthHandler) RequestLogin(c *gin.Context) {
+	ctx := c.Request.Context()
+	var form LoginForm
+	if err := c.ShouldBind(&form); err != nil {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError()}))
 		return
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(signupForm.Password), bcrypt.DefaultCost)
+	email, ok := normalizeEmail(form.Email)
+	if !ok {
+		c.HTML(http.StatusBadRequest, "", Login(Page{
+			Error: &AuthError{Type: "Authentication", Message: "Enter a valid email address."},
+			Email: strings.TrimSpace(form.Email),
+		}))
+		return
+	}
+
+	found, err := handler.UserRepository.GetUserByEmail(ctx, email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError(), Email: email}))
+		return
+	}
+	if found.ID == 0 {
+		c.HTML(http.StatusBadRequest, "", Login(Page{
+			Error: &AuthError{Type: "Authentication", Message: "No account found for that email."},
+			Email: email,
+		}))
+		return
+	}
+
+	if err := handler.issueMagicLink(ctx, c, email, purposeLogin); err != nil {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError(), Email: email}))
+		return
+	}
+	c.HTML(http.StatusOK, "", Login(Page{SentEmail: email, Email: email}))
+}
+
+func (handler *AuthHandler) RequestSignup(c *gin.Context) {
+	ctx := c.Request.Context()
+	var form SignupForm
+	if err := c.ShouldBind(&form); err != nil {
+		c.HTML(http.StatusBadRequest, "", Signup(Page{Error: technicalError()}))
+		return
+	}
+
+	email, ok := normalizeEmail(form.Email)
+	if !ok {
+		c.HTML(http.StatusBadRequest, "", Signup(Page{
+			Error: &AuthError{Type: "Authentication", Message: "Enter a valid email address."},
+			Email: strings.TrimSpace(form.Email),
+		}))
+		return
+	}
+
+	found, err := handler.UserRepository.GetUserByEmail(ctx, email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		c.HTML(http.StatusBadRequest, "", Signup(Page{Error: technicalError(), Email: email}))
+		return
+	}
+	if found.ID != 0 {
+		c.HTML(http.StatusBadRequest, "", Signup(Page{
+			Error: &AuthError{Type: "Authentication", Message: "An account with this email already exists."},
+			Email: email,
+		}))
+		return
+	}
+
+	if err := handler.issueMagicLink(ctx, c, email, purposeSignup); err != nil {
+		c.HTML(http.StatusBadRequest, "", Signup(Page{Error: technicalError(), Email: email}))
+		return
+	}
+	c.HTML(http.StatusOK, "", Signup(Page{SentEmail: email, Email: email}))
+}
+
+func (handler *AuthHandler) ShowVerify(c *gin.Context) {
+	link, err := handler.activeLink(c.Request.Context(), c.Query("token"))
+	if errors.Is(err, errInvalidLink) {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: invalidLinkError()}))
+		return
+	}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError()}))
 		return
 	}
-	createUserParams := entities.CreateUserParams{
-		FirstName:   signupForm.FirstName,
-		LastName:    signupForm.LastName,
-		Email:       signupForm.Email,
-		Password:    string(passwordHash),
-		ProfileID:   generateProfileId(signupForm.FirstName, signupForm.LastName),
-		DisplayName: signupForm.DisplayName,
+	c.HTML(http.StatusOK, "", VerifyLink(VerifyPage{
+		Token:    c.Query("token"),
+		IsSignup: link.Purpose == purposeSignup,
+	}))
+}
+
+func (handler *AuthHandler) VerifyMagicLink(c *gin.Context) {
+	ctx := c.Request.Context()
+	var form struct {
+		Token string `form:"token"`
+	}
+	if err := c.ShouldBind(&form); err != nil {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError()}))
+		return
 	}
 
-	_, err = handler.UserRepository.CreateUser(ctx, createUserParams)
-
+	var userID int64
+	err := handler.Transactor.Within(ctx, func(ctx context.Context) error {
+		link, err := handler.activeLink(ctx, form.Token)
+		if err != nil {
+			return err
+		}
+		consumed, err := handler.MagicLinkRepository.Consume(ctx, link.ID)
+		if err != nil {
+			return err
+		}
+		if consumed != 1 {
+			return errInvalidLink
+		}
+		id, err := handler.userIDForLink(ctx, link)
+		if err != nil {
+			return err
+		}
+		userID = id
+		return nil
+	})
+	if errors.Is(err, errInvalidLink) {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: invalidLinkError()}))
+		return
+	}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to process request"})
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError()}))
 		return
 	}
 
-	c.HTML(http.StatusOK, "", Login(nil))
+	if err := handler.setSession(c, userID); err != nil {
+		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError()}))
+		return
+	}
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
-func generateProfileId(firstName string, lastName string) string {
-	randomInt := rand.Intn(100000)
-	return firstName + "-" + lastName + "-" + strconv.Itoa(randomInt)
+func (handler *AuthHandler) issueMagicLink(ctx context.Context, c *gin.Context, email, purpose string) error {
+	raw, hash, err := newMagicToken()
+	if err != nil {
+		return err
+	}
+	expires := time.Now().UTC().Add(magicLinkTTL).Format(time.RFC3339)
+	err = handler.Transactor.Within(ctx, func(ctx context.Context) error {
+		if err := handler.MagicLinkRepository.InvalidateUnused(ctx, email); err != nil {
+			return err
+		}
+		_, err := handler.MagicLinkRepository.Create(ctx, entities.CreateMagicLinkParams{
+			Email:     email,
+			TokenHash: hash,
+			Purpose:   purpose,
+			ExpiresAt: expires,
+		})
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	return handler.Mailer.SendMagicLink(ctx, email, magicLinkURL(c, raw))
 }
 
-func (handler *AuthHandler) LoginForm(c *gin.Context) {
-	ctx := context.Background()
-	var loginForm LoginForm
+func (handler *AuthHandler) activeLink(ctx context.Context, token string) (entities.MagicLink, error) {
+	if strings.TrimSpace(token) == "" {
+		return entities.MagicLink{}, errInvalidLink
+	}
+	link, err := handler.MagicLinkRepository.GetActiveByTokenHash(ctx, entities.GetActiveMagicLinkByTokenHashParams{
+		TokenHash: hashMagicToken(token),
+		Now:       time.Now().UTC().Format(time.RFC3339),
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return entities.MagicLink{}, errInvalidLink
+	}
+	if err != nil {
+		return entities.MagicLink{}, err
+	}
+	return link, nil
+}
 
-	c.Bind(&loginForm)
-
-	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, loginForm.Email)
-
-	if userFound.ID == 0 {
-		loginErr := &AuthError{
-			Message: "Invalid username or password. Please try again.",
-			Type:    "Authentication",
-		}
-		c.HTML(http.StatusForbidden, "", Login(loginErr))
+func (handler *AuthHandler) userIDForLink(ctx context.Context, link entities.MagicLink) (int64, error) {
+	found, err := handler.UserRepository.GetUserByEmail(ctx, link.Email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return 0, err
+	}
+	if found.ID != 0 {
+		return found.ID, nil
+	}
+	if link.Purpose != purposeSignup {
+		return 0, errInvalidLink
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(loginForm.Password)); err != nil {
-		loginErr := &AuthError{
-			Message: "Invalid username or password. Please try again.",
-			Type:    "Authentication",
-		}
-		c.HTML(http.StatusForbidden, "", Login(loginErr))
+	_, err = handler.UserRepository.CreateUser(ctx, entities.CreateUserParams{
+		FirstName:   "",
+		LastName:    "",
+		Email:       link.Email,
+		ProfileID:   profileIDForEmail(link.Email),
+		DisplayName: "",
+	})
+	if err != nil {
+		return 0, err
 	}
+	created, err := handler.UserRepository.GetUserByEmail(ctx, link.Email)
+	if err != nil {
+		return 0, err
+	}
+	if created.ID == 0 {
+		return 0, fmt.Errorf("created user %s has no id", link.Email)
+	}
+	return created.ID, nil
+}
 
+func (handler *AuthHandler) setSession(c *gin.Context, userID int64) error {
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  userFound.ID,
+		"id":  userID,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	// TODO: Use a real secret from env variables for signing jwt
 	token, err := generateToken.SignedString([]byte("SECRET"))
-
 	if err != nil {
-		loginErr := &AuthError{
-			Message: "There was a technical error. Please try again.",
-			Type:    "Technical",
-		}
-		c.HTML(http.StatusBadRequest, "", Login(loginErr))
+		return err
 	}
 
-	cookieName := "access_token"
-	cookieMaxAge := 15 * 60
-	secure := false
-	sameSite := http.SameSiteLaxMode
-
-	c.SetCookie(cookieName,
-		token,
-		cookieMaxAge,
-		"/",
-		"",
-		secure,
-		true)
-
-	cookie := &http.Cookie{
-		Name:     cookieName,
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "access_token",
 		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(15 * time.Minute),
-		MaxAge:   cookieMaxAge,
+		MaxAge:   15 * 60,
 		HttpOnly: true,
-		Secure:   secure,
-		SameSite: sameSite,
-	}
-	http.SetCookie(c.Writer, cookie)
-
-	c.Redirect(http.StatusSeeOther, "/")
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
+	return nil
 }
 
 func (handler *AuthHandler) Logout(c *gin.Context) {
@@ -189,44 +335,4 @@ func (handler *AuthHandler) CheckAccessToken(c *gin.Context) {
 	)
 
 	c.Next()
-}
-
-func (handler *AuthHandler) ResetPassword(c *gin.Context) {
-	ctx := context.Background()
-
-	var resetPassword ResetPassword
-	c.Bind(&resetPassword)
-
-	userFound, _ := handler.UserRepository.GetUserByEmailForLogin(ctx, resetPassword.Email)
-
-	if userFound.ID == 0 {
-		authErr := &AuthError{
-			Message: "Invalid username. Please try again.",
-			Type:    "Authentication",
-		}
-		c.HTML(http.StatusForbidden, "", ForgottenPassword(authErr))
-	}
-
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(resetPassword.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	resetPasswordParams := entities.ResetPasswordParams{
-		Email:    resetPassword.Email,
-		Password: string(passwordHash),
-	}
-
-	resetErr := handler.UserRepository.ResetPassword(ctx, resetPasswordParams)
-
-	if resetErr != nil {
-		authErr := &AuthError{
-			Message: "Unable to reset password. Please try again.",
-			Type:    "Technical",
-		}
-		c.HTML(http.StatusForbidden, "", ForgottenPassword(authErr))
-	}
-
-	c.HTML(http.StatusOK, "", ResetPasswordSuccess())
 }

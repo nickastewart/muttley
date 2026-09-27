@@ -11,11 +11,10 @@ import (
 	"muttley/fileupload"
 	"muttley/friend"
 	"muttley/location"
+	"muttley/mailer"
 	"muttley/sqlite"
 	"muttley/sqlite/entities"
-	"muttley/templates"
 	"muttley/user"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "modernc.org/sqlite"
@@ -36,7 +35,7 @@ func main() {
 	var friendRepository friend.FriendRepository = friend.NewFriendRepository(queries)
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 
-	authHandler := auth.NewAuthHandler(userRepository)
+	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mailer.NewLogMailer(), sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
@@ -48,8 +47,10 @@ func main() {
 	router.Static("/images", "./static/images")
 	router.Static("/icons", "./static/icons")
 
-	router.POST("/signup", authHandler.Signup)
-	router.POST("/login", authHandler.LoginForm)
+	router.POST("/signup", authHandler.RequestSignup)
+	router.POST("/login", authHandler.RequestLogin)
+	router.GET("/login/verify", authHandler.ShowVerify)
+	router.POST("/login/verify", authHandler.VerifyMagicLink)
 	router.POST("/logout", authHandler.CheckAccessToken, authHandler.Logout)
 
 	router.HTMLRender = &TemplRender{}
@@ -57,19 +58,8 @@ func main() {
 	router.GET("/", authHandler.CheckAccessToken, dashboardHandler.GetDashboard)
 	router.GET("/dashboard", authHandler.CheckAccessToken, dashboardHandler.GetDashboard)
 
-	router.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", auth.Login(nil))
-	})
-
-	router.GET("/signup", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", templates.Signup())
-	})
-
-	router.GET("/forgotten-password", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "", auth.ForgottenPassword(nil))
-	})
-
-	router.POST("/reset-password", authHandler.ResetPassword)
+	router.GET("/login", authHandler.ShowLogin)
+	router.GET("/signup", authHandler.ShowSignup)
 
 	router.GET("/leaderboard", authHandler.CheckAccessToken, eventHandler.Leaderboard)
 

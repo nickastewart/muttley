@@ -2,7 +2,7 @@ package templates
 
 import "muttley/sqlite/entities"
 
-templ Account(user entities.GetUserByIdRow, success string, errMsg string) {
+templ Account(user entities.User, success string, errMsg string) {
 	@Head() {
 		<link rel="stylesheet" type="text/css" href="/styles/account.css"/>
 	}

@@ -23,7 +23,7 @@ func (r *UserRepositorySqlite) q(ctx context.Context) *entities.Queries {
 	return sqlite.Queries(ctx, r.queries)
 }
 
-func (r *UserRepositorySqlite) GetUserById(ctx context.Context, id int64) (entities.GetUserByIdRow, error) {
+func (r *UserRepositorySqlite) GetUserById(ctx context.Context, id int64) (entities.User, error) {
 	user, err := r.q(ctx).GetUserById(ctx, id)
 	return user, err
 }
@@ -39,11 +39,6 @@ func (r *UserRepositorySqlite) GetUserByEmail(ctx context.Context, email string)
 	return user, err
 }
 
-func (r *UserRepositorySqlite) GetUserByEmailForLogin(ctx context.Context, email string) (entities.GetUserByEmailForLoginRow, error) {
-	user, err := r.q(ctx).GetUserByEmailForLogin(ctx, email)
-	return user, err
-}
-
 func (r *UserRepositorySqlite) GetUsersBySearchTerm(ctx context.Context, params entities.GetUsersBySearchTermParams) ([]entities.GetUsersBySearchTermRow, error) {
 	users, err := r.q(ctx).GetUsersBySearchTerm(ctx, params)
 	return users, err
@@ -52,11 +47,6 @@ func (r *UserRepositorySqlite) GetUsersBySearchTerm(ctx context.Context, params 
 func (r *UserRepositorySqlite) GetUserIdByProfileId(ctx context.Context, profileId string) (int64, error) {
 	userId, err := r.q(ctx).GetUserIdByProfileId(ctx, profileId)
 	return userId, err
-}
-
-func (r *UserRepositorySqlite) ResetPassword(ctx context.Context, params entities.ResetPasswordParams) error {
-	err := r.q(ctx).ResetPassword(ctx, params)
-	return err
 }
 
 func (r *UserRepositorySqlite) UpdateUser(ctx context.Context, params entities.UpdateUserParams) error {

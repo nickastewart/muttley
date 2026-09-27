@@ -37,6 +37,20 @@ func (q *Queries) AddFriend(ctx context.Context, arg AddFriendParams) (Friend, e
 	return i, err
 }
 
+const consumeMagicLink = `-- name: ConsumeMagicLink :execrows
+UPDATE magic_link
+SET used_at = CURRENT_TIMESTAMP
+WHERE id = ? AND used_at IS NULL
+`
+
+func (q *Queries) ConsumeMagicLink(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.ExecContext(ctx, consumeMagicLink, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO event (location_id, type, date, total_drivers) VALUES (?, ?, ?, ?)
     RETURNING id, location_id, type, date, total_drivers
@@ -115,8 +129,41 @@ func (q *Queries) CreateLocation(ctx context.Context, name string) (Location, er
 	return i, err
 }
 
+const createMagicLink = `-- name: CreateMagicLink :one
+INSERT INTO magic_link (email, token_hash, purpose, expires_at)
+VALUES (?, ?, ?, ?)
+RETURNING id, email, token_hash, purpose, expires_at, used_at, created_at
+`
+
+type CreateMagicLinkParams struct {
+	Email     string
+	TokenHash string
+	Purpose   string
+	ExpiresAt string
+}
+
+func (q *Queries) CreateMagicLink(ctx context.Context, arg CreateMagicLinkParams) (MagicLink, error) {
+	row := q.db.QueryRowContext(ctx, createMagicLink,
+		arg.Email,
+		arg.TokenHash,
+		arg.Purpose,
+		arg.ExpiresAt,
+	)
+	var i MagicLink
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.TokenHash,
+		&i.Purpose,
+		&i.ExpiresAt,
+		&i.UsedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
-INSERT INTO user (first_name, last_name, email, password, profile_id, display_name) VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO user (first_name, last_name, email, profile_id, display_name) VALUES (?, ?, ?, ?, ?)
     RETURNING first_name, last_name, email, profile_id, display_name, created_at
 `
 
@@ -124,7 +171,6 @@ type CreateUserParams struct {
 	FirstName   string
 	LastName    string
 	Email       string
-	Password    string
 	ProfileID   string
 	DisplayName string
 }
@@ -143,7 +189,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
-		arg.Password,
 		arg.ProfileID,
 		arg.DisplayName,
 	)
@@ -184,6 +229,32 @@ DELETE FROM user WHERE id = ?
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
+}
+
+const getActiveMagicLinkByTokenHash = `-- name: GetActiveMagicLinkByTokenHash :one
+SELECT id, email, token_hash, purpose, expires_at, used_at, created_at
+FROM magic_link
+WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?2
+`
+
+type GetActiveMagicLinkByTokenHashParams struct {
+	TokenHash string
+	Now       string
+}
+
+func (q *Queries) GetActiveMagicLinkByTokenHash(ctx context.Context, arg GetActiveMagicLinkByTokenHashParams) (MagicLink, error) {
+	row := q.db.QueryRowContext(ctx, getActiveMagicLinkByTokenHash, arg.TokenHash, arg.Now)
+	var i MagicLink
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.TokenHash,
+		&i.Purpose,
+		&i.ExpiresAt,
+		&i.UsedAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const getBestTrack = `-- name: GetBestTrack :one
@@ -302,7 +373,7 @@ func (q *Queries) GetEventResultByEventIdAndUserId(ctx context.Context, arg GetE
 }
 
 const getEventsByUser = `-- name: GetEventsByUser :many
-SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.profile_id, user.password, user.display_name, user.created_at FROM event
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.profile_id, user.display_name, user.created_at FROM event
     LEFT JOIN location on event.location_id = location.id
     LEFT JOIN event_result on event.id = event_result.event_id
     LEFT JOIN user on user.id = event_result.user_id
@@ -355,7 +426,6 @@ func (q *Queries) GetEventsByUser(ctx context.Context, ids []int64) ([]GetEvents
 			&i.User.LastName,
 			&i.User.Email,
 			&i.User.ProfileID,
-			&i.User.Password,
 			&i.User.DisplayName,
 			&i.User.CreatedAt,
 		); err != nil {
@@ -618,40 +688,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 	return i, err
 }
 
-const getUserByEmailForLogin = `-- name: GetUserByEmailForLogin :one
-SELECT id, email, password FROM user WHERE email = ?
-`
-
-type GetUserByEmailForLoginRow struct {
-	ID       int64
-	Email    string
-	Password string
-}
-
-func (q *Queries) GetUserByEmailForLogin(ctx context.Context, email string) (GetUserByEmailForLoginRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmailForLogin, email)
-	var i GetUserByEmailForLoginRow
-	err := row.Scan(&i.ID, &i.Email, &i.Password)
-	return i, err
-}
-
 const getUserById = `-- name: GetUserById :one
 SELECT id, first_name, last_name, email, profile_id, display_name, created_at FROM user WHERE id = ?
 `
 
-type GetUserByIdRow struct {
-	ID          int64
-	FirstName   string
-	LastName    string
-	Email       string
-	ProfileID   string
-	DisplayName string
-	CreatedAt   sql.NullString
-}
-
-func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
+func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
-	var i GetUserByIdRow
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
@@ -665,7 +708,7 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 }
 
 const getUserFriendsResults = `-- name: GetUserFriendsResults :many
-SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.profile_id, user.password, user.display_name, user.created_at FROM event
+SELECT event.id, event.location_id, event.type, event.date, event.total_drivers, location.id, location.name, event_result.id, event_result.event_id, event_result.user_id, event_result.best_lap_time, event_result.average_lap_time, event_result.position, event_result.number_of_laps, user.id, user.first_name, user.last_name, user.email, user.profile_id, user.display_name, user.created_at FROM event
     LEFT JOIN location ON event.location_id = location.id
     LEFT JOIN event_result ON event.id = event_result.event_id
     LEFT JOIN user ON user.id = event_result.user_id
@@ -708,7 +751,6 @@ func (q *Queries) GetUserFriendsResults(ctx context.Context, userID int64) ([]Ge
 			&i.User.LastName,
 			&i.User.Email,
 			&i.User.ProfileID,
-			&i.User.Password,
 			&i.User.DisplayName,
 			&i.User.CreatedAt,
 		); err != nil {
@@ -785,17 +827,14 @@ func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearch
 	return items, nil
 }
 
-const resetPassword = `-- name: ResetPassword :exec
-UPDATE user SET password = ? WHERE email = ?
+const invalidateUnusedMagicLinks = `-- name: InvalidateUnusedMagicLinks :exec
+UPDATE magic_link
+SET used_at = CURRENT_TIMESTAMP
+WHERE email = ? AND used_at IS NULL
 `
 
-type ResetPasswordParams struct {
-	Password string
-	Email    string
-}
-
-func (q *Queries) ResetPassword(ctx context.Context, arg ResetPasswordParams) error {
-	_, err := q.db.ExecContext(ctx, resetPassword, arg.Password, arg.Email)
+func (q *Queries) InvalidateUnusedMagicLinks(ctx context.Context, email string) error {
+	_, err := q.db.ExecContext(ctx, invalidateUnusedMagicLinks, email)
 	return err
 }
 

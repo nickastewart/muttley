@@ -27,7 +27,7 @@ func (handler *UserHandler) Account(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	c.Header("HX-Redirect", "/account")
 	c.HTML(http.StatusOK, "", templates.Account(user, "", ""))
 }
@@ -40,7 +40,7 @@ func (handler *UserHandler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	currentEmail := user.Email
 
 	var form UpdateAccountForm
@@ -97,7 +97,7 @@ func (handler *UserHandler) DeleteAccount(c *gin.Context) {
 		return
 	}
 
-	user := u.(entities.GetUserByIdRow)
+	user := u.(entities.User)
 	if err := handler.UserRepository.DeleteUser(ctx, user.ID); err != nil {
 		c.Header("HX-Retarget", "body")
 		c.Header("HX-Reswap", "innerHTML")

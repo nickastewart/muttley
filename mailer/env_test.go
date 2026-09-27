@@ -17,6 +17,17 @@ func TestNewFromEnvDefaultsToLogMailer(t *testing.T) {
 	}
 }
 
+func TestNewFromEnvTestMailer(t *testing.T) {
+	t.Setenv("MAILER", "test")
+	got, err := mailer.NewFromEnv()
+	if err != nil {
+		t.Fatalf("new from env: %v", err)
+	}
+	if _, ok := got.(*mailer.TestMailer); !ok {
+		t.Fatalf("mailer = %T", got)
+	}
+}
+
 func TestNewFromEnvResend(t *testing.T) {
 	t.Setenv("MAILER", "resend")
 	t.Setenv("RESEND_API_KEY", "re_test")

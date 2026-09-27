@@ -3,6 +3,7 @@ package auth_test
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -174,6 +175,44 @@ func TestSignupMagicLinkCreatesTheAccount(t *testing.T) {
 	home := request(t, router, http.MethodGet, "/", nil, rec.Result().Cookies())
 	if home.Code != http.StatusOK {
 		t.Fatalf("home status = %d body = %s", home.Code, home.Body.String())
+	}
+}
+
+func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
+	tokens := mailer.NewTestMailer()
+	handler, db := newAuthHandler(t, tokens)
+	router := testRouter(handler)
+	router.GET("/test/magic-link", auth.TestMagicLink(tokens))
+	createAuthUser(t, db, "ada@example.com")
+
+	requestHTML(t, router, http.MethodPost, "/login", url.Values{"email": {"Ada@Example.com"}}, nil)
+
+	missing := request(t, router, http.MethodGet, "/test/magic-link", nil, nil)
+	if missing.Code != http.StatusBadRequest {
+		t.Fatalf("missing email status = %d body = %s", missing.Code, missing.Body.String())
+	}
+	unknown := request(t, router, http.MethodGet, "/test/magic-link?email=missing@example.com", nil, nil)
+	if unknown.Code != http.StatusNotFound {
+		t.Fatalf("unknown email status = %d body = %s", unknown.Code, unknown.Body.String())
+	}
+
+	rec := request(t, router, http.MethodGet, "/test/magic-link?email=ada@example.com", nil, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("token status = %d body = %s", rec.Code, rec.Body.String())
+	}
+	var payload struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode token: %v", err)
+	}
+	if payload.Token == "" {
+		t.Fatalf("token payload = %s", rec.Body.String())
+	}
+
+	verified := request(t, router, http.MethodPost, "/login/verify", url.Values{"token": {payload.Token}}, nil)
+	if verified.Code != http.StatusSeeOther {
+		t.Fatalf("verify status = %d body = %s", verified.Code, verified.Body.String())
 	}
 }
 

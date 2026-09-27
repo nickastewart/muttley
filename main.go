@@ -16,6 +16,7 @@ import (
 	"muttley/templates"
 	"muttley/user"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	_ "modernc.org/sqlite"
@@ -36,7 +37,16 @@ func main() {
 	var friendRepository friend.FriendRepository = friend.NewFriendRepository(queries)
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 
-	authHandler := auth.NewAuthHandler(userRepository)
+	baseURL := os.Getenv("APP_BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+	authHandler := auth.NewAuthHandlerWithMagicLink(
+		userRepository,
+		auth.NewMagicLinkRepository(db),
+		auth.LogMailer{},
+		baseURL,
+	)
 	userHandler := user.NewUserHandler(userRepository)
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
@@ -50,6 +60,8 @@ func main() {
 
 	router.POST("/signup", authHandler.Signup)
 	router.POST("/login", authHandler.LoginForm)
+	router.POST("/login/magic", authHandler.RequestMagicLink)
+	router.GET("/login/magic", authHandler.ConsumeMagicLink)
 	router.POST("/logout", authHandler.CheckAccessToken, authHandler.Logout)
 
 	router.HTMLRender = &TemplRender{}

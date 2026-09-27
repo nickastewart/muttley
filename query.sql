@@ -23,7 +23,7 @@ SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?;
 -- name: CreateMagicLink :one
 INSERT INTO magic_link (email, token_hash, purpose, expires_at)
 VALUES (?, ?, ?, ?)
-RETURNING id, email, token_hash, purpose, expires_at, used_at, created_at, token;
+RETURNING id, email, token_hash, purpose, expires_at, used_at, created_at;
 
 -- name: InvalidateUnusedMagicLinks :exec
 UPDATE magic_link
@@ -31,7 +31,7 @@ SET used_at = CURRENT_TIMESTAMP
 WHERE email = ? AND used_at IS NULL;
 
 -- name: GetActiveMagicLinkByTokenHash :one
-SELECT id, email, token_hash, purpose, expires_at, used_at, created_at, token
+SELECT id, email, token_hash, purpose, expires_at, used_at, created_at
 FROM magic_link
 WHERE token_hash = ? AND used_at IS NULL AND expires_at > sqlc.arg(now);
 
@@ -40,23 +40,12 @@ UPDATE magic_link
 SET used_at = CURRENT_TIMESTAMP
 WHERE id = ? AND used_at IS NULL;
 
--- name: SaveMagicLinkToken :execrows
-UPDATE magic_link
-SET token = ?
-WHERE id = (
-    SELECT latest.id FROM magic_link AS latest
-    WHERE latest.email = ? AND latest.used_at IS NULL
-    ORDER BY latest.id DESC
-    LIMIT 1
-);
-
 -- name: GetActiveMagicLinkTokenByEmail :one
-SELECT token
+SELECT token_hash
 FROM magic_link
 WHERE email = ?
   AND used_at IS NULL
   AND expires_at > sqlc.arg(now)
-  AND token != ''
 ORDER BY id DESC
 LIMIT 1;
 

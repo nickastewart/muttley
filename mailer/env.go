@@ -17,11 +17,12 @@ func TestProfile() bool {
 // MAILER defaults to log, which prints the link instead of sending it.
 // Local development should leave MAILER unset. Set MAILER=resend, along
 // with RESEND_API_KEY and RESEND_FROM, to deliver mail through Resend.
-// PROFILE=test, or MAILER=test, logs the link and stores the raw token in
-// the database. The token endpoint is still registered only for PROFILE=test.
+// PROFILE=test, or MAILER=test, logs the link. The hash is saved with the
+// magic link, the same as any other sign-in. The token endpoint is registered
+// only for PROFILE=test.
 func NewFromEnv() (Mailer, error) {
 	if TestProfile() || strings.EqualFold(strings.TrimSpace(os.Getenv("MAILER")), "test") {
-		return NewTestMailer(nil), nil
+		return NewTestMailer(), nil
 	}
 	switch strings.ToLower(strings.TrimSpace(os.Getenv("MAILER"))) {
 	case "", "log":

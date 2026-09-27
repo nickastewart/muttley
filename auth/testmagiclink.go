@@ -24,8 +24,8 @@ func RegisterTestMagicLink(router gin.IRoutes, tokens magicLinkTokenReader) {
 	router.GET("/test/magic-link/:email", TestMagicLink(tokens))
 }
 
-// TestMagicLink returns the raw token stored for the email path parameter.
-// It responds 404 unless PROFILE=test. The token signs the user in.
+// TestMagicLink returns the stored token hash for the email path parameter.
+// It responds 404 unless PROFILE=test.
 func TestMagicLink(tokens magicLinkTokenReader) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !mailer.TestProfile() || tokens == nil {

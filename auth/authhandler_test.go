@@ -180,10 +180,9 @@ func TestSignupMagicLinkCreatesTheAccount(t *testing.T) {
 
 func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
 	t.Setenv("PROFILE", "test")
-	tokens := mailer.NewTestMailer(nil)
+	tokens := mailer.NewTestMailer()
 	handler, db := newAuthHandler(t, tokens)
 	repo := auth.NewMagicLinkRepository(db)
-	tokens.Store = repo
 	router := testRouter(handler)
 	auth.RegisterTestMagicLink(router, repo)
 	createAuthUser(t, db, "ada@example.com")
@@ -191,8 +190,8 @@ func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
 	requestHTML(t, router, http.MethodPost, "/login", url.Values{"email": {"Ada@Example.com"}}, nil)
 
 	var stored string
-	if err := db.QueryRow(`SELECT token FROM magic_link WHERE email = ? AND used_at IS NULL`, "ada@example.com").Scan(&stored); err != nil {
-		t.Fatalf("stored token: %v", err)
+	if err := db.QueryRow(`SELECT token_hash FROM magic_link WHERE email = ? AND used_at IS NULL`, "ada@example.com").Scan(&stored); err != nil {
+		t.Fatalf("stored token hash: %v", err)
 	}
 
 	invalid := request(t, router, http.MethodGet, "/test/magic-link/"+url.PathEscape("not-an-email"), nil, nil)
@@ -217,27 +216,21 @@ func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
 	if payload.Token == "" || payload.Token != stored {
 		t.Fatalf("token payload = %s stored = %s", rec.Body.String(), stored)
 	}
-
-	verified := request(t, router, http.MethodPost, "/login/verify", url.Values{"token": {payload.Token}}, nil)
-	if verified.Code != http.StatusSeeOther {
-		t.Fatalf("verify status = %d body = %s", verified.Code, verified.Body.String())
-	}
 }
 
 func TestTestMagicLinkRouteHiddenUnlessTestProfile(t *testing.T) {
 	t.Setenv("PROFILE", "")
-	tokens := mailer.NewTestMailer(nil)
+	tokens := mailer.NewTestMailer()
 	handler, db := newAuthHandler(t, tokens)
 	repo := auth.NewMagicLinkRepository(db)
-	tokens.Store = repo
 	router := testRouter(handler)
 	auth.RegisterTestMagicLink(router, repo)
 	createAuthUser(t, db, "ada@example.com")
 	requestHTML(t, router, http.MethodPost, "/login", url.Values{"email": {"ada@example.com"}}, nil)
 
 	var stored string
-	if err := db.QueryRow(`SELECT token FROM magic_link WHERE email = ? AND used_at IS NULL`, "ada@example.com").Scan(&stored); err != nil {
-		t.Fatalf("stored token: %v", err)
+	if err := db.QueryRow(`SELECT token_hash FROM magic_link WHERE email = ? AND used_at IS NULL`, "ada@example.com").Scan(&stored); err != nil {
+		t.Fatalf("stored token hash: %v", err)
 	}
 	hidden := request(t, router, http.MethodGet, "/test/magic-link/"+url.PathEscape("ada@example.com"), nil, nil)
 	if hidden.Code != http.StatusNotFound || strings.Contains(hidden.Body.String(), stored) {

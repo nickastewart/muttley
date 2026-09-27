@@ -18,20 +18,19 @@ Load tests set the test profile:
 PROFILE=test
 ```
 
-That still creates the magic link the same way as a real sign-in, logs it, and
-saves the raw token on that database row. The token route is registered only
-while `PROFILE=test`. Fetch the token with the email as a path parameter:
+That still creates the magic link the same way as a real sign-in: only the
+token hash is stored. The link is also logged. The token route is registered
+only while `PROFILE=test`. Fetch the hash with the email as a path parameter:
 
 ```
 GET /test/magic-link/ada@example.com
 ```
 
 ```json
-{"token":"..."}
+{"token":"<token hash>"}
 ```
 
-Do not set `PROFILE=test` outside a test environment. The endpoint returns a
-token that signs that user in.
+Do not set `PROFILE=test` outside a test environment.
 
 To deliver mail with [Resend](https://resend.com/docs/introduction):
 

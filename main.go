@@ -42,9 +42,6 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	if testMailer, ok := mail.(*mailer.TestMailer); ok {
-		testMailer.Store = magicLinks
-	}
 
 	authHandler := auth.NewAuthHandler(userRepository, magicLinks, mail, sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)

@@ -36,13 +36,17 @@ func main() {
 	var friendRepository friend.FriendRepository = friend.NewFriendRepository(queries)
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 	var headToHeadRepository headtohead.HeadToHeadRepository = headtohead.NewHeadToHeadRepository(queries)
+	magicLinks := auth.NewMagicLinkRepository(db)
 
 	mail, err := mailer.NewFromEnv()
 	if err != nil {
 		log.Panic(err)
 	}
+	if testMailer, ok := mail.(*mailer.TestMailer); ok {
+		testMailer.Store = magicLinks
+	}
 
-	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mail, sqlite.NewTransactor(db))
+	authHandler := auth.NewAuthHandler(userRepository, magicLinks, mail, sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
@@ -60,8 +64,8 @@ func main() {
 	router.GET("/login/verify", authHandler.ShowVerify)
 	router.POST("/login/verify", authHandler.VerifyMagicLink)
 	router.POST("/logout", authHandler.CheckAccessToken, authHandler.Logout)
-	if tokens, ok := mail.(*mailer.TestMailer); ok {
-		router.GET("/test/magic-link", auth.TestMagicLink(tokens))
+	if _, ok := mail.(*mailer.TestMailer); ok {
+		router.GET("/test/magic-link", auth.TestMagicLink(magicLinks))
 	}
 
 	router.HTMLRender = &TemplRender{}

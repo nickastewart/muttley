@@ -50,6 +50,7 @@ type MagicLink struct {
 	ExpiresAt string
 	UsedAt    sql.NullString
 	CreatedAt string
+	Token     string
 }
 
 type User struct {

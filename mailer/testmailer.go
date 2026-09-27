@@ -6,31 +6,25 @@ import (
 	"log"
 	"net/url"
 	"strings"
-	"sync"
 )
 
-// MagicLinkToken is a raw sign-in token kept by TestMailer so a load test
-// can fetch it. The hashed copy used to sign in still lives in magic_link.
-type MagicLinkToken struct {
-	Email string
-	Token string
-	Link  string
+// TokenStore saves the raw magic-link token for a later database lookup.
+type TokenStore interface {
+	SaveToken(ctx context.Context, email, token string) error
 }
 
-// TestMailer logs a magic link and remembers the raw token, keyed by email.
+// TestMailer logs a magic link and stores the raw token for that email.
 // It is only for load tests. Do not use it in production: the token endpoint
-// returns secrets that sign a user in.
+// returns a secret that signs a user in.
 type TestMailer struct {
 	Logger *log.Logger
-
-	mu     sync.Mutex
-	tokens map[string]MagicLinkToken
+	Store  TokenStore
 }
 
-func NewTestMailer() *TestMailer {
+func NewTestMailer(store TokenStore) *TestMailer {
 	return &TestMailer{
 		Logger: log.Default(),
-		tokens: map[string]MagicLinkToken{},
+		Store:  store,
 	}
 }
 
@@ -43,29 +37,16 @@ func (m *TestMailer) SendMagicLink(ctx context.Context, to, link string) error {
 	if email == "" {
 		return fmt.Errorf("mailer: magic link email is required")
 	}
+	if m.Store == nil {
+		return fmt.Errorf("mailer: test token store is not configured")
+	}
 
 	logger := m.Logger
 	if logger == nil {
 		logger = log.Default()
 	}
 	logger.Printf("magic link for %s: %s", email, link)
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.tokens == nil {
-		m.tokens = map[string]MagicLinkToken{}
-	}
-	m.tokens[email] = MagicLinkToken{Email: email, Token: token, Link: link}
-	return nil
-}
-
-// Token returns the latest raw magic-link token saved for email.
-func (m *TestMailer) Token(email string) (MagicLinkToken, bool) {
-	key := strings.ToLower(strings.TrimSpace(email))
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	saved, ok := m.tokens[key]
-	return saved, ok
+	return m.Store.SaveToken(ctx, email, token)
 }
 
 func tokenFromMagicLink(link string) (string, error) {

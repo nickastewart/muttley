@@ -179,13 +179,20 @@ func TestSignupMagicLinkCreatesTheAccount(t *testing.T) {
 }
 
 func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
-	tokens := mailer.NewTestMailer()
+	tokens := mailer.NewTestMailer(nil)
 	handler, db := newAuthHandler(t, tokens)
+	repo := auth.NewMagicLinkRepository(db)
+	tokens.Store = repo
 	router := testRouter(handler)
-	router.GET("/test/magic-link", auth.TestMagicLink(tokens))
+	router.GET("/test/magic-link", auth.TestMagicLink(repo))
 	createAuthUser(t, db, "ada@example.com")
 
 	requestHTML(t, router, http.MethodPost, "/login", url.Values{"email": {"Ada@Example.com"}}, nil)
+
+	var stored string
+	if err := db.QueryRow(`SELECT token FROM magic_link WHERE email = ? AND used_at IS NULL`, "ada@example.com").Scan(&stored); err != nil {
+		t.Fatalf("stored token: %v", err)
+	}
 
 	missing := request(t, router, http.MethodGet, "/test/magic-link", nil, nil)
 	if missing.Code != http.StatusBadRequest {
@@ -206,8 +213,8 @@ func TestTestMagicLinkEndpointReturnsTheSavedToken(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("decode token: %v", err)
 	}
-	if payload.Token == "" {
-		t.Fatalf("token payload = %s", rec.Body.String())
+	if payload.Token == "" || payload.Token != stored {
+		t.Fatalf("token payload = %s stored = %s", rec.Body.String(), stored)
 	}
 
 	verified := request(t, router, http.MethodPost, "/login/verify", url.Values{"token": {payload.Token}}, nil)

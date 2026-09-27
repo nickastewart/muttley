@@ -1,16 +1,21 @@
 package auth
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"net/http"
-
-	"muttley/mailer"
 
 	"github.com/gin-gonic/gin"
 )
 
-// TestMagicLink returns the raw token TestMailer saved for an email.
+type magicLinkTokenReader interface {
+	ActiveToken(ctx context.Context, email string) (string, error)
+}
+
+// TestMagicLink returns the raw token stored for an email.
 // Register it only when MAILER=test. The token signs the user in.
-func TestMagicLink(tokens *mailer.TestMailer) gin.HandlerFunc {
+func TestMagicLink(tokens magicLinkTokenReader) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if tokens == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "magic link test mode is not enabled"})
@@ -21,11 +26,19 @@ func TestMagicLink(tokens *mailer.TestMailer) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
 			return
 		}
-		saved, ok := tokens.Token(email)
-		if !ok {
+		token, err := tokens.ActiveToken(c.Request.Context(), email)
+		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "no magic link token"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"token": saved.Token})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not load magic link token"})
+			return
+		}
+		if token == "" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "no magic link token"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
 }

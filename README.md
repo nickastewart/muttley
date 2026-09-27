@@ -13,7 +13,8 @@ should leave `MAILER` unset so the link is printed to the server log instead of
 being sent.
 
 Load tests can set `MAILER=test`. That still creates the magic link the same
-way as a real sign-in, logs it, and remembers the raw token. Fetch it with:
+way as a real sign-in, logs it, and saves the raw token on that database row.
+Fetch it with:
 
 ```
 GET /test/magic-link?email=ada@example.com

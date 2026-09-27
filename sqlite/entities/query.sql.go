@@ -132,7 +132,7 @@ func (q *Queries) CreateLocation(ctx context.Context, name string) (Location, er
 const createMagicLink = `-- name: CreateMagicLink :one
 INSERT INTO magic_link (email, token_hash, purpose, expires_at)
 VALUES (?, ?, ?, ?)
-RETURNING id, email, token_hash, purpose, expires_at, used_at, created_at
+RETURNING id, email, token_hash, purpose, expires_at, used_at, created_at, token
 `
 
 type CreateMagicLinkParams struct {
@@ -158,6 +158,7 @@ func (q *Queries) CreateMagicLink(ctx context.Context, arg CreateMagicLinkParams
 		&i.ExpiresAt,
 		&i.UsedAt,
 		&i.CreatedAt,
+		&i.Token,
 	)
 	return i, err
 }
@@ -232,7 +233,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getActiveMagicLinkByTokenHash = `-- name: GetActiveMagicLinkByTokenHash :one
-SELECT id, email, token_hash, purpose, expires_at, used_at, created_at
+SELECT id, email, token_hash, purpose, expires_at, used_at, created_at, token
 FROM magic_link
 WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?2
 `
@@ -253,8 +254,32 @@ func (q *Queries) GetActiveMagicLinkByTokenHash(ctx context.Context, arg GetActi
 		&i.ExpiresAt,
 		&i.UsedAt,
 		&i.CreatedAt,
+		&i.Token,
 	)
 	return i, err
+}
+
+const getActiveMagicLinkTokenByEmail = `-- name: GetActiveMagicLinkTokenByEmail :one
+SELECT token
+FROM magic_link
+WHERE email = ?
+  AND used_at IS NULL
+  AND expires_at > ?2
+  AND token != ''
+ORDER BY id DESC
+LIMIT 1
+`
+
+type GetActiveMagicLinkTokenByEmailParams struct {
+	Email string
+	Now   string
+}
+
+func (q *Queries) GetActiveMagicLinkTokenByEmail(ctx context.Context, arg GetActiveMagicLinkTokenByEmailParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, getActiveMagicLinkTokenByEmail, arg.Email, arg.Now)
+	var token string
+	err := row.Scan(&token)
+	return token, err
 }
 
 const getBestTrack = `-- name: GetBestTrack :one
@@ -908,6 +933,30 @@ WHERE email = ? AND used_at IS NULL
 func (q *Queries) InvalidateUnusedMagicLinks(ctx context.Context, email string) error {
 	_, err := q.db.ExecContext(ctx, invalidateUnusedMagicLinks, email)
 	return err
+}
+
+const saveMagicLinkToken = `-- name: SaveMagicLinkToken :execrows
+UPDATE magic_link
+SET token = ?
+WHERE id = (
+    SELECT latest.id FROM magic_link AS latest
+    WHERE latest.email = ? AND latest.used_at IS NULL
+    ORDER BY latest.id DESC
+    LIMIT 1
+)
+`
+
+type SaveMagicLinkTokenParams struct {
+	Token string
+	Email string
+}
+
+func (q *Queries) SaveMagicLinkToken(ctx context.Context, arg SaveMagicLinkTokenParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, saveMagicLinkToken, arg.Token, arg.Email)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const updateFriendStatus = `-- name: UpdateFriendStatus :one

@@ -10,9 +10,28 @@ import (
 	"muttley/mailer"
 )
 
+type savedToken struct {
+	email string
+	token string
+}
+
+type fakeTokenStore struct {
+	saved []savedToken
+	err   error
+}
+
+func (s *fakeTokenStore) SaveToken(ctx context.Context, email, token string) error {
+	if s.err != nil {
+		return s.err
+	}
+	s.saved = append(s.saved, savedToken{email: email, token: token})
+	return nil
+}
+
 func TestTestMailerLogsAndSavesTheToken(t *testing.T) {
 	var buf bytes.Buffer
-	m := &mailer.TestMailer{Logger: log.New(&buf, "", 0)}
+	store := &fakeTokenStore{}
+	m := &mailer.TestMailer{Logger: log.New(&buf, "", 0), Store: store}
 	link := "http://localhost/login/verify?token=abc"
 
 	if err := m.SendMagicLink(context.Background(), "Ada@Example.com", link); err != nil {
@@ -22,43 +41,27 @@ func TestTestMailerLogsAndSavesTheToken(t *testing.T) {
 	if !strings.Contains(got, "ada@example.com") || !strings.Contains(got, link) {
 		t.Fatalf("log = %q", got)
 	}
-
-	saved, ok := m.Token("ada@example.com")
-	if !ok || saved.Token != "abc" || saved.Link != link || saved.Email != "ada@example.com" {
-		t.Fatalf("saved = %+v ok = %v", saved, ok)
+	if len(store.saved) != 1 || store.saved[0].email != "ada@example.com" || store.saved[0].token != "abc" {
+		t.Fatalf("saved = %+v", store.saved)
 	}
 }
 
-func TestTestMailerKeepsTheLatestTokenPerEmail(t *testing.T) {
-	m := mailer.NewTestMailer()
-	ctx := context.Background()
-	if err := m.SendMagicLink(ctx, "ada@example.com", "http://localhost/login/verify?token=first"); err != nil {
-		t.Fatalf("first link: %v", err)
-	}
-	if err := m.SendMagicLink(ctx, "ada@example.com", "http://localhost/login/verify?token=second"); err != nil {
-		t.Fatalf("second link: %v", err)
-	}
-	if err := m.SendMagicLink(ctx, "grace@example.com", "http://localhost/login/verify?token=other"); err != nil {
-		t.Fatalf("other link: %v", err)
-	}
-
-	ada, ok := m.Token("ada@example.com")
-	if !ok || ada.Token != "second" {
-		t.Fatalf("ada = %+v ok = %v", ada, ok)
-	}
-	grace, ok := m.Token("grace@example.com")
-	if !ok || grace.Token != "other" {
-		t.Fatalf("grace = %+v ok = %v", grace, ok)
+func TestTestMailerRequiresAStore(t *testing.T) {
+	m := mailer.NewTestMailer(nil)
+	err := m.SendMagicLink(context.Background(), "ada@example.com", "http://localhost/login/verify?token=abc")
+	if err == nil {
+		t.Fatal("expected a missing store to fail")
 	}
 }
 
 func TestTestMailerRejectsALinkWithoutAToken(t *testing.T) {
-	m := mailer.NewTestMailer()
+	store := &fakeTokenStore{}
+	m := mailer.NewTestMailer(store)
 	err := m.SendMagicLink(context.Background(), "ada@example.com", "http://localhost/login/verify")
 	if err == nil {
 		t.Fatal("expected missing token to fail")
 	}
-	if _, ok := m.Token("ada@example.com"); ok {
-		t.Fatal("saved a token without one")
+	if len(store.saved) != 0 {
+		t.Fatalf("saved = %+v", store.saved)
 	}
 }

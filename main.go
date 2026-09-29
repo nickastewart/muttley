@@ -60,6 +60,7 @@ func main() {
 	router.GET("/login/verify", authHandler.ShowVerify)
 	router.POST("/login/verify", authHandler.VerifyMagicLink)
 	router.POST("/logout", authHandler.CheckAccessToken, authHandler.Logout)
+	auth.RegisterTestLogin(router, authHandler)
 
 	router.HTMLRender = &TemplRender{}
 

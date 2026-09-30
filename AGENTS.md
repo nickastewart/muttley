@@ -1,0 +1,223 @@
+# AGENTS.md
+
+Muttley is an HTTP server where friends share karting results and look at them
+on a dashboard, leaderboard, and head-to-head page. Follow the patterns below.
+Do not introduce a new layout, framework, or commit style for a one-off change.
+
+## Stack
+
+- Go 1.24 (`go.mod`). Module path is `muttley`.
+- [Gin](https://github.com/gin-gonic/gin) for routing. Entry point is `main.go`.
+- SQLite through `modernc.org/sqlite` (no CGo). The app database file is
+  `./sqlite/racer.db`. `*.db` is gitignored.
+- [sqlc](https://sqlc.dev) v1.30.0. Queries live in `sql/`, config in `sqlc.yaml`,
+  generated Go in `sqlite/entities`.
+- Schema changes are goose migrations in `migrations/`.
+- HTML is [templ](https://templ.guide) v0.3.960, with HTMX 2 for partial updates
+  and Chart.js on the dashboard.
+- Auth is a magic link emailed to the user, exchanged for a JWT `access_token`
+  cookie. Passwords have been removed (`migrations/00007_drop_user_password.sql`).
+- Race result files are parsed by `github.com/nickastewart/muttley-parser`.
+
+## Layout
+
+One package per feature, at the module root. There is no `internal/` or `cmd/`.
+
+| Path | Role |
+| --- | --- |
+| `main.go` | Open the database, construct repositories and handlers, register routes |
+| `renderer.go` | Gin HTML renderer for `templ.Component` |
+| `<feature>/` | Handler, repository interface, SQLite implementation, forms |
+| `<feature>/*.templ` or `templates/*.templ` | Pages. Auth pages live in `auth/`; shared chrome in `templates/` |
+| `sql/<feature>.sql` | sqlc queries for that feature |
+| `sqlite/entities/` | Generated sqlc code. Do not edit |
+| `sqlite/tx.go` | Transaction helper |
+| `sqlite/testdb/` | Per-test SQLite file with migrations applied |
+| `migrations/` | Numbered goose migrations |
+| `mailer/` | `Mailer` interface, log mailer, Resend mailer |
+| `static/styles/`, `static/icons/` | CSS and icons. Gin serves them at `/styles` and `/icons` |
+
+Current feature packages: `auth`, `user`, `dashboard`, `event`, `eventresult`,
+`location`, `friend`, `headtohead`, `fileupload`.
+
+## Adding a feature
+
+1. Add a goose migration. Copy the shape of `migrations/00005_create_friend_table.sql`:
+   `-- +goose Up` / `-- +goose Down`, each with `-- +goose StatementBegin` and
+   `-- +goose StatementEnd`. Name the file `000NN_short_snake_name.sql`, one
+   number above the highest file already there. Include a matching Down.
+2. Add queries to `sql/<feature>.sql`. Each query starts with a sqlc annotation
+   such as `-- name: GetUserById :one`. Use `:one`, `:many`, or `:exec`. Prefer
+   `?` placeholders. Use `sqlc.arg(name)` when the same argument is used more
+   than once or the name should be stable.
+3. Run `sqlc generate` and commit `sqlite/entities`. Do not hand-write queries
+   in Go.
+4. In the feature package, add a repository interface (`UserRepository`) and a
+   SQLite struct (`UserRepositorySqlite`) with `NewXxxRepository`. Handlers
+   depend on the interface, not the struct.
+5. Route every query through the transaction helper:
+
+   ```go
+   func (r *LocationRepositorySqlite) q(ctx context.Context) *entities.Queries {
+       return sqlite.Queries(ctx, r.queries)
+   }
+   ```
+
+   `friend` and `dashboard` still call `r.queries` directly. Do not copy that.
+   A repository that skips `sqlite.Queries` will ignore a transaction started
+   by the handler.
+6. Add a handler struct, a `NewXxxHandler` constructor, and methods with
+   signature `func (handler *XxxHandler) Name(c *gin.Context)`. Read the user
+   from `c.Get("currentUser")` and type-assert to `entities.User`.
+7. Render with `c.HTML(status, "", component)`. The empty name is required:
+   `TemplRender` only checks that the data is a `templ.Component`.
+8. Wire the repository and handler in `main.go` and register the route next to
+   the related ones. Anything that needs a logged-in user goes behind
+   `authHandler.CheckAccessToken`.
+9. Add a test. Run `go test ./...`.
+
+Most repositories take `*entities.Queries` from `entities.New(db)`. The user
+repository takes `*sql.DB` because account deletion spans tables and owns its
+own transactor. When a handler writes several repositories together, pass one
+`sqlite.NewTransactor(db)` into the handler and call `Within`.
+
+## Transactions
+
+Grouped writes commit or roll back together. Upload, magic-link issue/consume,
+and account deletion already do this.
+
+```go
+err := handler.Transactor.Within(ctx, func(ctx context.Context) error {
+    // repository methods must use sqlite.Queries(ctx, queries)
+    return nil
+})
+```
+
+`Within` joins an existing transaction instead of starting a nested one.
+`defer tx.Rollback()` runs on failure; `Commit` runs only when `fn` returns nil.
+
+## HTTP and UI
+
+- Full pages are templ components that call `@Head()` and `@Header()`.
+  Shared layout is `templates/head.templ`, `templates/header.templ`, and
+  `templates/nav.templ`. Page-specific templates live beside that feature
+  (`dashboard/dashboard.templ`) or in `templates/` for the older pages.
+- HTMX partials return only the fragment that `hx-target` swaps in. See
+  `templates/friend.templ` (`hx-get`, `hx-post`, `hx-target`, `hx-swap`).
+- Full-page handlers set `HX-Redirect` to the page URL before rendering, as
+  `Friend` and `Account` do.
+- Form errors re-render the same templ with a message. Auth uses `AuthError`
+  on `Page`. Account uses the success and error string arguments of
+  `templates.Account`.
+- JSON responses are for missing auth or request parsing failures
+  (`gin.H{"error": ...}`), not for normal page flow.
+- CSS is plain files in `static/styles/`, one file per area (`dashboard.css`,
+  `friends.css`). Link the page file from the templ `Head` block. Prefer
+  existing classes. New layout work should move toward Bootstrap utility
+  classes rather than more custom layout CSS (see issue 41).
+- After editing a `.templ` file, run `templ generate` and commit the matching
+  `*_templ.go`. Those files start with `// Code generated by templ - DO NOT EDIT.`
+
+Friend status values stored on the row are `REQUESTED`, `ACCEPTED`, and
+`CANCELLED`. Queries use `NONE` when there is no friend row.
+
+## Auth and mail
+
+- `CheckAccessToken` is the middleware that sets `currentUser`.
+- The cookie name is `access_token`. Logout and account deletion clear it.
+- Magic links are created and consumed inside a transaction. See `auth/authhandler.go`.
+- `mailer.Mailer` is the only send API: `SendMagicLink(ctx, to, link)`.
+  Leave `MAILER` unset in local development so `LogMailer` prints the link.
+  `MAILER=resend` uses `RESEND_API_KEY` and `RESEND_FROM`. Selection is
+  `mailer.NewFromEnv`.
+- `PROFILE=test` registers `GET /test/login/:id`, which sets the same cookie as
+  a real sign-in. `auth.RegisterTestLogin` no-ops for any other profile. Do not
+  set `PROFILE=test` outside a test or load-test environment.
+
+## Errors
+
+- Return `error` from repositories. A missing row is `sql.ErrNoRows`; compare
+  with `errors.Is`. A zero `ID` is also treated as "not found" in several handlers.
+- Do not add `log.Panic` on a request path. `SearchFriends` still panics on a
+  bad search; leave it unless you are fixing that path.
+- Log with `slog` at the handler when a call fails and the user can still be
+  shown a page. Auth and account handlers re-render the form instead of only
+  logging.
+
+## Tests
+
+Use the standard library `testing` package. No testify.
+
+- Repository tests are an external package (`package location_test`). Open a
+  database with `testdb.Open(t)`, wrap it with `entities.New`, and call the
+  constructor. Each test gets its own file under `t.TempDir()` with every
+  goose Up section applied. `testdb` only understands the StatementBegin form,
+  so do not write migrations in another shape.
+- Handler tests are also external (`package friend_test`). Build the handler
+  with real SQLite repositories, set `currentUser` on the Gin context, and
+  assert status code plus a snippet of the rendered HTML. Copy the render
+  adapter and request helper in `friend/friendhandler_test.go` rather than
+  adding a new test framework.
+- Name tests `TestThingYouDid`. Use `t.Helper()` in constructors and
+  `t.Fatalf("got %v, want %v", ...)` on failure.
+- Mailer tests should not call Resend. Construct the client with a fake HTTP
+  server the way `mailer/resend_test.go` does.
+
+## Generated files and commands
+
+Do not edit:
+
+- `sqlite/entities/*.go` (`// Code generated by sqlc. DO NOT EDIT.`)
+- `*_templ.go` (`// Code generated by templ - DO NOT EDIT.`)
+
+Do commit them after regenerating.
+
+```bash
+sqlc generate    # after sql/*.sql or migrations change
+templ generate   # after any .templ file changes
+go test ./...    # before opening a pull request
+```
+
+## Git commits and pull requests
+
+The subject is the issue title, with a type prefix when the title does not
+already have one.
+
+- New behaviour: `feat: <issue title>`
+- A defect: `fix: <issue title>`
+- Use `bug:` only when the issue title itself is a bug report and `fix:` does
+  not fit the wording. `test:` is allowed when the issue title already starts
+  with `Test:`.
+- If the issue title already starts with `feat:`, `fix:`, `bug:`, or `test:`,
+  use that title as the subject. Normalise the prefix to lowercase and drop
+  any extra space. Do not add a second prefix.
+- Do not add a scope (`feat(auth):`) unless the issue title already has one.
+- Keep the issue title's wording. No trailing period.
+
+Leave one blank line, then the body:
+
+1. Why the change was made. This is the user-facing or code-facing reason, not
+   a list of files.
+2. The decisions made while implementing it: what you chose, what you rejected,
+   and any constraint that shaped the diff.
+3. A trailer when the commit finishes the issue: `Closes #<n>` for features,
+   `Fixes #<n>` for defects.
+
+Wrap the body at about 72 characters. Match this subject and body on the pull
+request so a squash merge keeps the same message. One commit per pull request
+unless a later commit is a review fix, and that fix uses the same subject.
+
+```
+feat: Create AGENTS.md file
+
+Agents working in this repo had no written summary of the package layout,
+sqlc flow, or how commits should be written. AGENTS.md records the patterns
+already in the code and the commit format from issue 67.
+
+The document describes the existing structure instead of inventing a new
+layout. Commit subjects use feat, fix, or bug, or the issue title when it
+already carries that prefix. The body says why the change was made and which
+implementation decisions were taken.
+
+Closes #67
+```

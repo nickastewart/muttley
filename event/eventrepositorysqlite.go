@@ -40,6 +40,14 @@ func (r *EventRepositorySqlite) GetEventByLocationAndTypeAndDate(ctx context.Con
 	return event, err
 }
 
+func (r *EventRepositorySqlite) ListEventsByLocationAndTypeAndDate(ctx context.Context, arg entities.ListEventsByLocationAndTypeAndDateParams) ([]entities.Event, error) {
+	events, err := r.q(ctx).ListEventsByLocationAndTypeAndDate(ctx, arg)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+	return events, err
+}
+
 func (r *EventRepositorySqlite) GetEventsByUser(ctx context.Context, userID []int64) ([]entities.GetEventsByUserRow, error) {
 	events, err := r.q(ctx).GetEventsByUser(ctx, userID)
 	if err != nil {

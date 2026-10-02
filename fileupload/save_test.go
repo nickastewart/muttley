@@ -58,6 +58,104 @@ func TestSaveEventCommitsLocationEventAndResult(t *testing.T) {
 	}
 }
 
+func TestSaveEventAttachesFriendToSameSession(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	ada := createUploadUser(t, db)
+	grace := createUploadUserNamed(t, db, "Grace", "grace@example.com", "grace")
+	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
+
+	adaFile := parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 1)
+	_, adaEvent, adaResult, err := handler.saveEvent(ctx, ada, adaFile)
+	if err != nil {
+		t.Fatalf("save ada: %v", err)
+	}
+
+	graceFile := parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 4)
+	_, graceEvent, graceResult, err := handler.saveEvent(ctx, grace, graceFile)
+	if err != nil {
+		t.Fatalf("save grace: %v", err)
+	}
+	if graceEvent.ID != adaEvent.ID {
+		t.Fatalf("grace event id = %d, want ada event %d", graceEvent.ID, adaEvent.ID)
+	}
+	if graceResult.EventID != adaResult.EventID || graceResult.UserID != grace.ID || graceResult.Position != 4 {
+		t.Fatalf("grace result = %+v", graceResult)
+	}
+	if got := countRows(t, db, "event"); got != 1 {
+		t.Fatalf("events = %d, want 1", got)
+	}
+	if got := countRows(t, db, "event_result"); got != 2 {
+		t.Fatalf("results = %d, want 2", got)
+	}
+}
+
+func TestSaveEventUsesTotalDriversToSeparateSameDayHeats(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	ada := createUploadUser(t, db)
+	grace := createUploadUserNamed(t, db, "Grace", "grace@example.com", "grace")
+	bea := createUploadUserNamed(t, db, "Bea", "bea@example.com", "bea")
+	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
+
+	_, sprint, _, err := handler.saveEvent(ctx, ada, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 1))
+	if err != nil {
+		t.Fatalf("save sprint: %v", err)
+	}
+	_, endurance, _, err := handler.saveEvent(ctx, grace, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 12, 2))
+	if err != nil {
+		t.Fatalf("save endurance: %v", err)
+	}
+	if endurance.ID == sprint.ID {
+		t.Fatal("different driver counts created one event")
+	}
+	if got := countRows(t, db, "event"); got != 2 {
+		t.Fatalf("events = %d, want 2", got)
+	}
+
+	_, joined, result, err := handler.saveEvent(ctx, bea, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 12, 6))
+	if err != nil {
+		t.Fatalf("save bea: %v", err)
+	}
+	if joined.ID != endurance.ID {
+		t.Fatalf("bea event id = %d, want endurance %d", joined.ID, endurance.ID)
+	}
+	if result.Position != 6 || result.EventID != endurance.ID {
+		t.Fatalf("bea result = %+v", result)
+	}
+	if got := countRows(t, db, "event"); got != 2 {
+		t.Fatalf("events after third upload = %d, want 2", got)
+	}
+	if got := countRows(t, db, "event_result"); got != 3 {
+		t.Fatalf("results = %d, want 3", got)
+	}
+}
+
+func TestMatchSession(t *testing.T) {
+	sprint := entities.Event{ID: 1, TotalDrivers: 8}
+	endurance := entities.Event{ID: 2, TotalDrivers: 12}
+	candidates := []entities.Event{sprint, endurance}
+
+	got, ok := matchSession(candidates, 12)
+	if !ok || got.ID != endurance.ID {
+		t.Fatalf("match 12 = %+v ok=%v, want endurance", got, ok)
+	}
+	got, ok = matchSession(candidates, 8)
+	if !ok || got.ID != sprint.ID {
+		t.Fatalf("match 8 = %+v ok=%v, want sprint", got, ok)
+	}
+	if _, ok := matchSession(candidates, 10); ok {
+		t.Fatal("unmatched driver count should not attach")
+	}
+	got, ok = matchSession(candidates, 0)
+	if !ok || got.ID != sprint.ID {
+		t.Fatalf("missing driver count = %+v ok=%v, want oldest", got, ok)
+	}
+	if _, ok := matchSession(nil, 8); ok {
+		t.Fatal("no candidates should not attach")
+	}
+}
+
 func TestSaveEventRollsBackNewLocationAndEvent(t *testing.T) {
 	db := testdb.Open(t)
 	handler := newUploadHandler(db, failingResults{})
@@ -111,39 +209,52 @@ func newUploadHandler(db *sql.DB, results eventresult.EventResultRepository) *Fi
 }
 
 func parsedEvent(locationName string) *model.Event {
-	return &model.Event{
-		Date:     "2024-06-01",
-		Location: locationName,
-		RaceType: "Rental",
-		DriverInfo: model.DriverInfo{
-			Name:     "Ada",
-			Position: 1,
-		},
-		DriverTimes: []model.DriverTime{{
-			Pos:    1,
+	return parsedSession(locationName, "2024-06-01", "Rental", 1, 1)
+}
+
+func parsedSession(locationName, date, raceType string, drivers, position int) *model.Event {
+	times := make([]model.DriverTime, drivers)
+	for i := range times {
+		times[i] = model.DriverTime{
+			Pos:    i + 1,
 			Kart:   "1",
-			Racer:  "Ada",
+			Racer:  "Driver",
 			Best:   45000,
 			NoLaps: 10,
 			Avg:    47000,
-		}},
+		}
+	}
+	return &model.Event{
+		Date:     date,
+		Location: locationName,
+		RaceType: raceType,
+		DriverInfo: model.DriverInfo{
+			Name:     "Ada",
+			Position: position,
+		},
+		DriverTimes: times,
 	}
 }
 
 func createUploadUser(t *testing.T, db *sql.DB) entities.User {
 	t.Helper()
+	return createUploadUserNamed(t, db, "Ada", "ada@example.com", "ada")
+}
+
+func createUploadUserNamed(t *testing.T, db *sql.DB, firstName, email, profileID string) entities.User {
+	t.Helper()
 	repo := user.NewUserRepository(db)
 	ctx := context.Background()
 	if _, err := repo.CreateUser(ctx, entities.CreateUserParams{
-		FirstName:   "Ada",
+		FirstName:   firstName,
 		LastName:    "Lovelace",
-		Email:       "ada@example.com",
-		ProfileID:   "ada",
-		DisplayName: "Ada",
+		Email:       email,
+		ProfileID:   profileID,
+		DisplayName: firstName,
 	}); err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	byEmail, err := repo.GetUserByEmail(ctx, "ada@example.com")
+	byEmail, err := repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		t.Fatalf("get user: %v", err)
 	}

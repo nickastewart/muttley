@@ -1,6 +1,11 @@
 -- name: GetEventByLocationAndTypeAndDate :one
 SELECT * FROM event WHERE location_id = ? AND type = ? AND date = ?;
 
+-- name: ListEventsByLocationAndTypeAndDate :many
+SELECT * FROM event
+WHERE location_id = ? AND type = ? AND date = ?
+ORDER BY id ASC;
+
 -- name: CreateEvent :one
 INSERT INTO event (location_id, type, date, total_drivers) VALUES (?, ?, ?, ?)
     RETURNING *;

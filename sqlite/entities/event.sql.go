@@ -186,3 +186,44 @@ func (q *Queries) GetRecentEvents(ctx context.Context, userid int64) ([]GetRecen
 	}
 	return items, nil
 }
+
+const listEventsByLocationAndTypeAndDate = `-- name: ListEventsByLocationAndTypeAndDate :many
+SELECT id, location_id, type, date, total_drivers FROM event
+WHERE location_id = ? AND type = ? AND date = ?
+ORDER BY id ASC
+`
+
+type ListEventsByLocationAndTypeAndDateParams struct {
+	LocationID int64
+	Type       string
+	Date       string
+}
+
+func (q *Queries) ListEventsByLocationAndTypeAndDate(ctx context.Context, arg ListEventsByLocationAndTypeAndDateParams) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, listEventsByLocationAndTypeAndDate, arg.LocationID, arg.Type, arg.Date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.LocationID,
+			&i.Type,
+			&i.Date,
+			&i.TotalDrivers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -47,6 +47,47 @@ func TestCreateAndGetEvent(t *testing.T) {
 	}
 }
 
+func TestListEventsByLocationAndTypeAndDateOrdersById(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	events := event.NewEventRepository(entities.New(db))
+	track := createLocation(t, db, "Whilton Mill")
+	other := createLocation(t, db, "Daytona Sandown Park")
+
+	first := createEventWithDrivers(t, db, track.ID, "16 Jul 2024", "Rental", 12)
+	second := createEventWithDrivers(t, db, track.ID, "16 Jul 2024", "Rental", 8)
+	createEventWithDrivers(t, db, track.ID, "17 Jul 2024", "Rental", 8)
+	createEventWithDrivers(t, db, other.ID, "16 Jul 2024", "Rental", 8)
+	createEventWithDrivers(t, db, track.ID, "16 Jul 2024", "Endurance", 8)
+
+	found, err := events.ListEventsByLocationAndTypeAndDate(ctx, entities.ListEventsByLocationAndTypeAndDateParams{
+		LocationID: track.ID,
+		Type:       "Rental",
+		Date:       "16 Jul 2024",
+	})
+	if err != nil {
+		t.Fatalf("list events: %v", err)
+	}
+	if len(found) != 2 || found[0].ID != first.ID || found[1].ID != second.ID {
+		t.Fatalf("found = %+v, want %d then %d", found, first.ID, second.ID)
+	}
+	if found[0].TotalDrivers != 12 || found[1].TotalDrivers != 8 {
+		t.Fatalf("driver counts = %d, %d", found[0].TotalDrivers, found[1].TotalDrivers)
+	}
+
+	none, err := events.ListEventsByLocationAndTypeAndDate(ctx, entities.ListEventsByLocationAndTypeAndDateParams{
+		LocationID: track.ID,
+		Type:       "Rental",
+		Date:       "1 Jan 2020",
+	})
+	if err != nil {
+		t.Fatalf("list missing events: %v", err)
+	}
+	if len(none) != 0 {
+		t.Fatalf("missing events = %+v", none)
+	}
+}
+
 func TestGetMissingEvent(t *testing.T) {
 	events := event.NewEventRepository(entities.New(testdb.Open(t)))
 
@@ -170,11 +211,16 @@ func createLocation(t *testing.T, db *sql.DB, name string) entities.Location {
 
 func createEvent(t *testing.T, db *sql.DB, locationID int64, date string) entities.Event {
 	t.Helper()
+	return createEventWithDrivers(t, db, locationID, date, "Rental", 10)
+}
+
+func createEventWithDrivers(t *testing.T, db *sql.DB, locationID int64, date, raceType string, totalDrivers int64) entities.Event {
+	t.Helper()
 	race, err := event.NewEventRepository(entities.New(db)).CreateEvent(context.Background(), entities.CreateEventParams{
 		LocationID:   locationID,
-		Type:         "Rental",
+		Type:         raceType,
 		Date:         date,
-		TotalDrivers: 10,
+		TotalDrivers: totalDrivers,
 	})
 	if err != nil {
 		t.Fatalf("create event: %v", err)

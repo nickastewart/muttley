@@ -137,31 +137,45 @@ func (handler *FileUploadHandler) processLocation(ctx context.Context, event *mo
 }
 
 func (handler *FileUploadHandler) processEvent(ctx context.Context, event *model.Event, location *entities.Location) (entities.Event, error) {
-
-	getEventParams := entities.GetEventByLocationAndTypeAndDateParams{
+	totalDrivers := int64(len(event.DriverTimes))
+	candidates, err := handler.EventRepository.ListEventsByLocationAndTypeAndDate(ctx, entities.ListEventsByLocationAndTypeAndDateParams{
 		LocationID: location.ID,
 		Type:       event.RaceType,
 		Date:       event.Date,
+	})
+	if err != nil {
+		return entities.Event{}, err
 	}
 
-	eventEntity, err := handler.EventRepository.GetEventByLocationAndTypeAndDate(ctx, getEventParams)
-
-	if eventEntity.ID == 0 || errors.Is(err, sql.ErrNoRows) {
-		createEventParams := entities.CreateEventParams{
-			LocationID:   location.ID,
-			Type:         event.RaceType,
-			Date:         event.Date,
-			TotalDrivers: int64(len(event.DriverTimes)),
-		}
-
-		savedEvent, err := handler.EventRepository.CreateEvent(ctx, createEventParams)
-		if err != nil {
-			return savedEvent, err
-		}
-		return savedEvent, nil
+	if matched, ok := matchSession(candidates, totalDrivers); ok {
+		return matched, nil
 	}
 
-	return eventEntity, err
+	savedEvent, err := handler.EventRepository.CreateEvent(ctx, entities.CreateEventParams{
+		LocationID:   location.ID,
+		Type:         event.RaceType,
+		Date:         event.Date,
+		TotalDrivers: totalDrivers,
+	})
+	if err != nil {
+		return savedEvent, err
+	}
+	return savedEvent, nil
+}
+
+func matchSession(candidates []entities.Event, totalDrivers int64) (entities.Event, bool) {
+	if totalDrivers > 0 {
+		for _, candidate := range candidates {
+			if candidate.TotalDrivers == totalDrivers {
+				return candidate, true
+			}
+		}
+		return entities.Event{}, false
+	}
+	if len(candidates) == 0 {
+		return entities.Event{}, false
+	}
+	return candidates[0], true
 }
 
 func (handler *FileUploadHandler) processEventResult(ctx context.Context, user entities.User, driverResult *model.DriverTime, event *entities.Event) (entities.EventResult, error) {

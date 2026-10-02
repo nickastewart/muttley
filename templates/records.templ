@@ -1,0 +1,77 @@
+package templates
+
+import "muttley/sqlite/entities"
+
+func formatRecordTime(time int64) string {
+	if time <= 0 {
+		return "—"
+	}
+	return formatTime(time)
+}
+
+func formatConsistency(best int64, average int64) string {
+	if best <= 0 || average <= 0 {
+		return "—"
+	}
+	gap := average - best
+	if gap < 0 {
+		gap = -gap
+	}
+	return formatTime(gap)
+}
+
+templ Records(rows []entities.ListLocationRecordsRow) {
+	@Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/records.css"/>
+	}
+	@Header()
+	<div class="main-container">
+		<div id="records-container">
+			<div class="records-list">
+				<table id="records-table">
+					<thead>
+						<tr>
+							<th class="records-header-cell records-location">Location</th>
+							<th class="records-header-cell">Personal best</th>
+							<th class="records-header-cell">Best average</th>
+							<th class="records-header-cell">Consistency</th>
+							<th class="records-header-cell">Track record</th>
+						</tr>
+					</thead>
+					<tbody>
+						if len(rows) == 0 {
+							<tr class="records-row">
+								<td class="records-cell records-empty" colspan="5">No results yet.</td>
+							</tr>
+						}
+						for _, row := range rows {
+							<tr class="records-row">
+								<td class="records-cell records-location">{ row.LocationName }</td>
+								<td class="records-cell">
+									<div class="records-time">{ formatRecordTime(row.PersonalBestLap) }</div>
+									if row.PersonalBestDate != "" {
+										<div class="records-sub">{ row.PersonalBestDate }</div>
+									}
+								</td>
+								<td class="records-cell">
+									<div class="records-time">{ formatRecordTime(row.BestAverageLap) }</div>
+									if row.BestAverageDate != "" {
+										<div class="records-sub">{ row.BestAverageDate }</div>
+									}
+								</td>
+								<td class="records-cell">{ formatConsistency(row.PersonalBestLap, row.PersonalBestAverageLap) }</td>
+								<td class="records-cell">
+									<div class="records-time">{ formatRecordTime(row.TrackRecordLap) }</div>
+									if row.TrackRecordLap > 0 {
+										<div class="records-name">{ row.TrackRecordDisplayName }</div>
+										<div class="records-sub">{ row.TrackRecordFirstName + " " + row.TrackRecordLastName }</div>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+}

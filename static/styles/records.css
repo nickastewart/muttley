@@ -1,0 +1,64 @@
+/* Track records */
+
+#records-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 40px;
+}
+
+.records-list {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#records-table {
+    border-collapse: collapse;
+    width: 100%;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+#records-table thead {
+    background-color: var(--bg-light);
+    color: var(--text);
+}
+
+#records-table tr {
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+
+.records-header-cell {
+    padding: 10px;
+    text-align: center;
+    border: none;
+}
+
+.records-cell {
+    padding: 10px;
+    text-align: center;
+    border: none;
+}
+
+.records-location {
+    text-align: left;
+}
+
+.records-time,
+.records-name {
+    font-weight: bold;
+    color: var(--text);
+}
+
+.records-sub {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-top: 4px;
+}
+
+.records-empty {
+    text-align: left;
+    color: var(--text-muted);
+}

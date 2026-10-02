@@ -13,6 +13,7 @@ import (
 	"muttley/headtohead"
 	"muttley/location"
 	"muttley/mailer"
+	"muttley/records"
 	"muttley/sqlite"
 	"muttley/sqlite/entities"
 	"muttley/user"
@@ -36,6 +37,7 @@ func main() {
 	var friendRepository friend.FriendRepository = friend.NewFriendRepository(queries)
 	var dashboardRepository dashboard.DashboardRepository = dashboard.NewDashboardRepository(queries)
 	var headToHeadRepository headtohead.HeadToHeadRepository = headtohead.NewHeadToHeadRepository(queries)
+	var recordsRepository records.RecordsRepository = records.NewRecordsRepository(queries)
 
 	mail, err := mailer.NewFromEnv()
 	if err != nil {
@@ -44,11 +46,12 @@ func main() {
 
 	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mail, sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)
-	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, sqlite.NewTransactor(db))
+	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, recordsRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)
 	dashboardHandler := dashboard.NewDashboardHander(dashboardRepository, eventRepository, headToHeadRepository)
 	headToHeadHandler := headtohead.NewHeadToHeadHandler(headToHeadRepository)
+	recordsHandler := records.NewRecordsHandler(recordsRepository)
 
 	router := gin.Default()
 	router.Static("/styles", "./static/styles")
@@ -71,6 +74,7 @@ func main() {
 	router.GET("/signup", authHandler.ShowSignup)
 
 	router.GET("/leaderboard", authHandler.CheckAccessToken, eventHandler.Leaderboard)
+	router.GET("/records", authHandler.CheckAccessToken, recordsHandler.Records)
 
 	router.GET("/upload", authHandler.CheckAccessToken, fileUploadHandler.UploadFile)
 	router.POST("/upload/process", authHandler.CheckAccessToken, fileUploadHandler.ProcessFile)

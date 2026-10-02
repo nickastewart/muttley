@@ -7,6 +7,7 @@ import (
 	"muttley/event"
 	"muttley/eventresult"
 	"muttley/location"
+	"muttley/records"
 	"muttley/sqlite"
 	"muttley/sqlite/entities"
 	"muttley/templates"
@@ -20,11 +21,17 @@ import (
 	"github.com/nickastewart/muttley-parser/model"
 )
 
+type uploadRecords struct {
+	PersonalBest bool
+	TrackRecord  bool
+}
+
 type FileUploadHandler struct {
 	UserRepository         user.UserRepository
 	LocationRepository     location.LocationRepository
 	EventRepository        event.EventRepository
 	EventResultRespository eventresult.EventResultRepository
+	RecordsRepository      records.RecordsRepository
 	Transactor             *sqlite.Transactor
 }
 
@@ -32,12 +39,14 @@ func NewFileUploadHandler(userRepository user.UserRepository,
 	eventRepository event.EventRepository,
 	locationRepository location.LocationRepository,
 	eventResultRespository eventresult.EventResultRepository,
+	recordsRepository records.RecordsRepository,
 	transactor *sqlite.Transactor) *FileUploadHandler {
 	return &FileUploadHandler{
 		UserRepository:         userRepository,
 		EventRepository:        eventRepository,
 		LocationRepository:     locationRepository,
 		EventResultRespository: eventResultRespository,
+		RecordsRepository:      recordsRepository,
 		Transactor:             transactor,
 	}
 }
@@ -81,19 +90,20 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 		return
 	}
 
-	locationEntity, eventEntity, eventResultEntity, err := handler.saveEvent(ctx, user, event)
+	locationEntity, eventEntity, eventResultEntity, notes, err := handler.saveEvent(ctx, user, event)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.HTML(http.StatusOK, "", templates.UploadSuccess(locationEntity, eventEntity, eventResultEntity))
+	c.HTML(http.StatusOK, "", templates.UploadSuccess(locationEntity, eventEntity, eventResultEntity, notes.PersonalBest, notes.TrackRecord))
 }
 
-func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.User, parsed *model.Event) (entities.Location, entities.Event, entities.EventResult, error) {
+func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.User, parsed *model.Event) (entities.Location, entities.Event, entities.EventResult, uploadRecords, error) {
 	var savedLocation entities.Location
 	var savedEvent entities.Event
 	var saved entities.EventResult
+	var notes uploadRecords
 	err := handler.Transactor.Within(ctx, func(ctx context.Context) error {
 		locationEntity, err := handler.processLocation(ctx, parsed)
 		if err != nil {
@@ -107,8 +117,17 @@ func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser ent
 			return err
 		}
 
+		snapshot, err := handler.RecordsRepository.GetLocationRecordSnapshot(ctx, entities.GetLocationRecordSnapshotParams{
+			Userid:     currentUser.ID,
+			Locationid: locationEntity.ID,
+		})
+		if err != nil {
+			log.Println("Failed to read records " + err.Error())
+			return err
+		}
+
 		driverTime := parsed.DriverTimes[parsed.DriverInfo.Position-1]
-		savedResult, err := handler.processEventResult(ctx, currentUser, &driverTime, &eventEntity)
+		savedResult, created, err := handler.processEventResult(ctx, currentUser, &driverTime, &eventEntity)
 		if err != nil {
 			log.Println("Failed to process event result " + err.Error())
 			return err
@@ -116,9 +135,20 @@ func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser ent
 		savedLocation = locationEntity
 		savedEvent = eventEntity
 		saved = savedResult
+		notes = recordNotes(created, savedResult.BestLapTime, snapshot.PersonalBestLap, snapshot.TrackRecordLap)
 		return nil
 	})
-	return savedLocation, savedEvent, saved, err
+	return savedLocation, savedEvent, saved, notes, err
+}
+
+func recordNotes(created bool, bestLap int64, previousPersonalBest int64, previousTrackRecord int64) uploadRecords {
+	if !created || bestLap <= 0 {
+		return uploadRecords{}
+	}
+	return uploadRecords{
+		PersonalBest: previousPersonalBest == 0 || bestLap < previousPersonalBest,
+		TrackRecord:  previousTrackRecord == 0 || bestLap < previousTrackRecord,
+	}
 }
 
 func (handler *FileUploadHandler) processLocation(ctx context.Context, event *model.Event) (entities.Location, error) {
@@ -178,7 +208,7 @@ func matchSession(candidates []entities.Event, totalDrivers int64) (entities.Eve
 	return candidates[0], true
 }
 
-func (handler *FileUploadHandler) processEventResult(ctx context.Context, user entities.User, driverResult *model.DriverTime, event *entities.Event) (entities.EventResult, error) {
+func (handler *FileUploadHandler) processEventResult(ctx context.Context, user entities.User, driverResult *model.DriverTime, event *entities.Event) (entities.EventResult, bool, error) {
 
 	getEventResultByEventIdAndUserIdParams := entities.GetEventResultByEventIdAndUserIdParams{
 		EventID: event.ID,
@@ -200,10 +230,10 @@ func (handler *FileUploadHandler) processEventResult(ctx context.Context, user e
 		savedEntity, err := handler.EventResultRespository.CreateEventResult(ctx, createEventResultParams)
 
 		if err != nil {
-			return eventResultEntity, err
+			return eventResultEntity, false, err
 		}
-		return savedEntity, nil
+		return savedEntity, true, nil
 
 	}
-	return eventResultEntity, err
+	return eventResultEntity, false, err
 }

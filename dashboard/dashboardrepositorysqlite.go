@@ -2,6 +2,8 @@ package dashboard
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"muttley/sqlite/entities"
 )
@@ -26,7 +28,7 @@ func (r *DashboardRepositorySqlite) GetDashboard(context context.Context, userId
 
 func (r *DashboardRepositorySqlite) GetBestTrack(context context.Context, userId int64) (entities.GetBestTrackRow, error) {
 	bestTrack, err := r.queries.GetBestTrack(context, userId)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Println(err)
 	}
 	return bestTrack, err

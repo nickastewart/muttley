@@ -2,6 +2,8 @@ package dashboard
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log/slog"
 	"muttley/event"
 	"muttley/headtohead"
@@ -43,7 +45,7 @@ func (handler *DashboardHandler) GetDashboard(c *gin.Context) {
 	}
 
 	bestTrack, err := handler.DashboardRepository.GetBestTrack(ctx, user.ID)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		slog.Error("Error getting bestTrack")
 		// TODO handle erorr in UI
 	}

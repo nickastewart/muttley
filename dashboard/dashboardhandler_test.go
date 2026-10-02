@@ -1,11 +1,15 @@
 package dashboard_test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
+	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -55,6 +59,42 @@ func TestDashboardHeadToHeadWinsAreZeroWithoutSharedFriendRaces(t *testing.T) {
 	body := requestDashboard(t, db, &otto).Body.String()
 	if !strings.Contains(body, `Head To Head Wins</span></div><div class="dashboard-top-row-item-content"><span>0</span>`) {
 		t.Fatalf("dashboard head to head wins = %s, want 0", body)
+	}
+}
+
+func TestDashboardBestTrackIsBlankWithoutThreeRaces(t *testing.T) {
+	db := testdb.Open(t)
+	otto := createUser(t, db, "Otto", "otto-best@example.com", "otto-best")
+	seedRace(t, db, otto.ID, "Short Track", "2024-07-01", 1)
+	seedRace(t, db, otto.ID, "Short Track", "2024-07-02", 2)
+
+	var logs bytes.Buffer
+	log.SetOutput(&logs)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+	logger := slog.New(slog.NewTextHandler(&logs, nil))
+	previous := slog.Default()
+	slog.SetDefault(logger)
+	t.Cleanup(func() { slog.SetDefault(previous) })
+
+	body := requestDashboard(t, db, &otto).Body.String()
+	if !strings.Contains(body, `dashboard-top-row-item-content-best-track">-</div>`) {
+		t.Fatalf("best track = %s, want -", body)
+	}
+	if strings.Contains(logs.String(), "no rows in result set") || strings.Contains(logs.String(), "Error getting bestTrack") {
+		t.Fatalf("missing best track was logged as an error: %s", logs.String())
+	}
+}
+
+func TestDashboardShowsBestTrackAfterThreeRaces(t *testing.T) {
+	db := testdb.Open(t)
+	ada := createUser(t, db, "Ada", "ada-best@example.com", "ada-best")
+	seedRace(t, db, ada.ID, "Fast Track", "2024-08-01", 1)
+	seedRace(t, db, ada.ID, "Fast Track", "2024-08-02", 2)
+	seedRace(t, db, ada.ID, "Fast Track", "2024-08-03", 1)
+
+	body := requestDashboard(t, db, &ada).Body.String()
+	if !strings.Contains(body, `dashboard-top-row-item-content-best-track">Fast Track</div>`) {
+		t.Fatalf("best track = %s, want Fast Track", body)
 	}
 }
 

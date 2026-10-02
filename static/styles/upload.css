@@ -93,6 +93,15 @@
     color: var(--text);
 }
 
+.upload-success-record {
+    margin: 0 10px 8px;
+    padding: 10px;
+    border: 1px solid var(--highlight);
+    border-radius: 10px;
+    color: var(--text);
+    font-weight: bold;
+}
+
 .upload-success-details {
     margin: 0 10px 10px;
     border: 1px solid var(--border);

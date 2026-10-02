@@ -2,7 +2,7 @@ package templates
 
 import "muttley/sqlite/entities"
 
-templ UploadSuccess(location entities.Location, event entities.Event, result entities.EventResult) {
+templ UploadSuccess(location entities.Location, event entities.Event, result entities.EventResult, personalBest bool, trackRecord bool) {
 	@Head() {
 		<link rel="stylesheet" type="text/css" href="/styles/upload.css"/>
 	}
@@ -12,6 +12,12 @@ templ UploadSuccess(location entities.Location, event entities.Event, result ent
 			<div class="upload-file-card">
 				<div class="upload-file-card-title"><span>Upload successful</span></div>
 				<p class="upload-success-copy">Your result was saved.</p>
+				if personalBest {
+					<p class="upload-success-record">Personal best</p>
+				}
+				if trackRecord {
+					<p class="upload-success-record">Track record</p>
+				}
 				<dl class="upload-success-details">
 					<div class="upload-success-row">
 						<dt>Date</dt>

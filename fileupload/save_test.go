@@ -9,6 +9,7 @@ import (
 	"muttley/event"
 	"muttley/eventresult"
 	"muttley/location"
+	"muttley/records"
 	"muttley/sqlite"
 	"muttley/sqlite/entities"
 	"muttley/sqlite/testdb"
@@ -23,7 +24,7 @@ func TestSaveEventCommitsLocationEventAndResult(t *testing.T) {
 	currentUser := createUploadUser(t, db)
 	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
 
-	_, _, saved, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
+	_, _, saved, _, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
 	if err != nil {
 		t.Fatalf("save event: %v", err)
 	}
@@ -40,7 +41,7 @@ func TestSaveEventCommitsLocationEventAndResult(t *testing.T) {
 		t.Fatalf("results = %d, want 1", got)
 	}
 
-	_, _, again, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
+	_, _, again, _, err := handler.saveEvent(ctx, currentUser, parsedEvent("Whilton Mill"))
 	if err != nil {
 		t.Fatalf("save event again: %v", err)
 	}
@@ -66,13 +67,13 @@ func TestSaveEventAttachesFriendToSameSession(t *testing.T) {
 	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
 
 	adaFile := parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 1)
-	_, adaEvent, adaResult, err := handler.saveEvent(ctx, ada, adaFile)
+	_, adaEvent, adaResult, _, err := handler.saveEvent(ctx, ada, adaFile)
 	if err != nil {
 		t.Fatalf("save ada: %v", err)
 	}
 
 	graceFile := parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 4)
-	_, graceEvent, graceResult, err := handler.saveEvent(ctx, grace, graceFile)
+	_, graceEvent, graceResult, _, err := handler.saveEvent(ctx, grace, graceFile)
 	if err != nil {
 		t.Fatalf("save grace: %v", err)
 	}
@@ -98,11 +99,11 @@ func TestSaveEventUsesTotalDriversToSeparateSameDayHeats(t *testing.T) {
 	bea := createUploadUserNamed(t, db, "Bea", "bea@example.com", "bea")
 	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
 
-	_, sprint, _, err := handler.saveEvent(ctx, ada, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 1))
+	_, sprint, _, _, err := handler.saveEvent(ctx, ada, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 8, 1))
 	if err != nil {
 		t.Fatalf("save sprint: %v", err)
 	}
-	_, endurance, _, err := handler.saveEvent(ctx, grace, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 12, 2))
+	_, endurance, _, _, err := handler.saveEvent(ctx, grace, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 12, 2))
 	if err != nil {
 		t.Fatalf("save endurance: %v", err)
 	}
@@ -113,7 +114,7 @@ func TestSaveEventUsesTotalDriversToSeparateSameDayHeats(t *testing.T) {
 		t.Fatalf("events = %d, want 2", got)
 	}
 
-	_, joined, result, err := handler.saveEvent(ctx, bea, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 12, 6))
+	_, joined, result, _, err := handler.saveEvent(ctx, bea, parsedSession("Daytona Milton Keynes", "16 Jul 2024", "(DMAX Sprint Race)", 12, 6))
 	if err != nil {
 		t.Fatalf("save bea: %v", err)
 	}
@@ -160,7 +161,7 @@ func TestSaveEventRollsBackNewLocationAndEvent(t *testing.T) {
 	db := testdb.Open(t)
 	handler := newUploadHandler(db, failingResults{})
 
-	_, _, _, err := handler.saveEvent(context.Background(), entities.User{ID: 1}, parsedEvent("New Track"))
+	_, _, _, _, err := handler.saveEvent(context.Background(), entities.User{ID: 1}, parsedEvent("New Track"))
 	if err == nil {
 		t.Fatal("expected save to fail")
 	}
@@ -183,7 +184,7 @@ func TestSaveEventKeepsExistingLocationWhenResultFails(t *testing.T) {
 	}
 	handler := newUploadHandler(db, failingResults{})
 
-	_, _, _, err := handler.saveEvent(ctx, entities.User{ID: 1}, parsedEvent("Whilton Mill"))
+	_, _, _, _, err := handler.saveEvent(ctx, entities.User{ID: 1}, parsedEvent("Whilton Mill"))
 	if err == nil {
 		t.Fatal("expected save to fail")
 	}
@@ -199,11 +200,13 @@ func TestSaveEventKeepsExistingLocationWhenResultFails(t *testing.T) {
 }
 
 func newUploadHandler(db *sql.DB, results eventresult.EventResultRepository) *FileUploadHandler {
+	queries := entities.New(db)
 	return NewFileUploadHandler(
 		user.NewUserRepository(db),
-		event.NewEventRepository(entities.New(db)),
-		location.NewLocationRepository(entities.New(db)),
+		event.NewEventRepository(queries),
+		location.NewLocationRepository(queries),
 		results,
+		records.NewRecordsRepository(queries),
 		sqlite.NewTransactor(db),
 	)
 }

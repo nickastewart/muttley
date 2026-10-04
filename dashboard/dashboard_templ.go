@@ -264,9 +264,9 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var18 string
-			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.BestLapTime)
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(templates.FormatTime(event.EventResult.BestLapTime))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 80, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 80, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -277,9 +277,9 @@ func Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSta
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(event.EventResult.AverageLapTime)
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(templates.FormatTime(event.EventResult.AverageLapTime))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 81, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `dashboard/dashboard.templ`, Line: 81, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {

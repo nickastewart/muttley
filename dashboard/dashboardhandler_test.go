@@ -98,6 +98,20 @@ func TestDashboardShowsBestTrackAfterThreeRaces(t *testing.T) {
 	}
 }
 
+func TestDashboardFormatsLapTimes(t *testing.T) {
+	db := testdb.Open(t)
+	ada := createUser(t, db, "Ada", "ada-laps@example.com", "ada-laps")
+	seedRace(t, db, ada.ID, "Whilton Mill", "2024-09-01", 1)
+
+	body := requestDashboard(t, db, &ada).Body.String()
+	if !strings.Contains(body, ">00:45.000<") || !strings.Contains(body, ">00:47.000<") {
+		t.Fatalf("lap times = %s, want 00:45.000 and 00:47.000", body)
+	}
+	if strings.Contains(body, ">45000<") || strings.Contains(body, ">47000<") {
+		t.Fatalf("lap times were still raw milliseconds: %s", body)
+	}
+}
+
 func requestDashboard(t *testing.T, db *sql.DB, user *entities.User) *httptest.ResponseRecorder {
 	t.Helper()
 	gin.SetMode(gin.TestMode)

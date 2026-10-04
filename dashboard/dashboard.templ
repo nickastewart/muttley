@@ -77,8 +77,8 @@ templ Dashboard(dashboard entities.GetDashboardRow, bestTrack string, locationSt
 								<td class="dashboard-cell">{ event.Event.Date }</td>
 								<td class="dashboard-cell">{ event.Location.Name }</td>
 								<td class="dashboard-cell">{ event.Event.Type }</td>
-								<td class="dashboard-cell">{ event.EventResult.BestLapTime }</td>
-								<td class="dashboard-cell">{ event.EventResult.AverageLapTime }</td>
+								<td class="dashboard-cell">{ templates.FormatTime(event.EventResult.BestLapTime) }</td>
+								<td class="dashboard-cell">{ templates.FormatTime(event.EventResult.AverageLapTime) }</td>
 								<td class="dashboard-cell">{ event.EventResult.Position }</td>
 								<td class="dashboard-cell">{ event.EventResult.NumberOfLaps }</td>
 							</tr>

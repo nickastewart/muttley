@@ -74,6 +74,41 @@ func TestAcceptFriendRequest(t *testing.T) {
 	}
 }
 
+func TestSearchFriendsPendingRequest(t *testing.T) {
+	db := testdb.Open(t)
+	searcher := createUser(t, db, "Ada", "ada@example.com", "ada")
+	match := createUser(t, db, "Grace", "grace@example.com", "grace")
+	other := createUser(t, db, "Alan", "alan@example.com", "alan")
+
+	friends := friend.NewFriendRepository(entities.New(db))
+	if _, err := friends.AddFriend(context.Background(), entities.AddFriendParams{
+		UserID:       searcher.ID,
+		FriendID:     match.ID,
+		FriendStatus: "REQUESTED",
+	}); err != nil {
+		t.Fatalf("add requested: %v", err)
+	}
+	if _, err := friends.AddFriend(context.Background(), entities.AddFriendParams{
+		UserID:       other.ID,
+		FriendID:     match.ID,
+		FriendStatus: "ACCEPTED",
+	}); err != nil {
+		t.Fatalf("add unrelated: %v", err)
+	}
+
+	res := friendRequest(t, db, searcher, http.MethodGet, "/search/friends?searchTerm=Grace")
+	body := res.Body.String()
+	if res.Code != http.StatusOK {
+		t.Fatalf("search status = %d body = %s", res.Code, body)
+	}
+	if strings.Count(body, `class="friend-card"`) != 1 {
+		t.Fatalf("result cards = %d body = %s", strings.Count(body, `class="friend-card"`), body)
+	}
+	if !strings.Contains(body, "Pending Request") || strings.Contains(body, `hx-post="/add-friend`) {
+		t.Fatalf("search body = %s", body)
+	}
+}
+
 func TestAcceptMissingFriendRequest(t *testing.T) {
 	db := testdb.Open(t)
 	ada := createUser(t, db, "Ada", "ada@example.com", "ada")
@@ -113,6 +148,7 @@ func friendRequest(t *testing.T, db *sql.DB, current entities.User, method, path
 		c.Next()
 	}
 	router.GET("/friends", asUser, handler.Friends)
+	router.GET("/search/friends", asUser, handler.SearchFriends)
 	router.POST("/add-friend", asUser, handler.AddFriend)
 	router.POST("/accept-friend", asUser, handler.AcceptFriend)
 

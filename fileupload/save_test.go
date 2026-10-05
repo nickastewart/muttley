@@ -18,6 +18,32 @@ import (
 	"github.com/nickastewart/muttley-parser/model"
 )
 
+func TestSaveEventRejectsPositionOutsideDriverTimes(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	currentUser := createUploadUser(t, db)
+	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
+
+	for _, position := range []int{0, 2} {
+		_, _, _, _, err := handler.saveEvent(ctx, currentUser, parsedSession("Whilton Mill", "2024-06-01", "Rental", 1, position))
+		if err == nil {
+			t.Fatalf("position %d: expected error", position)
+		}
+		if !errors.Is(err, errBadResultsFile) {
+			t.Fatalf("position %d error = %v, want bad results file", position, err)
+		}
+	}
+	if got := countRows(t, db, "location"); got != 0 {
+		t.Fatalf("locations = %d, want 0", got)
+	}
+	if got := countRows(t, db, "event"); got != 0 {
+		t.Fatalf("events = %d, want 0", got)
+	}
+	if got := countRows(t, db, "event_result"); got != 0 {
+		t.Fatalf("results = %d, want 0", got)
+	}
+}
+
 func TestSaveEventCommitsLocationEventAndResult(t *testing.T) {
 	db := testdb.Open(t)
 	ctx := context.Background()

@@ -8,9 +8,11 @@ SQLite for the dastabase and HTMX for the frontend interactivity.
 
 ## Mail
 
-Magic-link email uses the log mailer unless `MAILER=resend`. Local development
-should leave `MAILER` unset so the link is printed to the server log instead of
-being sent.
+Magic-link email uses the log mailer when `APP_ENV=development` and `MAILER`
+is unset or `log`. Local development should set `APP_ENV=development` and leave
+`MAILER` unset so the link is printed to the server log instead of being sent.
+Any other `APP_ENV`, including unset, refuses to start with the log mailer.
+`MAILER=resend` does not depend on `APP_ENV`.
 
 ## Test mode
 

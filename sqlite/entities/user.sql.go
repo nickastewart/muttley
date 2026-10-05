@@ -135,15 +135,27 @@ func (q *Queries) GetUserIdByProfileId(ctx context.Context, profileID string) (i
 }
 
 const getUsersBySearchTerm = `-- name: GetUsersBySearchTerm :many
-SELECT user.id, user.first_name, user.last_name, user.profile_id, COALESCE(f1.friend_status, f2.friend_status, 'NONE') as friend_status FROM user 
-    LEFT JOIN friend f1 ON f1.user_id = user.id
-    LEFT JOIN friend f2 ON f2.friend_id = user.id
-    WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?1 AND user.id != ?2
+SELECT user.id, user.first_name, user.last_name, user.profile_id,
+       CAST(COALESCE(
+           (SELECT friend.friend_status
+            FROM friend
+            WHERE friend.friend_status != 'CANCELLED'
+              AND (
+                    (friend.user_id = ?1 AND friend.friend_id = user.id)
+                    OR
+                    (friend.friend_id = ?1 AND friend.user_id = user.id)
+                  )
+            LIMIT 1),
+           'NONE'
+       ) AS TEXT) AS friend_status
+FROM user
+WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?2
+  AND user.id != ?1
 `
 
 type GetUsersBySearchTermParams struct {
-	Name   string
 	Userid int64
+	Name   string
 }
 
 type GetUsersBySearchTermRow struct {
@@ -155,7 +167,7 @@ type GetUsersBySearchTermRow struct {
 }
 
 func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearchTermParams) ([]GetUsersBySearchTermRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUsersBySearchTerm, arg.Name, arg.Userid)
+	rows, err := q.db.QueryContext(ctx, getUsersBySearchTerm, arg.Userid, arg.Name)
 	if err != nil {
 		return nil, err
 	}

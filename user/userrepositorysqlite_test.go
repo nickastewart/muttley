@@ -139,6 +139,62 @@ func TestSearchUsersByName(t *testing.T) {
 	}
 }
 
+func TestSearchUsersByNameUsesSearcherFriendship(t *testing.T) {
+	db := testdb.Open(t)
+	repo := user.NewUserRepository(db)
+	friends := friend.NewFriendRepository(entities.New(db))
+	ctx := context.Background()
+
+	searcher := createUser(t, repo, "Nick", "Stewart", "nick@example.com", "nick")
+	pending := createUser(t, repo, "Ada", "Lovelace", "ada@example.com", "ada")
+	other := createUser(t, repo, "Grace", "Hopper", "grace@example.com", "grace")
+	cancelled := createUser(t, repo, "Alan", "Turing", "alan@example.com", "alan")
+
+	if _, err := friends.AddFriend(ctx, entities.AddFriendParams{
+		UserID:       searcher.ID,
+		FriendID:     pending.ID,
+		FriendStatus: "REQUESTED",
+	}); err != nil {
+		t.Fatalf("add requested: %v", err)
+	}
+	if _, err := friends.AddFriend(ctx, entities.AddFriendParams{
+		UserID:       other.ID,
+		FriendID:     pending.ID,
+		FriendStatus: "ACCEPTED",
+	}); err != nil {
+		t.Fatalf("add unrelated: %v", err)
+	}
+	if _, err := friends.AddFriend(ctx, entities.AddFriendParams{
+		UserID:       searcher.ID,
+		FriendID:     cancelled.ID,
+		FriendStatus: "CANCELLED",
+	}); err != nil {
+		t.Fatalf("add cancelled: %v", err)
+	}
+
+	pendingMatches, err := repo.GetUsersBySearchTerm(ctx, entities.GetUsersBySearchTermParams{
+		Name:   "%ada%",
+		Userid: searcher.ID,
+	})
+	if err != nil {
+		t.Fatalf("search ada: %v", err)
+	}
+	if len(pendingMatches) != 1 || pendingMatches[0].ID != pending.ID || pendingMatches[0].FriendStatus != "REQUESTED" {
+		t.Fatalf("ada matches = %+v", pendingMatches)
+	}
+
+	cancelledMatches, err := repo.GetUsersBySearchTerm(ctx, entities.GetUsersBySearchTermParams{
+		Name:   "%turing%",
+		Userid: searcher.ID,
+	})
+	if err != nil {
+		t.Fatalf("search turing: %v", err)
+	}
+	if len(cancelledMatches) != 1 || cancelledMatches[0].ID != cancelled.ID || cancelledMatches[0].FriendStatus != "NONE" {
+		t.Fatalf("turing matches = %+v", cancelledMatches)
+	}
+}
+
 func TestDeleteUserRemovesResultsAndFriendships(t *testing.T) {
 	db := testdb.Open(t)
 	ctx := context.Background()

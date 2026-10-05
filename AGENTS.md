@@ -139,9 +139,10 @@ Friend status values stored on the row are `REQUESTED`, `ACCEPTED`, and
 - The cookie name is `access_token`. Logout and account deletion clear it.
 - Magic links are created and consumed inside a transaction. See `auth/authhandler.go`.
 - `mailer.Mailer` is the only send API: `SendMagicLink(ctx, to, link)`.
-  Leave `MAILER` unset in local development so `LogMailer` prints the link.
-  `MAILER=resend` uses `RESEND_API_KEY` and `RESEND_FROM`. Selection is
-  `mailer.NewFromEnv`.
+  Set `APP_ENV=development` and leave `MAILER` unset in local development so
+  `LogMailer` prints the link. Any other `APP_ENV`, including unset, refuses
+  the log mailer. `MAILER=resend` uses `RESEND_API_KEY` and `RESEND_FROM` and
+  does not depend on `APP_ENV`. Selection is `mailer.NewFromEnv`.
 - `PROFILE=test` registers `GET /test/login/:id`, which sets the same cookie as
   a real sign-in. `auth.RegisterTestLogin` no-ops for any other profile. Do not
   set `PROFILE=test` outside a test or load-test environment.

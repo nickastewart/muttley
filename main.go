@@ -53,7 +53,8 @@ func main() {
 	headToHeadHandler := headtohead.NewHeadToHeadHandler(headToHeadRepository)
 	recordsHandler := records.NewRecordsHandler(recordsRepository)
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.LoggerWithFormatter(accessLogFormatter), gin.Recovery())
 	router.Static("/styles", "./static/styles")
 	router.Static("/images", "./static/images")
 	router.Static("/icons", "./static/icons")

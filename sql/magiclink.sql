@@ -17,3 +17,6 @@ WHERE token_hash = ? AND used_at IS NULL AND expires_at > sqlc.arg(now);
 UPDATE magic_link
 SET used_at = CURRENT_TIMESTAMP
 WHERE id = ? AND used_at IS NULL;
+
+-- name: DeleteMagicLinksByEmail :exec
+DELETE FROM magic_link WHERE email = ?;

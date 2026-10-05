@@ -252,6 +252,42 @@ func TestDeleteUserRemovesResultsAndFriendships(t *testing.T) {
 	}
 }
 
+func TestDeleteUserRemovesMagicLinks(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	users := user.NewUserRepository(db)
+
+	owner := createUser(t, users, "Ada", "Lovelace", "ada@example.com", "ada")
+	insertMagicLink(t, db, "ada@example.com", "unused-hash", sql.NullString{})
+	insertMagicLink(t, db, "ada@example.com", "used-hash", sql.NullString{String: "2024-01-01T00:00:00Z", Valid: true})
+	otherID := insertMagicLink(t, db, "grace@example.com", "other-hash", sql.NullString{})
+
+	if err := users.DeleteUser(ctx, owner.ID); err != nil {
+		t.Fatalf("delete user: %v", err)
+	}
+
+	_, err := users.GetUserById(ctx, owner.ID)
+	if !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("deleted user error = %v, want sql.ErrNoRows", err)
+	}
+
+	var remaining int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM magic_link WHERE email = ?`, owner.Email).Scan(&remaining); err != nil {
+		t.Fatalf("count deleted email links: %v", err)
+	}
+	if remaining != 0 {
+		t.Fatalf("magic links for deleted email = %d, want 0", remaining)
+	}
+
+	var keptEmail string
+	if err := db.QueryRow(`SELECT email FROM magic_link WHERE id = ?`, otherID).Scan(&keptEmail); err != nil {
+		t.Fatalf("kept magic link: %v", err)
+	}
+	if keptEmail != "grace@example.com" {
+		t.Fatalf("kept magic link email = %s, want grace@example.com", keptEmail)
+	}
+}
+
 func TestDeleteUserRollsBackWhenUserDeleteFails(t *testing.T) {
 	db := testdb.Open(t)
 	ctx := context.Background()
@@ -340,6 +376,23 @@ func TestGetMissingUser(t *testing.T) {
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("get by profile error = %v, want sql.ErrNoRows", err)
 	}
+}
+
+func insertMagicLink(t *testing.T, db *sql.DB, email, tokenHash string, usedAt sql.NullString) int64 {
+	t.Helper()
+	result, err := db.Exec(`
+		INSERT INTO magic_link (email, token_hash, purpose, expires_at, used_at)
+		VALUES (?, ?, ?, ?, ?)`,
+		email, tokenHash, "login", "2099-01-01T00:00:00Z", usedAt,
+	)
+	if err != nil {
+		t.Fatalf("insert magic link %s: %v", tokenHash, err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("magic link id %s: %v", tokenHash, err)
+	}
+	return id
 }
 
 func newUserRepo(t *testing.T) user.UserRepository {

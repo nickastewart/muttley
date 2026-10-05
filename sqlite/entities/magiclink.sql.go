@@ -56,6 +56,15 @@ func (q *Queries) CreateMagicLink(ctx context.Context, arg CreateMagicLinkParams
 	return i, err
 }
 
+const deleteMagicLinksByEmail = `-- name: DeleteMagicLinksByEmail :exec
+DELETE FROM magic_link WHERE email = ?
+`
+
+func (q *Queries) DeleteMagicLinksByEmail(ctx context.Context, email string) error {
+	_, err := q.db.ExecContext(ctx, deleteMagicLinksByEmail, email)
+	return err
+}
+
 const getActiveMagicLinkByTokenHash = `-- name: GetActiveMagicLinkByTokenHash :one
 SELECT id, email, token_hash, purpose, expires_at, used_at, created_at
 FROM magic_link

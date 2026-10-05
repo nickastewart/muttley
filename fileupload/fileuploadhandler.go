@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"log/slog"
 	"muttley/event"
 	"muttley/eventresult"
 	"muttley/location"
@@ -25,6 +26,8 @@ type uploadRecords struct {
 	PersonalBest bool
 	TrackRecord  bool
 }
+
+var errBadResultsFile = errors.New("bad results file")
 
 type FileUploadHandler struct {
 	UserRepository         user.UserRepository
@@ -53,7 +56,7 @@ func NewFileUploadHandler(userRepository user.UserRepository,
 
 func (handler *FileUploadHandler) UploadFile(c *gin.Context) {
 	c.Header("HX-Redirect", "/upload")
-	c.HTML(http.StatusOK, "", templates.UploadFile())
+	renderUploadFile(c, "")
 }
 
 func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
@@ -67,36 +70,54 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 
 	user := u.(entities.User)
 
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 2<<20)
 	form, err := c.MultipartForm()
-
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		var maxBytes *http.MaxBytesError
+		if errors.As(err, &maxBytes) {
+			renderUploadFile(c, "That file is too large.")
+			return
+		}
+		renderUploadFile(c, "Choose one results file.")
 		return
 	}
 
-	multipartFile := form.File["file"]
-	log.Println(multipartFile)
-	file, err := multipartFile[0].Open()
+	files := form.File["file"]
+	if len(files) != 1 || files[0].Size == 0 {
+		renderUploadFile(c, "Choose one results file.")
+		return
+	}
+
+	file, err := files[0].Open()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		slog.Error("open results file", "error", err)
+		renderUploadFile(c, "Unable to save this result. Please try again.")
 		return
 	}
 	defer file.Close()
 
-	event, err := parser.ParseFile(file)
+	parsed, err := parser.ParseFile(file)
 	if err != nil {
-		log.Println("Failed to parse file")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		renderUploadFile(c, "This file does not look like a results email.")
 		return
 	}
 
-	locationEntity, eventEntity, eventResultEntity, notes, err := handler.saveEvent(ctx, user, event)
+	locationEntity, eventEntity, eventResultEntity, notes, err := handler.saveEvent(ctx, user, parsed)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if errors.Is(err, errBadResultsFile) {
+			renderUploadFile(c, "This file does not look like a results email.")
+			return
+		}
+		slog.Error("save result", "error", err)
+		renderUploadFile(c, "Unable to save this result. Please try again.")
 		return
 	}
 
 	c.HTML(http.StatusOK, "", templates.UploadSuccess(locationEntity, eventEntity, eventResultEntity, notes.PersonalBest, notes.TrackRecord))
+}
+
+func renderUploadFile(c *gin.Context, errMsg string) {
+	c.HTML(http.StatusOK, "", templates.UploadFile(errMsg))
 }
 
 func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser entities.User, parsed *model.Event) (entities.Location, entities.Event, entities.EventResult, uploadRecords, error) {
@@ -104,6 +125,9 @@ func (handler *FileUploadHandler) saveEvent(ctx context.Context, currentUser ent
 	var savedEvent entities.Event
 	var saved entities.EventResult
 	var notes uploadRecords
+	if parsed.DriverInfo.Position < 1 || parsed.DriverInfo.Position > len(parsed.DriverTimes) {
+		return savedLocation, savedEvent, saved, notes, errBadResultsFile
+	}
 	err := handler.Transactor.Within(ctx, func(ctx context.Context) error {
 		locationEntity, err := handler.processLocation(ctx, parsed)
 		if err != nil {

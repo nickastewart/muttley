@@ -8,7 +8,7 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func UploadFile() templ.Component {
+func UploadFile(errMsg string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -55,7 +55,30 @@ func UploadFile() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"main-container\"><div id=\"upload-file-container\"><div class=\"upload-file-card\"><div class=\"upload-file-card-title\"><span>Upload Result</span></div><form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div class=\"upload-file-field\"><label for=\"file-location\">Track</label> <select id=\"file-location\" name=\"file-location\"><option value=\"Daytona Milton Keynes\">Daytona Milton Keynes</option> <option value=\"Daytona Sandown Park\">Daytona Sandown Park</option></select></div><div class=\"upload-file-field\"><label for=\"upload-file-input\">Results file</label> <input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"main-container\"><div id=\"upload-file-container\"><div class=\"upload-file-card\"><div class=\"upload-file-card-title\"><span>Upload Result</span></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errMsg != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"upload-file-notice\"><div class=\"upload-file-notice-title\">Error</div><div class=\"upload-file-notice-message\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/upload_file.templ`, Line: 15, Col: 54}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<form id=\"upload-file-form\" method=\"post\" action=\"/upload/process\" enctype=\"multipart/form-data\"><div class=\"upload-file-field\"><label for=\"file-location\">Track</label> <select id=\"file-location\" name=\"file-location\"><option value=\"Daytona Milton Keynes\">Daytona Milton Keynes</option> <option value=\"Daytona Sandown Park\">Daytona Sandown Park</option></select></div><div class=\"upload-file-field\"><label for=\"upload-file-input\">Results file</label> <input id=\"upload-file-input\" type=\"file\" name=\"file\" accept=\".eml\"></div><input id=\"file-upload-submit\" value=\"Submit\" type=\"submit\"></form></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

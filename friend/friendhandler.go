@@ -9,6 +9,7 @@ import (
 	"muttley/templates"
 	"muttley/user"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,13 +57,19 @@ func (handler *FriendHandler) SearchFriends(c *gin.Context) {
 		return
 	}
 
+	user := u.(entities.User)
 	searchTerm, ok := c.GetQuery("searchTerm")
 	log.Print(searchTerm)
-	if !ok {
-		log.Panic("Search Term is empty")
+	if !ok || strings.TrimSpace(searchTerm) == "" {
+		friends, err := handler.FriendRepository.GetFriendsByUser(ctx, user.ID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Error getting friends"})
+			return
+		}
+		c.HTML(http.StatusOK, "", templates.FriendCards(friends))
+		return
 	}
 
-	user := u.(entities.User)
 	searchParams := entities.GetUsersBySearchTermParams{
 		Name:   "%" + searchTerm + "%",
 		Userid: user.ID,

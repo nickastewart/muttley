@@ -129,6 +129,58 @@ func TestGetFriendsByUser(t *testing.T) {
 	}
 }
 
+func TestGetFriendsByUserReturnsEachPersonOnce(t *testing.T) {
+	db := testdb.Open(t)
+	ctx := context.Background()
+	friends := friend.NewFriendRepository(entities.New(db))
+	ada := createUser(t, db, "Ada", "ada@example.com", "ada")
+	bob := createUser(t, db, "Bob", "bob@example.com", "bob")
+	cara := createUser(t, db, "Cara", "cara@example.com", "cara")
+
+	if _, err := friends.AddFriend(ctx, entities.AddFriendParams{
+		UserID:       ada.ID,
+		FriendID:     bob.ID,
+		FriendStatus: "ACCEPTED",
+	}); err != nil {
+		t.Fatalf("add bob: %v", err)
+	}
+	if _, err := friends.AddFriend(ctx, entities.AddFriendParams{
+		UserID:       ada.ID,
+		FriendID:     cara.ID,
+		FriendStatus: "ACCEPTED",
+	}); err != nil {
+		t.Fatalf("add cara: %v", err)
+	}
+
+	bobFriends, err := friends.GetFriendsByUser(ctx, bob.ID)
+	if err != nil {
+		t.Fatalf("get bob friends: %v", err)
+	}
+	if len(bobFriends) != 1 || bobFriends[0].ID != ada.ID || bobFriends[0].FirstName != "Ada" || bobFriends[0].FriendStatus != "ACCEPTED" || bobFriends[0].ConfirmationRequired != "false" {
+		t.Fatalf("bob friends = %+v, want one accepted ada", bobFriends)
+	}
+
+	adaFriends, err := friends.GetFriendsByUser(ctx, ada.ID)
+	if err != nil {
+		t.Fatalf("get ada friends: %v", err)
+	}
+	if len(adaFriends) != 2 {
+		t.Fatalf("ada friends = %+v, want bob and cara once each", adaFriends)
+	}
+	seen := map[int64]entities.GetFriendsByUserRow{}
+	for _, row := range adaFriends {
+		if _, ok := seen[row.ID]; ok {
+			t.Fatalf("duplicate friend %+v in %+v", row, adaFriends)
+		}
+		seen[row.ID] = row
+	}
+	bobRow, bobOK := seen[bob.ID]
+	caraRow, caraOK := seen[cara.ID]
+	if !bobOK || !caraOK || bobRow.FirstName != "Bob" || caraRow.FirstName != "Cara" || bobRow.FriendStatus != "ACCEPTED" || caraRow.FriendStatus != "ACCEPTED" || bobRow.ConfirmationRequired != "false" || caraRow.ConfirmationRequired != "false" {
+		t.Fatalf("ada friends = %+v", adaFriends)
+	}
+}
+
 func TestUpdateFriendStatus(t *testing.T) {
 	db := testdb.Open(t)
 	ctx := context.Background()

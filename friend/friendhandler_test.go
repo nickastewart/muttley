@@ -109,6 +109,55 @@ func TestSearchFriendsPendingRequest(t *testing.T) {
 	}
 }
 
+func TestSearchFriendsBlankTermRestoresFriendsList(t *testing.T) {
+	db := testdb.Open(t)
+	searcher := createUser(t, db, "Ada", "ada@example.com", "ada")
+	accepted := createUser(t, db, "Grace", "grace@example.com", "grace")
+	if _, err := user.NewUserRepository(db).CreateUser(context.Background(), entities.CreateUserParams{
+		FirstName:   "",
+		LastName:    "",
+		Email:       "blank@example.com",
+		ProfileID:   "blank",
+		DisplayName: "",
+	}); err != nil {
+		t.Fatalf("create blank user: %v", err)
+	}
+	if _, err := friend.NewFriendRepository(entities.New(db)).AddFriend(context.Background(), entities.AddFriendParams{
+		UserID:       searcher.ID,
+		FriendID:     accepted.ID,
+		FriendStatus: "ACCEPTED",
+	}); err != nil {
+		t.Fatalf("add friend: %v", err)
+	}
+
+	paths := []string{
+		"/search/friends?searchTerm=",
+		"/search/friends",
+		"/search/friends?searchTerm=%20%09%20",
+	}
+	for _, path := range paths {
+		t.Run(path, func(t *testing.T) {
+			res := friendRequest(t, db, searcher, http.MethodGet, path)
+			body := res.Body.String()
+			if res.Code != http.StatusOK {
+				t.Fatalf("status = %d body = %s", res.Code, body)
+			}
+			if !strings.Contains(body, accepted.DisplayName) || !strings.Contains(body, ">Remove<") {
+				t.Fatalf("friends list body = %s", body)
+			}
+			if strings.Contains(body, ">Add<") || strings.Contains(body, "blank") || strings.Contains(body, `class="friend-card-title"></div>`) || strings.Contains(body, `class="friend-card-title"> </div>`) {
+				t.Fatalf("blank search rendered an empty add card: %s", body)
+			}
+			if strings.Count(body, `class="friend-card"`) != 1 {
+				t.Fatalf("friend cards = %d body = %s", strings.Count(body, `class="friend-card"`), body)
+			}
+			if strings.Contains(body, `id="friend-list"`) || strings.Contains(body, "<html") {
+				t.Fatalf("blank search rendered a full page: %s", body)
+			}
+		})
+	}
+}
+
 func TestAcceptMissingFriendRequest(t *testing.T) {
 	db := testdb.Open(t)
 	ada := createUser(t, db, "Ada", "ada@example.com", "ada")

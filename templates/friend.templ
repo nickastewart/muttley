@@ -26,25 +26,29 @@ templ Friend(friends []entities.GetFriendsByUserRow) {
 				/>
 			</div>
 			<div id="friend-list">
-				for _, friend := range friends {
-					<div class="friend-card">
-						<div class="friend-card-info">
-							<div class="friend-card-title">{ friend.DisplayName }</div>
-							<div class="friend-card-subtitle">{ friend.FirstName + " " + friend.LastName }</div>
-						</div>
-						<div class="friend-card-actions" id={ fmt.Sprintf("friend-card-actions-%s", friend.ProfileID) }>
-							if friend.ConfirmationRequired == "true" {
-								<button class="friend-card-button" hx-post={ fmt.Sprintf("/accept-friend?profileId=%s", friend.ProfileID) } hx-target={ fmt.Sprintf("#friend-card-actions-%s", friend.ProfileID) } hx-swap="innerHTML">Accept</button>
-							}
-							if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
-								@FriendRemoveButton(friend.ProfileID)
-							}
-						</div>
-					</div>
-				}
+				@FriendCards(friends)
 			</div>
 		</div>
 	</div>
+}
+
+templ FriendCards(friends []entities.GetFriendsByUserRow) {
+	for _, friend := range friends {
+		<div class="friend-card">
+			<div class="friend-card-info">
+				<div class="friend-card-title">{ friend.DisplayName }</div>
+				<div class="friend-card-subtitle">{ friend.FirstName + " " + friend.LastName }</div>
+			</div>
+			<div class="friend-card-actions" id={ fmt.Sprintf("friend-card-actions-%s", friend.ProfileID) }>
+				if friend.ConfirmationRequired == "true" {
+					<button class="friend-card-button" hx-post={ fmt.Sprintf("/accept-friend?profileId=%s", friend.ProfileID) } hx-target={ fmt.Sprintf("#friend-card-actions-%s", friend.ProfileID) } hx-swap="innerHTML">Accept</button>
+				}
+				if friend.FriendStatus == "ACCEPTED" || friend.FriendStatus == "REQUESTED" {
+					@FriendRemoveButton(friend.ProfileID)
+				}
+			</div>
+		</div>
+	}
 }
 
 templ FriendRemoveButton(profileID string) {

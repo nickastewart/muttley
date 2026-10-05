@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"muttley/sqlite"
 	"muttley/sqlite/entities"
 )
@@ -56,11 +57,21 @@ func (r *UserRepositorySqlite) UpdateUser(ctx context.Context, params entities.U
 func (r *UserRepositorySqlite) DeleteUser(ctx context.Context, id int64) error {
 	return r.transactor.Within(ctx, func(ctx context.Context) error {
 		q := r.q(ctx)
+		existing, err := q.GetUserById(ctx, id)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
+		missing := errors.Is(err, sql.ErrNoRows)
 		if err := q.DeleteEventResultsByUserId(ctx, id); err != nil {
 			return err
 		}
 		if err := q.DeleteFriendsByUserId(ctx, id); err != nil {
 			return err
+		}
+		if !missing {
+			if err := q.DeleteMagicLinksByEmail(ctx, existing.Email); err != nil {
+				return err
+			}
 		}
 		return q.DeleteUser(ctx, id)
 	})

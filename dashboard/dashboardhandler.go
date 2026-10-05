@@ -38,47 +38,51 @@ func (handler *DashboardHandler) GetDashboard(c *gin.Context) {
 
 	user := u.(entities.User)
 	dashboard, err := handler.DashboardRepository.GetDashboard(ctx, user.ID)
-
 	if err != nil {
-		slog.Error("Error getting dashbaord")
-		// TODO handle erorr in UI
+		dashboardQueryFailed(c, "Error getting dashboard", err)
+		return
 	}
 
 	bestTrack, err := handler.DashboardRepository.GetBestTrack(ctx, user.ID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		slog.Error("Error getting bestTrack")
-		// TODO handle erorr in UI
+		dashboardQueryFailed(c, "Error getting bestTrack", err)
+		return
 	}
 
 	locationStats, err := handler.DashboardRepository.GetLocationStats(ctx, user.ID)
 	if err != nil {
-		slog.Error("Error getting bestTrack")
-		// TODO handle erorr in UI
+		dashboardQueryFailed(c, "Error getting location stats", err)
+		return
 	}
 
 	recentPositions, err := handler.DashboardRepository.GetRecentPositions(ctx, user.ID)
 	if err != nil {
-		slog.Error("Error getting bestTrack")
-		// TODO handle erorr in UI
+		dashboardQueryFailed(c, "Error getting recent positions", err)
+		return
 	}
 
 	recentEvents, err := handler.EventRepository.GetRecentEvents(ctx, user.ID)
 	if err != nil {
-		slog.Error("Error getting recent events")
-		// TODO handle erorr in UI
+		dashboardQueryFailed(c, "Error getting recent events", err)
+		return
+	}
+
+	headToHead, err := handler.HeadToHeadRepository.GetHeadToHead(ctx, user.ID)
+	if err != nil {
+		dashboardQueryFailed(c, "Error getting head to head", err)
+		return
 	}
 
 	headToHeadWins := int64(0)
-	headToHead, err := handler.HeadToHeadRepository.GetHeadToHead(ctx, user.ID)
-	if err != nil {
-		slog.Error("Error getting head to head wins")
-		// TODO handle erorr in UI
-	} else {
-		for _, row := range headToHead {
-			headToHeadWins += row.UserWins
-		}
+	for _, row := range headToHead {
+		headToHeadWins += row.UserWins
 	}
 
 	c.Header("HX-Redirect", "/dashboard")
 	c.HTML(http.StatusOK, "", Dashboard(dashboard, bestTrack.Name, locationStats, recentPositions, recentEvents, headToHeadWins))
+}
+
+func dashboardQueryFailed(c *gin.Context, message string, err error) {
+	slog.Error(message, "error", err)
+	c.HTML(http.StatusInternalServerError, "", DashboardError())
 }

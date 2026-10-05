@@ -98,6 +98,46 @@ func TestDashboardShowsBestTrackAfterThreeRaces(t *testing.T) {
 	}
 }
 
+func TestDashboardQueryErrorDoesNotRenderZeros(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&logs, nil))
+	previous := slog.Default()
+	slog.SetDefault(logger)
+	t.Cleanup(func() { slog.SetDefault(previous) })
+
+	repo := failingRepository{}
+	handler := dashboard.NewDashboardHander(repo, repo, repo)
+	router := gin.New()
+	router.HTMLRender = &testTemplRender{}
+	router.GET("/dashboard", func(c *gin.Context) {
+		c.Set("currentUser", entities.User{ID: 1})
+		handler.GetDashboard(c)
+	})
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/dashboard", nil)
+	router.ServeHTTP(recorder, request)
+
+	body := recorder.Body.String()
+	if !strings.Contains(body, "Could not load your dashboard. Try again.") {
+		t.Fatalf("dashboard error = %s, want the fixed sentence", body)
+	}
+	if strings.Contains(body, "<span>Races</span>") || strings.Contains(body, "<span>Wins</span>") {
+		t.Fatalf("failed dashboard rendered stat tiles: %s", body)
+	}
+	if strings.Contains(body, "database closed") {
+		t.Fatalf("dashboard leaked the query error: %s", body)
+	}
+	if recorder.Header().Get("HX-Redirect") != "" {
+		t.Fatalf("HX-Redirect = %q, want none", recorder.Header().Get("HX-Redirect"))
+	}
+	logged := logs.String()
+	if !strings.Contains(logged, "Error getting dashboard") || !strings.Contains(logged, "database closed") {
+		t.Fatalf("query error was not logged: %s", logged)
+	}
+}
+
 func TestDashboardFormatsLapTimes(t *testing.T) {
 	db := testdb.Open(t)
 	ada := createUser(t, db, "Ada", "ada-laps@example.com", "ada-laps")
@@ -211,4 +251,46 @@ func (t *testTemplRender) Instance(name string, data interface{}) render.Render 
 		return &testTemplRender{Code: http.StatusOK, Data: component}
 	}
 	return nil
+}
+
+type failingRepository struct{}
+
+func (failingRepository) GetDashboard(context.Context, int64) (entities.GetDashboardRow, error) {
+	return entities.GetDashboardRow{}, errors.New("database closed")
+}
+
+func (failingRepository) GetBestTrack(context.Context, int64) (entities.GetBestTrackRow, error) {
+	return entities.GetBestTrackRow{}, nil
+}
+
+func (failingRepository) GetLocationStats(context.Context, int64) ([]entities.GetLocationStatsRow, error) {
+	return nil, nil
+}
+
+func (failingRepository) GetRecentPositions(context.Context, int64) ([]int64, error) {
+	return nil, nil
+}
+
+func (failingRepository) CreateEvent(context.Context, entities.CreateEventParams) (entities.Event, error) {
+	return entities.Event{}, nil
+}
+
+func (failingRepository) GetEventByLocationAndTypeAndDate(context.Context, entities.GetEventByLocationAndTypeAndDateParams) (entities.Event, error) {
+	return entities.Event{}, nil
+}
+
+func (failingRepository) ListEventsByLocationAndTypeAndDate(context.Context, entities.ListEventsByLocationAndTypeAndDateParams) ([]entities.Event, error) {
+	return nil, nil
+}
+
+func (failingRepository) GetEventsByUser(context.Context, []int64) ([]entities.GetEventsByUserRow, error) {
+	return nil, nil
+}
+
+func (failingRepository) GetRecentEvents(context.Context, int64) ([]entities.GetRecentEventsRow, error) {
+	return nil, nil
+}
+
+func (failingRepository) GetHeadToHead(context.Context, int64) ([]entities.GetHeadToHeadRow, error) {
+	return nil, nil
 }

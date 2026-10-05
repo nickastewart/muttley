@@ -202,3 +202,15 @@ func getTrackChartData(locationStats []entities.GetLocationStatsRow) []int64 {
 	}
 	return data
 }
+
+templ DashboardError() {
+	@templates.Head() {
+		<link rel="stylesheet" type="text/css" href="/styles/dashboard.css"/>
+	}
+	@templates.Header()
+	<div class="main-container">
+		<div class="dashboard">
+			<div class="dashboard-row">Could not load your dashboard. Try again.</div>
+		</div>
+	</div>
+}

@@ -67,18 +67,21 @@ func (q *Queries) GetFriendByUserIdAndFriendId(ctx context.Context, arg GetFrien
 }
 
 const getFriendsByUser = `-- name: GetFriendsByUser :many
-SELECT user.id, user.first_name, user.last_name, user.profile_id, user.display_name, COALESCE(friend.friend_status, 'NONE') AS friend_status,
-        CASE 
-            WHEN friend.friend_id = ?1 AND COALESCE(friend.friend_status, 'NONE') = 'REQUESTED' THEN 'true'
-            ELSE 'false'
-        END AS confirmation_required
-    FROM user
-    LEFT JOIN friend ON (user.id = friend.user_id OR user.id = friend.friend_id)
-    WHERE user.id in (
-        SELECT friend.user_id FROM friend WHERE friend.friend_id = ?1 AND friend_status != 'CANCELLED'
-        UNION
-        SELECT friend.friend_id FROM friend WHERE friend.user_id = ?1 AND friend_status != 'CANCELLED'
-    ) AND user.id != ?1
+SELECT user.id, user.first_name, user.last_name, user.profile_id, user.display_name,
+       friend.friend_status AS friend_status,
+       CASE
+           WHEN friend.friend_id = ?1
+                AND friend.friend_status = 'REQUESTED' THEN 'true'
+           ELSE 'false'
+       END AS confirmation_required
+FROM user
+JOIN friend ON (
+        (friend.user_id = ?1 AND friend.friend_id = user.id)
+        OR
+        (friend.friend_id = ?1 AND friend.user_id = user.id)
+    )
+WHERE friend.friend_status != 'CANCELLED'
+  AND user.id != ?1
 `
 
 type GetFriendsByUserRow struct {

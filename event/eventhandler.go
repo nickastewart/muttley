@@ -2,7 +2,7 @@ package event
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"muttley/eventresult"
 	"muttley/friend"
 	"muttley/location"
@@ -48,9 +48,16 @@ func (handler *EventsHandler) Leaderboard(c *gin.Context) {
 
 	user := u.(entities.User)
 
+	friendIds, err := handler.getFriendIds(ctx, user.ID)
+	if err != nil {
+		slog.Error("Error getting friends user ids")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting friends"})
+		return
+	}
+
 	userIds := []int64{}
 	userIds = append(userIds, user.ID)
-	userIds = append(userIds, handler.getFriendIds(ctx, user.ID)...)
+	userIds = append(userIds, friendIds...)
 
 	events, err := handler.EventRepository.GetEventsByUser(ctx, userIds)
 	if err != nil {
@@ -66,14 +73,14 @@ func (handler *EventsHandler) Leaderboard(c *gin.Context) {
 	c.HTML(http.StatusOK, "", templates.Leaderboard(events))
 }
 
-func (handler *EventsHandler) getFriendIds(ctx context.Context, userId int64) []int64 {
+func (handler *EventsHandler) getFriendIds(ctx context.Context, userId int64) ([]int64, error) {
 	friends, err := handler.FriendRepository.GetFriendsByUser(ctx, userId)
 	if err != nil {
-		log.Fatal("Error getting friends user ids")
+		return nil, err
 	}
 	friendIds := make([]int64, len(friends))
 	for index, friend := range friends {
 		friendIds[index] = friend.ID
 	}
-	return friendIds
+	return friendIds, nil
 }

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -256,9 +257,11 @@ func (handler *AuthHandler) userIDForLink(ctx context.Context, link entities.Mag
 }
 
 func (handler *AuthHandler) setSession(c *gin.Context, userID int64) error {
+	now := time.Now()
+	exp := now.Add(sessionTTL)
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  userID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": exp.Unix(),
 	})
 
 	// TODO: Use a real secret from env variables for signing jwt
@@ -267,72 +270,100 @@ func (handler *AuthHandler) setSession(c *gin.Context, userID int64) error {
 		return err
 	}
 
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "access_token",
-		Value:    token,
-		Path:     "/",
-		Expires:  time.Now().Add(15 * time.Minute),
-		MaxAge:   15 * 60,
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-	})
-	return nil
+	return setAccessTokenCookie(c, token, exp, int(sessionTTL.Seconds()))
 }
 
 func (handler *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	_ = ClearSession(c)
 	c.Header("HX-Redirect", "/login")
 }
 
 func (handler *AuthHandler) CheckAccessToken(c *gin.Context) {
 	ctx := context.Background()
 
-	authToken, err := c.Cookie("access_token")
-
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/login")
-		return
+	authToken, err := c.Cookie(accessTokenCookie)
+	if err != nil || !handler.acceptAccessToken(c, ctx, authToken) {
+		handler.rejectAccess(c)
 	}
+}
 
-	tokenString := authToken
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func (handler *AuthHandler) acceptAccessToken(c *gin.Context, ctx context.Context, authToken string) bool {
+	token, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		// TODO: Use a real secret from env variables for signing jwt
 		return []byte("SECRET"), nil
 	})
-
-	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
+	if err != nil || token == nil || !token.Valid {
+		return false
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		c.Abort()
-		return
+		return false
+	}
+	exp, ok := claimNumber(claims["exp"])
+	if !ok || float64(time.Now().Unix()) > exp {
+		return false
+	}
+	id, ok := claimNumber(claims["id"])
+	if !ok {
+		return false
 	}
 
-	if float64(time.Now().Unix()) > claims["exp"].(float64) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	user, _ := handler.UserRepository.GetUserById(ctx, int64(claims["id"].(float64)))
+	user, _ := handler.UserRepository.GetUserById(ctx, int64(id))
 	if user.ID == 0 {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
+		return false
 	}
 
-	c.Set(
-		"currentUser",
-		user,
-	)
-
+	c.Set("currentUser", user)
 	c.Next()
+	return true
+}
+
+func (handler *AuthHandler) rejectAccess(c *gin.Context) {
+	_ = ClearSession(c)
+	c.Abort()
+	if wantsJSON(c) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+	if c.GetHeader("HX-Request") == "true" {
+		c.Header("HX-Redirect", "/login")
+	}
+	c.Redirect(http.StatusSeeOther, "/login")
+}
+
+func claimNumber(value any) (float64, bool) {
+	switch n := value.(type) {
+	case float64:
+		return n, true
+	case json.Number:
+		parsed, err := n.Float64()
+		if err != nil {
+			return 0, false
+		}
+		return parsed, true
+	default:
+		return 0, false
+	}
+}
+
+func wantsJSON(c *gin.Context) bool {
+	jsonOK := false
+	htmlOK := false
+	for _, part := range strings.Split(c.GetHeader("Accept"), ",") {
+		media := strings.TrimSpace(part)
+		if i := strings.Index(media, ";"); i >= 0 {
+			media = strings.TrimSpace(media[:i])
+		}
+		switch strings.ToLower(media) {
+		case "application/json":
+			jsonOK = true
+		case "text/html", "application/xhtml+xml":
+			htmlOK = true
+		}
+	}
+	return jsonOK && !htmlOK
 }

@@ -43,9 +43,13 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	if _, err := auth.CookieSecureFromEnv(); err != nil {
+		log.Panic(err)
+	}
 
 	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mail, sqlite.NewTransactor(db))
 	userHandler := user.NewUserHandler(userRepository)
+	userHandler.ClearSession = auth.ClearSession
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, recordsRepository, sqlite.NewTransactor(db))
 	eventHandler := event.NewEventsHandler(userRepository, eventRepository, locationRepository, eventResultRepository, friendRepository)
 	friendHandler := friend.NewFriendHandler(friendRepository, userRepository)

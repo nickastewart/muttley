@@ -14,6 +14,15 @@ is unset or `log`. Local development should set `APP_ENV=development` and leave
 Any other `APP_ENV`, including unset, refuses to start with the log mailer.
 `MAILER=resend` does not depend on `APP_ENV`.
 
+## Session cookie
+
+The `access_token` cookie and its JWT expire together after 7 days.
+`COOKIE_SECURE=true` or `false` sets the Secure flag. When `COOKIE_SECURE`
+is unset, the cookie is Secure only if `APP_ENV=production`. Any other
+value refuses to start. The app does not read `X-Forwarded-Proto` for this.
+Behind a TLS-terminating proxy, set `COOKIE_SECURE=true` or
+`APP_ENV=production`.
+
 ## Test mode
 
 Load tests that need an authenticated session set:

@@ -12,6 +12,7 @@ import (
 
 type UserHandler struct {
 	UserRepository UserRepository
+	ClearSession   func(*gin.Context) error
 }
 
 func NewUserHandler(userRepository UserRepository) *UserHandler {
@@ -105,7 +106,9 @@ func (handler *UserHandler) DeleteAccount(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	if handler.ClearSession != nil {
+		_ = handler.ClearSession(c)
+	}
 	c.Header("HX-Redirect", "/login")
 	if c.GetHeader("HX-Request") != "true" {
 		c.Redirect(http.StatusSeeOther, "/login")

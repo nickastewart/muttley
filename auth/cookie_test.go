@@ -227,7 +227,7 @@ func requestProtected(t *testing.T, handler *auth.AuthHandler, method string, co
 func signToken(t *testing.T, claims jwt.MapClaims) string {
 	t.Helper()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, err := token.SignedString([]byte("SECRET"))
+	signed, err := token.SignedString(testSigningKey)
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}

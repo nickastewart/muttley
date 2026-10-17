@@ -25,15 +25,17 @@ type AuthHandler struct {
 	Mailer              mailer.Mailer
 	Transactor          *sqlite.Transactor
 	BaseURL             string
+	SigningKey          []byte
 }
 
-func NewAuthHandler(userRepository user.UserRepository, magicLinks MagicLinkRepository, mailer mailer.Mailer, transactor *sqlite.Transactor, baseURL string) *AuthHandler {
+func NewAuthHandler(userRepository user.UserRepository, magicLinks MagicLinkRepository, mailer mailer.Mailer, transactor *sqlite.Transactor, baseURL string, signingKey []byte) *AuthHandler {
 	return &AuthHandler{
 		UserRepository:      userRepository,
 		MagicLinkRepository: magicLinks,
 		Mailer:              mailer,
 		Transactor:          transactor,
 		BaseURL:             baseURL,
+		SigningKey:          signingKey,
 	}
 }
 
@@ -266,8 +268,7 @@ func (handler *AuthHandler) setSession(c *gin.Context, userID int64) error {
 		"exp": exp.Unix(),
 	})
 
-	// TODO: Use a real secret from env variables for signing jwt
-	token, err := generateToken.SignedString([]byte("SECRET"))
+	token, err := generateToken.SignedString(handler.SigningKey)
 	if err != nil {
 		return err
 	}
@@ -294,8 +295,7 @@ func (handler *AuthHandler) acceptAccessToken(c *gin.Context, ctx context.Contex
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		// TODO: Use a real secret from env variables for signing jwt
-		return []byte("SECRET"), nil
+		return handler.SigningKey, nil
 	})
 	if err != nil || token == nil || !token.Valid {
 		return false

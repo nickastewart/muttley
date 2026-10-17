@@ -40,3 +40,13 @@ func (r *LocationRepositorySqlite) GetLocationByName(ctx context.Context, name s
 
 	return location, err
 }
+
+func (r *LocationRepositorySqlite) GetAllowedLocationByName(ctx context.Context, name string) (entities.AllowedLocation, error) {
+	location, err := r.q(ctx).GetAllowedLocationByName(ctx, name)
+
+	if err != nil {
+		slog.Error(err.Error())
+	}
+
+	return location, err
+}

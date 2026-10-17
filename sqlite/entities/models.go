@@ -8,6 +8,11 @@ import (
 	"database/sql"
 )
 
+type AllowedLocation struct {
+	ID   int64
+	Name string
+}
+
 type Event struct {
 	ID           int64
 	LocationID   int64

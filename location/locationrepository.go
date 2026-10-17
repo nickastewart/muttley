@@ -8,4 +8,5 @@ import (
 type LocationRepository interface {
 	CreateLocation(ctx context.Context, name string) (entities.Location, error)
 	GetLocationByName(ctx context.Context, name string) (entities.Location, error)
+	GetAllowedLocationByName(ctx context.Context, name string) (entities.AllowedLocation, error)
 }

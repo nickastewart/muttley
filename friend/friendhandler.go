@@ -115,23 +115,34 @@ func (handler *FriendHandler) AddFriend(c *gin.Context) {
 		return
 	}
 
-	if err == nil && friend.ID != 0 {
-		handler.updateFriendStatus(ctx, friend.ID, "REQUESTED")
-	} else {
-		addFriendParams := entities.AddFriendParams{
+	if errors.Is(err, sql.ErrNoRows) || friend.ID == 0 {
+		_, err = handler.FriendRepository.AddFriend(ctx, entities.AddFriendParams{
 			UserID:       user.ID,
 			FriendID:     friendId,
 			FriendStatus: "REQUESTED",
-		}
-
-		_, err = handler.FriendRepository.AddFriend(ctx, addFriendParams)
+		})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error adding friend"})
 			return
 		}
+		c.HTML(http.StatusOK, "", templates.FriendPendingRequestButton())
+		return
 	}
 
-	c.HTML(http.StatusOK, "", templates.FriendPendingRequestButton())
+	switch friend.FriendStatus {
+	case "CANCELLED":
+		if err := handler.updateFriendStatus(ctx, friend.ID, "REQUESTED"); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error adding friend"})
+			return
+		}
+		c.HTML(http.StatusOK, "", templates.FriendPendingRequestButton())
+	case "REQUESTED":
+		c.HTML(http.StatusOK, "", templates.FriendPendingRequestButton())
+	case "ACCEPTED":
+		c.HTML(http.StatusOK, "", templates.FriendAcceptedButton())
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error adding friend"})
+	}
 }
 
 func (handler *FriendHandler) AcceptFriend(c *gin.Context) {
@@ -219,15 +230,14 @@ func (handler *FriendHandler) RemoveFriend(c *gin.Context) {
 	}
 
 	if friend.FriendStatus != "CANCELLED" {
-		handler.updateFriendStatus(ctx, friend.ID, "CANCELLED")
+		_ = handler.updateFriendStatus(ctx, friend.ID, "CANCELLED")
 	}
 }
 
-func (handler *FriendHandler) updateFriendStatus(ctx context.Context, friendId int64, status string) {
-
-	updateStatusParams := entities.UpdateFriendStatusParams{
+func (handler *FriendHandler) updateFriendStatus(ctx context.Context, friendId int64, status string) error {
+	_, err := handler.FriendRepository.UpdateFriendStatus(ctx, entities.UpdateFriendStatusParams{
 		FriendStatus: status,
 		ID:           friendId,
-	}
-	handler.FriendRepository.UpdateFriendStatus(ctx, updateStatusParams)
+	})
+	return err
 }

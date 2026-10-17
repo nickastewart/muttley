@@ -140,11 +140,12 @@ Friend status values stored on the row are `REQUESTED`, `ACCEPTED`, and
   plus `HX-Redirect` when `HX-Request` is set). JSON 401 is only for a client
   that asks for JSON and not HTML.
 - The cookie name is `access_token`. The JWT `exp` and the cookie `MaxAge`
-  are both 7 days. `COOKIE_SECURE=true` or `false` sets `Secure`; when it is
-  unset, the cookie is Secure only for `APP_ENV=production`. An unknown
-  `COOKIE_SECURE` refuses to start. Logout and account deletion clear that
-  cookie with the same attributes. `main` sets `UserHandler.ClearSession` to
-  `auth.ClearSession`.
+  are both 7 days. `JWT_SECRET` signs that token and must be at least 32
+  bytes; a missing or shorter value refuses to start. `COOKIE_SECURE=true`
+  or `false` sets `Secure`; when it is unset, the cookie is Secure only for
+  `APP_ENV=production`. An unknown `COOKIE_SECURE` refuses to start. Logout
+  and account deletion clear that cookie with the same attributes. `main`
+  sets `UserHandler.ClearSession` to `auth.ClearSession`.
 - Magic links are created and consumed inside a transaction. See `auth/authhandler.go`.
 - `mailer.Mailer` is the only send API: `SendMagicLink(ctx, to, link)`.
   Set `APP_ENV=development` and leave `MAILER` unset in local development so

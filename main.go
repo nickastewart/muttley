@@ -50,8 +50,12 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	signingKey, err := auth.SigningKeyFromEnv()
+	if err != nil {
+		log.Panic(err)
+	}
 
-	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mail, sqlite.NewTransactor(db), baseURL)
+	authHandler := auth.NewAuthHandler(userRepository, auth.NewMagicLinkRepository(db), mail, sqlite.NewTransactor(db), baseURL, signingKey)
 	userHandler := user.NewUserHandler(userRepository)
 	userHandler.ClearSession = auth.ClearSession
 	fileUploadHandler := fileupload.NewFileUploadHandler(userRepository, eventRepository, locationRepository, eventResultRepository, recordsRepository, sqlite.NewTransactor(db))

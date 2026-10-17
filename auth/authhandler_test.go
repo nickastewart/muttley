@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -22,6 +23,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func TestLoginPageHasNoPassword(t *testing.T) {
@@ -228,6 +230,32 @@ func TestLoginRejectsAnInvalidEmail(t *testing.T) {
 	}
 }
 
+func TestCheckAccessTokenRejectsADifferentSigningKey(t *testing.T) {
+	handler, db := newAuthHandler(t, &captureMailer{})
+	createAuthUser(t, db, "ada@example.com")
+	id := authUserID(t, db, "ada@example.com")
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":  id,
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+	signed, err := token.SignedString(bytes.Repeat([]byte("x"), 32))
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+
+	rec := request(t, testRouter(handler), http.MethodGet, "/", nil, []*http.Cookie{{
+		Name:  "access_token",
+		Value: signed,
+	}})
+	if rec.Code == http.StatusOK || strings.Contains(rec.Body.String(), "ok") {
+		t.Fatalf("status = %d body = %s", rec.Code, rec.Body.String())
+	}
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/login" {
+		t.Fatalf("status = %d location = %q body = %s", rec.Code, rec.Header().Get("Location"), rec.Body.String())
+	}
+}
+
 type captureMailer struct {
 	to   string
 	link string
@@ -240,6 +268,8 @@ func (m *captureMailer) SendMagicLink(ctx context.Context, to, link string) erro
 	return m.err
 }
 
+var testSigningKey = bytes.Repeat([]byte("k"), 32)
+
 func newAuthHandler(t *testing.T, mail mailer.Mailer) (*auth.AuthHandler, *sql.DB) {
 	t.Helper()
 	db := testdb.Open(t)
@@ -249,6 +279,7 @@ func newAuthHandler(t *testing.T, mail mailer.Mailer) (*auth.AuthHandler, *sql.D
 		mail,
 		sqlite.NewTransactor(db),
 		"http://localhost:8080",
+		testSigningKey,
 	), db
 }
 

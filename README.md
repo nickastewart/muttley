@@ -20,7 +20,11 @@ sign-in link is built only from that value. When `MAILER` is unset or
 ## Session cookie
 
 The `access_token` cookie and its JWT expire together after 7 days.
-`COOKIE_SECURE=true` or `false` sets the Secure flag. When `COOKIE_SECURE`
+`JWT_SECRET` signs that token and must be at least 32 bytes. A missing
+or shorter value refuses to start, and the error does not echo the
+secret. Generate it with a CSPRNG rather than a short passphrase.
+Changing it rejects cookies signed with the previous key, so users
+sign in again. `COOKIE_SECURE=true` or `false` sets the Secure flag. When `COOKIE_SECURE`
 is unset, the cookie is Secure only if `APP_ENV=production`. Any other
 value refuses to start. The app does not read `X-Forwarded-Proto` for this.
 Behind a TLS-terminating proxy, set `COOKIE_SECURE=true` or

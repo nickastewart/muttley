@@ -158,6 +158,93 @@ func TestSearchFriendsBlankTermRestoresFriendsList(t *testing.T) {
 	}
 }
 
+func TestAddFriendDoesNotDemoteAccepted(t *testing.T) {
+	db := testdb.Open(t)
+	ada := createUser(t, db, "Ada", "ada@example.com", "ada")
+	grace := createUser(t, db, "Grace", "grace@example.com", "grace")
+
+	added := friendRequest(t, db, ada, http.MethodPost, "/add-friend?profileId=grace")
+	if added.Code != http.StatusOK || !strings.Contains(added.Body.String(), "Pending Request") {
+		t.Fatalf("add friend status = %d body = %s", added.Code, added.Body.String())
+	}
+
+	again := friendRequest(t, db, ada, http.MethodPost, "/add-friend?profileId=grace")
+	if again.Code != http.StatusOK || !strings.Contains(again.Body.String(), "Pending Request") || strings.Contains(again.Body.String(), "hx-post") {
+		t.Fatalf("second add status = %d body = %s", again.Code, again.Body.String())
+	}
+	if status := friendStatus(t, db, ada.ID, grace.ID); status != "REQUESTED" {
+		t.Fatalf("status after second add = %q, want REQUESTED", status)
+	}
+
+	accepted := friendRequest(t, db, grace, http.MethodPost, "/accept-friend?profileId=ada")
+	if accepted.Code != http.StatusOK {
+		t.Fatalf("accept status = %d body = %s", accepted.Code, accepted.Body.String())
+	}
+
+	for _, caller := range []struct {
+		name string
+		user entities.User
+		path string
+	}{
+		{name: "requester", user: ada, path: "/add-friend?profileId=grace"},
+		{name: "recipient", user: grace, path: "/add-friend?profileId=ada"},
+	} {
+		t.Run(caller.name, func(t *testing.T) {
+			res := friendRequest(t, db, caller.user, http.MethodPost, caller.path)
+			body := res.Body.String()
+			if res.Code != http.StatusOK {
+				t.Fatalf("status = %d body = %s", res.Code, body)
+			}
+			if !strings.Contains(body, "Accepted") || !strings.Contains(body, "disabled") || strings.Contains(body, "Pending Request") || strings.Contains(body, "hx-post") {
+				t.Fatalf("accepted add body = %s", body)
+			}
+			if status := friendStatus(t, db, ada.ID, grace.ID); status != "ACCEPTED" {
+				t.Fatalf("status after add = %q, want ACCEPTED", status)
+			}
+		})
+	}
+}
+
+func TestAddFriendReopensCancelled(t *testing.T) {
+	db := testdb.Open(t)
+	ada := createUser(t, db, "Ada", "ada@example.com", "ada")
+	grace := createUser(t, db, "Grace", "grace@example.com", "grace")
+	friends := friend.NewFriendRepository(entities.New(db))
+	created, err := friends.AddFriend(context.Background(), entities.AddFriendParams{
+		UserID:       ada.ID,
+		FriendID:     grace.ID,
+		FriendStatus: "REQUESTED",
+	})
+	if err != nil {
+		t.Fatalf("add friend: %v", err)
+	}
+	if _, err := friends.UpdateFriendStatus(context.Background(), entities.UpdateFriendStatusParams{
+		FriendStatus: "CANCELLED",
+		ID:           created.ID,
+	}); err != nil {
+		t.Fatalf("cancel friend: %v", err)
+	}
+
+	res := friendRequest(t, db, ada, http.MethodPost, "/add-friend?profileId=grace")
+	body := res.Body.String()
+	if res.Code != http.StatusOK || !strings.Contains(body, "Pending Request") {
+		t.Fatalf("reopen status = %d body = %s", res.Code, body)
+	}
+	if status := friendStatus(t, db, ada.ID, grace.ID); status != "REQUESTED" {
+		t.Fatalf("status after reopen = %q, want REQUESTED", status)
+	}
+	row, err := friends.GetFriendByUserIdAndFriendId(context.Background(), entities.GetFriendByUserIdAndFriendIdParams{
+		Userid:   ada.ID,
+		Friendid: grace.ID,
+	})
+	if err != nil {
+		t.Fatalf("get friend: %v", err)
+	}
+	if row.ID != created.ID {
+		t.Fatalf("friend id = %d, want %d", row.ID, created.ID)
+	}
+}
+
 func TestAcceptMissingFriendRequest(t *testing.T) {
 	db := testdb.Open(t)
 	ada := createUser(t, db, "Ada", "ada@example.com", "ada")

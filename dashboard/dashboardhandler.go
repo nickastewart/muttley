@@ -9,6 +9,7 @@ import (
 	"muttley/headtohead"
 	"muttley/sqlite/entities"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,6 +38,16 @@ func (handler *DashboardHandler) GetDashboard(c *gin.Context) {
 	}
 
 	user := u.(entities.User)
+	if accountNameMissing(user) {
+		if c.GetHeader("HX-Request") == "true" {
+			c.Header("HX-Redirect", "/account")
+			c.Status(http.StatusOK)
+			return
+		}
+		c.Redirect(http.StatusSeeOther, "/account")
+		return
+	}
+
 	dashboard, err := handler.DashboardRepository.GetDashboard(ctx, user.ID)
 	if err != nil {
 		dashboardQueryFailed(c, "Error getting dashboard", err)
@@ -80,6 +91,12 @@ func (handler *DashboardHandler) GetDashboard(c *gin.Context) {
 
 	c.Header("HX-Redirect", "/dashboard")
 	c.HTML(http.StatusOK, "", Dashboard(dashboard, bestTrack.Name, locationStats, recentPositions, recentEvents, headToHeadWins))
+}
+
+func accountNameMissing(user entities.User) bool {
+	return strings.TrimSpace(user.FirstName) == "" &&
+		strings.TrimSpace(user.LastName) == "" &&
+		strings.TrimSpace(user.DisplayName) == ""
 }
 
 func dashboardQueryFailed(c *gin.Context, message string, err error) {

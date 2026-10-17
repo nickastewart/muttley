@@ -195,6 +195,38 @@ func TestSearchUsersByNameUsesSearcherFriendship(t *testing.T) {
 	}
 }
 
+func TestSearchUsersByDisplayName(t *testing.T) {
+	db := testdb.Open(t)
+	repo := user.NewUserRepository(db)
+	ctx := context.Background()
+
+	searcher := createUser(t, repo, "Apex", "Stewart", "nick@example.com", "nick")
+	if _, err := repo.CreateUser(ctx, entities.CreateUserParams{
+		FirstName:   "",
+		LastName:    "",
+		Email:       "apex@example.com",
+		ProfileID:   "apex",
+		DisplayName: "Apex",
+	}); err != nil {
+		t.Fatalf("create apex: %v", err)
+	}
+	apex, err := repo.GetUserByEmail(ctx, "apex@example.com")
+	if err != nil {
+		t.Fatalf("get apex: %v", err)
+	}
+
+	matches, err := repo.GetUsersBySearchTerm(ctx, entities.GetUsersBySearchTermParams{
+		Name:   "%apex%",
+		Userid: searcher.ID,
+	})
+	if err != nil {
+		t.Fatalf("search apex: %v", err)
+	}
+	if len(matches) != 1 || matches[0].ID != apex.ID || matches[0].DisplayName != "Apex" || matches[0].ID == searcher.ID {
+		t.Fatalf("apex matches = %+v, want one row for %d", matches, apex.ID)
+	}
+}
+
 func TestDeleteUserRemovesResultsAndFriendships(t *testing.T) {
 	db := testdb.Open(t)
 	ctx := context.Background()

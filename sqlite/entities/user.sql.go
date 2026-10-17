@@ -135,7 +135,7 @@ func (q *Queries) GetUserIdByProfileId(ctx context.Context, profileID string) (i
 }
 
 const getUsersBySearchTerm = `-- name: GetUsersBySearchTerm :many
-SELECT user.id, user.first_name, user.last_name, user.profile_id,
+SELECT user.id, user.first_name, user.last_name, user.profile_id, user.display_name,
        CAST(COALESCE(
            (SELECT friend.friend_status
             FROM friend
@@ -149,7 +149,10 @@ SELECT user.id, user.first_name, user.last_name, user.profile_id,
            'NONE'
        ) AS TEXT) AS friend_status
 FROM user
-WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?2
+WHERE (
+    CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE ?2
+    OR LOWER(user.display_name) LIKE ?2
+  )
   AND user.id != ?1
 `
 
@@ -163,6 +166,7 @@ type GetUsersBySearchTermRow struct {
 	FirstName    string
 	LastName     string
 	ProfileID    string
+	DisplayName  string
 	FriendStatus string
 }
 
@@ -180,6 +184,7 @@ func (q *Queries) GetUsersBySearchTerm(ctx context.Context, arg GetUsersBySearch
 			&i.FirstName,
 			&i.LastName,
 			&i.ProfileID,
+			&i.DisplayName,
 			&i.FriendStatus,
 		); err != nil {
 			return nil, err

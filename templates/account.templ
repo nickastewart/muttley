@@ -11,6 +11,9 @@ templ Account(user entities.User, success string, errMsg string) {
 		<div id="account-container">
 			<div class="account-card">
 				<div class="account-card-title"><span>Account</span></div>
+				<div class="account-notice" id="account-required-banner">
+					<div class="account-notice-message">All fields are mandatory.</div>
+				</div>
 				if errMsg != "" {
 					<div class="account-notice">
 						<div class="account-notice-title">Error</div>

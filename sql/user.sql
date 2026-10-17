@@ -21,7 +21,7 @@ DELETE FROM user WHERE id = ?;
 SELECT id, first_name, last_name, email, profile_id FROM user WHERE email = ?;
 
 -- name: GetUsersBySearchTerm :many
-SELECT user.id, user.first_name, user.last_name, user.profile_id,
+SELECT user.id, user.first_name, user.last_name, user.profile_id, user.display_name,
        CAST(COALESCE(
            (SELECT friend.friend_status
             FROM friend
@@ -35,7 +35,10 @@ SELECT user.id, user.first_name, user.last_name, user.profile_id,
            'NONE'
        ) AS TEXT) AS friend_status
 FROM user
-WHERE CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE sqlc.arg(name)
+WHERE (
+    CONCAT(LOWER(user.first_name), ' ', LOWER(user.last_name)) LIKE sqlc.arg(name)
+    OR LOWER(user.display_name) LIKE sqlc.arg(name)
+  )
   AND user.id != sqlc.arg(userId);
 
 -- name: GetUserIdByProfileId :one

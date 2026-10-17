@@ -36,7 +36,7 @@ templ Leaderboard(events []entities.GetEventsByUserRow) {
 						for index, event := range events {
 							<tr class="leaderboard-row">
 								<td class="leaderboard-cell">{ index + 1 }</td>
-								<td class="leaderboard-cell">{ event.User.FirstName + " " + event.User.LastName }</td>
+								<td class="leaderboard-cell">{ DriverName(event.User) }</td>
 								<td class="leaderboard-cell">{ event.Event.Date }</td>
 								<td class="leaderboard-cell">{ event.Location.Name }</td>
 								<td class="leaderboard-cell">{ event.Event.Type }</td>

@@ -7,7 +7,7 @@ templ FriendSearchResults(users []entities.GetUsersBySearchTermRow) {
 	for _, user := range users {
 		<div class="friend-card">
 			<div class="friend-card-info">
-				<div class="friend-card-title">{ user.FirstName + " " + user.LastName }</div>
+				<div class="friend-card-title">{ cardTitle(user) }</div>
 			</div>
 			<div class="friend-card-actions">
 				if user.FriendStatus == "ACCEPTED" {

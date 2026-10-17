@@ -189,6 +189,37 @@ func TestSignupRejectsAnExistingEmail(t *testing.T) {
 	}
 }
 
+func TestMagicLinkIgnoresRequestHost(t *testing.T) {
+	for _, path := range []string{"/login", "/signup"} {
+		t.Run(path, func(t *testing.T) {
+			sent := &captureMailer{}
+			handler, db := newAuthHandler(t, sent)
+			handler.BaseURL = "https://muttley.example"
+			router := testRouter(handler)
+			if path == "/login" {
+				createAuthUser(t, db, "ada@example.com")
+			}
+
+			req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(url.Values{"email": {"ada@example.com"}}.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Host = "evil.example"
+			req.Header.Set("X-Forwarded-Proto", "https")
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusOK {
+				t.Fatalf("status = %d body = %s", rec.Code, rec.Body.String())
+			}
+			if !strings.HasPrefix(sent.link, "https://muttley.example/login/verify?token=") || strings.Contains(sent.link, "evil.example") {
+				t.Fatalf("link = %q", sent.link)
+			}
+			if tokenFromLink(t, sent.link) == "" {
+				t.Fatal("missing token")
+			}
+		})
+	}
+}
+
 func TestLoginRejectsAnInvalidEmail(t *testing.T) {
 	sent := &captureMailer{}
 	body := requestHTML(t, newTestRouter(t, sent), http.MethodPost, "/login", url.Values{"email": {"not-an-email"}}, nil)
@@ -217,6 +248,7 @@ func newAuthHandler(t *testing.T, mail mailer.Mailer) (*auth.AuthHandler, *sql.D
 		auth.NewMagicLinkRepository(db),
 		mail,
 		sqlite.NewTransactor(db),
+		"http://localhost:8080",
 	), db
 }
 

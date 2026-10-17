@@ -24,14 +24,16 @@ type AuthHandler struct {
 	MagicLinkRepository MagicLinkRepository
 	Mailer              mailer.Mailer
 	Transactor          *sqlite.Transactor
+	BaseURL             string
 }
 
-func NewAuthHandler(userRepository user.UserRepository, magicLinks MagicLinkRepository, mailer mailer.Mailer, transactor *sqlite.Transactor) *AuthHandler {
+func NewAuthHandler(userRepository user.UserRepository, magicLinks MagicLinkRepository, mailer mailer.Mailer, transactor *sqlite.Transactor, baseURL string) *AuthHandler {
 	return &AuthHandler{
 		UserRepository:      userRepository,
 		MagicLinkRepository: magicLinks,
 		Mailer:              mailer,
 		Transactor:          transactor,
+		BaseURL:             baseURL,
 	}
 }
 
@@ -77,7 +79,7 @@ func (handler *AuthHandler) RequestLogin(c *gin.Context) {
 		return
 	}
 
-	if err := handler.issueMagicLink(ctx, c, email, purposeLogin); err != nil {
+	if err := handler.issueMagicLink(ctx, email, purposeLogin); err != nil {
 		c.HTML(http.StatusBadRequest, "", Login(Page{Error: technicalError(), Email: email}))
 		return
 	}
@@ -114,7 +116,7 @@ func (handler *AuthHandler) RequestSignup(c *gin.Context) {
 		return
 	}
 
-	if err := handler.issueMagicLink(ctx, c, email, purposeSignup); err != nil {
+	if err := handler.issueMagicLink(ctx, email, purposeSignup); err != nil {
 		c.HTML(http.StatusBadRequest, "", Signup(Page{Error: technicalError(), Email: email}))
 		return
 	}
@@ -183,7 +185,7 @@ func (handler *AuthHandler) VerifyMagicLink(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
-func (handler *AuthHandler) issueMagicLink(ctx context.Context, c *gin.Context, email, purpose string) error {
+func (handler *AuthHandler) issueMagicLink(ctx context.Context, email, purpose string) error {
 	raw, hash, err := newMagicToken()
 	if err != nil {
 		return err
@@ -204,7 +206,7 @@ func (handler *AuthHandler) issueMagicLink(ctx context.Context, c *gin.Context, 
 	if err != nil {
 		return err
 	}
-	return handler.Mailer.SendMagicLink(ctx, email, magicLinkURL(c, raw))
+	return handler.Mailer.SendMagicLink(ctx, email, magicLinkURL(handler.BaseURL, raw))
 }
 
 func (handler *AuthHandler) activeLink(ctx context.Context, token string) (entities.MagicLink, error) {

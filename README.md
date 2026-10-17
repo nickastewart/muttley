@@ -12,7 +12,10 @@ Magic-link email uses the log mailer when `APP_ENV=development` and `MAILER`
 is unset or `log`. Local development should set `APP_ENV=development` and leave
 `MAILER` unset so the link is printed to the server log instead of being sent.
 Any other `APP_ENV`, including unset, refuses to start with the log mailer.
-`MAILER=resend` does not depend on `APP_ENV`.
+`MAILER=resend` does not depend on `APP_ENV`. Set `APP_BASE_URL` to the
+public origin (`https://example.com`) whenever `MAILER=resend`. The
+sign-in link is built only from that value. When `MAILER` is unset or
+`log` and `APP_BASE_URL` is unset, the link uses `http://localhost:8080`.
 
 ## Session cookie
 

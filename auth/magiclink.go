@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -78,10 +76,6 @@ func signupLink(email string) string {
 	return "/signup?email=" + url.QueryEscape(email)
 }
 
-func magicLinkURL(c *gin.Context, token string) string {
-	scheme := "http"
-	if c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https") {
-		scheme = "https"
-	}
-	return scheme + "://" + c.Request.Host + "/login/verify?token=" + url.QueryEscape(token)
+func magicLinkURL(baseURL, token string) string {
+	return strings.TrimRight(baseURL, "/") + "/login/verify?token=" + url.QueryEscape(token)
 }

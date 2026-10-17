@@ -3,6 +3,7 @@ package auth
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,15 +16,38 @@ func TestProfile() bool {
 	return strings.EqualFold(strings.TrimSpace(os.Getenv("PROFILE")), "test")
 }
 
+func appEnv() string {
+	return strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+}
+
+func testLoginOpen() bool {
+	if !TestProfile() {
+		return false
+	}
+	switch appEnv() {
+	case "", "development":
+		return true
+	default:
+		return false
+	}
+}
+
+func TestLoginFromEnv() error {
+	if TestProfile() && strings.EqualFold(strings.TrimSpace(os.Getenv("APP_ENV")), "production") {
+		return fmt.Errorf("auth: PROFILE=test cannot be used when APP_ENV=production")
+	}
+	return nil
+}
+
 func RegisterTestLogin(router gin.IRoutes, handler *AuthHandler) {
-	if !TestProfile() || handler == nil {
+	if !testLoginOpen() || handler == nil {
 		return
 	}
 	router.GET("/test/login/:id", handler.TestLogin)
 }
 
 func (handler *AuthHandler) TestLogin(c *gin.Context) {
-	if !TestProfile() || handler == nil || handler.UserRepository == nil {
+	if !testLoginOpen() || handler == nil || handler.UserRepository == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}

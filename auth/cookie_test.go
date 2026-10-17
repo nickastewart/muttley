@@ -3,7 +3,7 @@ package auth_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"strconv"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -152,15 +152,17 @@ func TestSessionCookieLogoutAndDeleteShareSecure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv("COOKIE_SECURE", tc.cookie)
 			t.Setenv("APP_ENV", tc.appEnv)
-			t.Setenv("PROFILE", "test")
 
-			handler, db := newAuthHandler(t, &captureMailer{})
+			sent := &captureMailer{}
+			handler, db := newAuthHandler(t, sent)
 			createAuthUser(t, db, "ada@example.com")
 			id := authUserID(t, db, "ada@example.com")
 
 			gin.SetMode(gin.TestMode)
 			router := gin.New()
-			auth.RegisterTestLogin(router, handler)
+			router.HTMLRender = &testTemplRender{}
+			router.POST("/login", handler.RequestLogin)
+			router.POST("/login/verify", handler.VerifyMagicLink)
 			router.POST("/logout", handler.Logout)
 			accounts := user.NewUserHandler(user.NewUserRepository(db))
 			accounts.ClearSession = auth.ClearSession
@@ -169,8 +171,9 @@ func TestSessionCookieLogoutAndDeleteShareSecure(t *testing.T) {
 				accounts.DeleteAccount(c)
 			})
 
-			session := request(t, router, http.MethodGet, "/test/login/"+strconv.FormatInt(id, 10), nil, nil)
-			if session.Code != http.StatusOK {
+			request(t, router, http.MethodPost, "/login", url.Values{"email": {"ada@example.com"}}, nil)
+			session := request(t, router, http.MethodPost, "/login/verify", url.Values{"token": {tokenFromLink(t, sent.link)}}, nil)
+			if session.Code != http.StatusSeeOther {
 				t.Fatalf("login status = %d body = %s", session.Code, session.Body.String())
 			}
 			sessionCookie := accessTokenSetCookie(t, session)

@@ -28,21 +28,25 @@ Behind a TLS-terminating proxy, set `COOKIE_SECURE=true` or
 
 ## Test mode
 
-Load tests that need an authenticated session set:
+Load tests that need an authenticated session set `PROFILE=test` only when
+`APP_ENV` is unset or `development`:
 
 ```
+APP_ENV=development
 PROFILE=test
 ```
 
 That registers `GET /test/login/{id}`. The route looks up that user and sets the
 same `access_token` cookie as a normal sign-in, so later requests are logged in
-as that user. Any other profile leaves the route unregistered.
+as that user. Production must set `APP_ENV=production`. `PROFILE=test` with
+`APP_ENV=production` refuses to start. Any other `APP_ENV` leaves the route
+unregistered.
 
 ```
 GET /test/login/1
 ```
 
-Do not set `PROFILE=test` outside a test environment.
+Do not set `PROFILE=test` outside a local or load-test environment.
 
 To deliver mail with [Resend](https://resend.com/docs/introduction):
 

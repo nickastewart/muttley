@@ -46,6 +46,9 @@ func main() {
 	if _, err := auth.CookieSecureFromEnv(); err != nil {
 		log.Panic(err)
 	}
+	if err := auth.TestLoginFromEnv(); err != nil {
+		log.Panic(err)
+	}
 	baseURL, err := auth.BaseURLFromEnv()
 	if err != nil {
 		log.Panic(err)

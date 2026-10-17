@@ -151,9 +151,12 @@ Friend status values stored on the row are `REQUESTED`, `ACCEPTED`, and
   `LogMailer` prints the link. Any other `APP_ENV`, including unset, refuses
   the log mailer. `MAILER=resend` uses `RESEND_API_KEY` and `RESEND_FROM` and
   does not depend on `APP_ENV`. Selection is `mailer.NewFromEnv`.
-- `PROFILE=test` registers `GET /test/login/:id`, which sets the same cookie as
-  a real sign-in. `auth.RegisterTestLogin` no-ops for any other profile. Do not
-  set `PROFILE=test` outside a test or load-test environment.
+- `PROFILE=test` registers `GET /test/login/:id` only when `APP_ENV` is
+  unset or `development`. The route sets the same cookie as a real sign-in.
+  `PROFILE=test` with `APP_ENV=production` refuses to start. Any other
+  `APP_ENV` leaves the route unregistered, and the handler returns 404 with
+  no cookie if it still runs. Do not set `PROFILE=test` outside a test or
+  load-test environment.
 
 ## Errors
 

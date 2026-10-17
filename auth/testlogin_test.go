@@ -82,6 +82,93 @@ func TestTestLoginRouteHiddenUnlessTestProfile(t *testing.T) {
 	}
 }
 
+func TestTestLoginAllowedWhenAppEnvIsDevelopment(t *testing.T) {
+	t.Setenv("PROFILE", "test")
+	t.Setenv("APP_ENV", " Development ")
+	if err := auth.TestLoginFromEnv(); err != nil {
+		t.Fatalf("startup: %v", err)
+	}
+	handler, db := newAuthHandler(t, &captureMailer{})
+	router := testRouter(handler)
+	auth.RegisterTestLogin(router, handler)
+	createAuthUser(t, db, "ada@example.com")
+	id := authUserID(t, db, "ada@example.com")
+
+	rec := request(t, router, http.MethodGet, "/test/login/"+strconv.FormatInt(id, 10), nil, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d body = %s", rec.Code, rec.Body.String())
+	}
+	cookies := rec.Result().Cookies()
+	if len(cookies) != 1 || cookies[0].Name != "access_token" || cookies[0].Value == "" {
+		t.Fatalf("cookies = %+v", cookies)
+	}
+}
+
+func TestTestLoginRefusedWhenProduction(t *testing.T) {
+	t.Setenv("PROFILE", "test")
+	t.Setenv("APP_ENV", " Production ")
+	err := auth.TestLoginFromEnv()
+	if err == nil {
+		t.Fatal("expected startup error")
+	}
+	if strings.Contains(err.Error(), " Production ") {
+		t.Fatalf("err echoed the raw env: %v", err)
+	}
+
+	handler, db := newAuthHandler(t, &captureMailer{})
+	router := testRouter(handler)
+	auth.RegisterTestLogin(router, handler)
+	createAuthUser(t, db, "ada@example.com")
+	id := authUserID(t, db, "ada@example.com")
+
+	hidden := request(t, router, http.MethodGet, "/test/login/"+strconv.FormatInt(id, 10), nil, nil)
+	if hidden.Code != http.StatusNotFound || len(hidden.Result().Cookies()) != 0 {
+		t.Fatalf("hidden status = %d cookies = %+v body = %s", hidden.Code, hidden.Result().Cookies(), hidden.Body.String())
+	}
+}
+
+func TestTestLoginHiddenForOtherAppEnv(t *testing.T) {
+	t.Setenv("PROFILE", "test")
+	t.Setenv("APP_ENV", "staging")
+	if err := auth.TestLoginFromEnv(); err != nil {
+		t.Fatalf("startup: %v", err)
+	}
+	handler, db := newAuthHandler(t, &captureMailer{})
+	router := testRouter(handler)
+	auth.RegisterTestLogin(router, handler)
+	createAuthUser(t, db, "ada@example.com")
+	id := authUserID(t, db, "ada@example.com")
+
+	hidden := request(t, router, http.MethodGet, "/test/login/"+strconv.FormatInt(id, 10), nil, nil)
+	if hidden.Code != http.StatusNotFound || len(hidden.Result().Cookies()) != 0 {
+		t.Fatalf("hidden status = %d cookies = %+v body = %s", hidden.Code, hidden.Result().Cookies(), hidden.Body.String())
+	}
+}
+
+func TestTestLoginHandlerClosesWhenAppEnvBecomesProduction(t *testing.T) {
+	t.Setenv("PROFILE", "test")
+	t.Setenv("APP_ENV", "")
+	handler, db := newAuthHandler(t, &captureMailer{})
+	router := testRouter(handler)
+	auth.RegisterTestLogin(router, handler)
+	createAuthUser(t, db, "ada@example.com")
+	id := authUserID(t, db, "ada@example.com")
+
+	t.Setenv("APP_ENV", "production")
+	blocked := request(t, router, http.MethodGet, "/test/login/"+strconv.FormatInt(id, 10), nil, nil)
+	if blocked.Code != http.StatusNotFound || len(blocked.Result().Cookies()) != 0 {
+		t.Fatalf("blocked status = %d cookies = %+v body = %s", blocked.Code, blocked.Result().Cookies(), blocked.Body.String())
+	}
+}
+
+func TestTestLoginUnsetAppEnvStillStarts(t *testing.T) {
+	t.Setenv("PROFILE", "")
+	t.Setenv("APP_ENV", "production")
+	if err := auth.TestLoginFromEnv(); err != nil {
+		t.Fatalf("startup: %v", err)
+	}
+}
+
 func authUserID(t *testing.T, db *sql.DB, email string) int64 {
 	t.Helper()
 	var id int64

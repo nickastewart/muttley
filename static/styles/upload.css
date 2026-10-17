@@ -35,6 +35,11 @@
     color: var(--text);
 }
 
+.upload-file-notice-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
 .upload-file-notice-message {
     color: var(--text-muted);
 }

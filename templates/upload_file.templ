@@ -1,6 +1,6 @@
 package templates
 
-templ UploadFile(message string) {
+templ UploadFile(errMsg string) {
 	@Head() {
 		<link rel="stylesheet" type="text/css" href="/styles/upload.css"/>
 	}
@@ -9,9 +9,10 @@ templ UploadFile(message string) {
 		<div id="upload-file-container">
 			<div class="upload-file-card">
 				<div class="upload-file-card-title"><span>Upload Result</span></div>
-				if message != "" {
+				if errMsg != "" {
 					<div class="upload-file-notice">
-						<div class="upload-file-notice-message">{ message }</div>
+						<div class="upload-file-notice-title">Error</div>
+						<div class="upload-file-notice-message">{ errMsg }</div>
 					</div>
 				}
 				<form id="upload-file-form" method="post" action="/upload/process" enctype="multipart/form-data">

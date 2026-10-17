@@ -53,7 +53,7 @@ func NewFileUploadHandler(userRepository user.UserRepository,
 
 func (handler *FileUploadHandler) UploadFile(c *gin.Context) {
 	c.Header("HX-Redirect", "/upload")
-	c.HTML(http.StatusOK, "", templates.UploadFile())
+	c.HTML(http.StatusOK, "", templates.UploadFile(""))
 }
 
 func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
@@ -92,6 +92,10 @@ func (handler *FileUploadHandler) ProcessFile(c *gin.Context) {
 
 	locationEntity, eventEntity, eventResultEntity, notes, err := handler.saveEvent(ctx, user, event)
 	if err != nil {
+		if errors.Is(err, errUnknownTrack) {
+			c.HTML(http.StatusBadRequest, "", templates.UploadFile(unknownTrackMessage))
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -151,9 +155,20 @@ func recordNotes(created bool, bestLap int64, previousPersonalBest int64, previo
 	}
 }
 
-func (handler *FileUploadHandler) processLocation(ctx context.Context, event *model.Event) (entities.Location, error) {
+const unknownTrackMessage = "That track is not recognised."
 
-	location, err := handler.LocationRepository.GetLocationByName(ctx, event.Location)
+var errUnknownTrack = errors.New("unknown track")
+
+func (handler *FileUploadHandler) processLocation(ctx context.Context, event *model.Event) (entities.Location, error) {
+	allowed, err := handler.LocationRepository.GetAllowedLocationByName(ctx, event.Location)
+	if errors.Is(err, sql.ErrNoRows) || allowed.ID == 0 {
+		return entities.Location{}, errUnknownTrack
+	}
+	if err != nil {
+		return entities.Location{}, err
+	}
+
+	location, err := handler.LocationRepository.GetLocationByName(ctx, allowed.Name)
 
 	if location.ID == 0 || errors.Is(err, sql.ErrNoRows) {
 		createdLocation, err := handler.LocationRepository.CreateLocation(ctx, event.Location)

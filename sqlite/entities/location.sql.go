@@ -21,6 +21,17 @@ func (q *Queries) CreateLocation(ctx context.Context, name string) (Location, er
 	return i, err
 }
 
+const getAllowedLocationByName = `-- name: GetAllowedLocationByName :one
+SELECT id, name FROM allowed_location WHERE name = ?
+`
+
+func (q *Queries) GetAllowedLocationByName(ctx context.Context, name string) (AllowedLocation, error) {
+	row := q.db.QueryRowContext(ctx, getAllowedLocationByName, name)
+	var i AllowedLocation
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getLocationByName = `-- name: GetLocationByName :one
 SELECT id, name FROM location WHERE name = ?
 `

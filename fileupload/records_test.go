@@ -46,7 +46,7 @@ func TestSaveEventFlagsPersonalBestAndTrackRecord(t *testing.T) {
 	addUploadFriend(t, db, ada.ID, alan.ID, "REQUESTED")
 	handler := newUploadHandler(db, eventresult.NewEventResultRepository(entities.New(db)))
 
-	_, _, _, first, err := handler.saveEvent(ctx, ada, parsedLap("Whilton Mill", "2024-06-01", "Rental", 1, 1, 45000, 47000))
+	_, _, _, first, err := handler.saveEvent(ctx, ada, parsedLap("Daytona Milton Keynes", "2024-06-01", "Rental", 1, 1, 45000, 47000))
 	if err != nil {
 		t.Fatalf("first save: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestSaveEventFlagsPersonalBestAndTrackRecord(t *testing.T) {
 		t.Fatalf("first save notes = %+v, want both records", first)
 	}
 
-	_, _, _, again, err := handler.saveEvent(ctx, ada, parsedLap("Whilton Mill", "2024-06-01", "Rental", 1, 1, 45000, 47000))
+	_, _, _, again, err := handler.saveEvent(ctx, ada, parsedLap("Daytona Milton Keynes", "2024-06-01", "Rental", 1, 1, 45000, 47000))
 	if err != nil {
 		t.Fatalf("second save: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestSaveEventFlagsPersonalBestAndTrackRecord(t *testing.T) {
 		t.Fatalf("repeat save notes = %+v, want no record", again)
 	}
 
-	_, _, _, slower, err := handler.saveEvent(ctx, ada, parsedLap("Whilton Mill", "2024-06-02", "Rental", 1, 1, 46000, 48000))
+	_, _, _, slower, err := handler.saveEvent(ctx, ada, parsedLap("Daytona Milton Keynes", "2024-06-02", "Rental", 1, 1, 46000, 48000))
 	if err != nil {
 		t.Fatalf("slower save: %v", err)
 	}
@@ -70,14 +70,14 @@ func TestSaveEventFlagsPersonalBestAndTrackRecord(t *testing.T) {
 		t.Fatalf("slower notes = %+v, want no record", slower)
 	}
 
-	if _, _, _, _, err := handler.saveEvent(ctx, grace, parsedLap("Whilton Mill", "2024-06-03", "Rental", 1, 1, 43000, 45000)); err != nil {
+	if _, _, _, _, err := handler.saveEvent(ctx, grace, parsedLap("Daytona Milton Keynes", "2024-06-03", "Rental", 1, 1, 43000, 45000)); err != nil {
 		t.Fatalf("grace save: %v", err)
 	}
-	if _, _, _, _, err := handler.saveEvent(ctx, alan, parsedLap("Whilton Mill", "2024-06-04", "Rental", 1, 1, 42000, 44000)); err != nil {
+	if _, _, _, _, err := handler.saveEvent(ctx, alan, parsedLap("Daytona Milton Keynes", "2024-06-04", "Rental", 1, 1, 42000, 44000)); err != nil {
 		t.Fatalf("alan save: %v", err)
 	}
 
-	_, _, _, personal, err := handler.saveEvent(ctx, ada, parsedLap("Whilton Mill", "2024-06-05", "Rental", 1, 1, 44000, 46000))
+	_, _, _, personal, err := handler.saveEvent(ctx, ada, parsedLap("Daytona Milton Keynes", "2024-06-05", "Rental", 1, 1, 44000, 46000))
 	if err != nil {
 		t.Fatalf("personal save: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestSaveEventFlagsPersonalBestAndTrackRecord(t *testing.T) {
 		t.Fatalf("personal notes = %+v, want personal best only", personal)
 	}
 
-	_, _, _, both, err := handler.saveEvent(ctx, ada, parsedLap("Whilton Mill", "2024-06-06", "Rental", 1, 1, 41000, 43000))
+	_, _, _, both, err := handler.saveEvent(ctx, ada, parsedLap("Daytona Milton Keynes", "2024-06-06", "Rental", 1, 1, 41000, 43000))
 	if err != nil {
 		t.Fatalf("record save: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestSaveEventFlagsPersonalBestAndTrackRecord(t *testing.T) {
 		t.Fatalf("record notes = %+v, want both records", both)
 	}
 
-	_, _, _, missing, err := handler.saveEvent(ctx, ada, parsedLap("Whilton Mill", "2024-06-07", "Rental", 1, 1, 0, 47000))
+	_, _, _, missing, err := handler.saveEvent(ctx, ada, parsedLap("Daytona Milton Keynes", "2024-06-07", "Rental", 1, 1, 0, 47000))
 	if err != nil {
 		t.Fatalf("zero save: %v", err)
 	}

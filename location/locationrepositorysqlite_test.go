@@ -41,6 +41,23 @@ func TestGetMissingLocation(t *testing.T) {
 	}
 }
 
+func TestAllowedLocationsAreSeeded(t *testing.T) {
+	repo := newLocationRepo(t)
+	ctx := context.Background()
+
+	for _, name := range []string{"Daytona Milton Keynes", "Daytona Sandown Park"} {
+		got, err := repo.GetAllowedLocationByName(ctx, name)
+		if err != nil || got.ID == 0 || got.Name != name {
+			t.Fatalf("allowed location %q = %+v err %v", name, got, err)
+		}
+	}
+
+	_, err := repo.GetAllowedLocationByName(ctx, "Unrecognised")
+	if !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("error = %v, want sql.ErrNoRows", err)
+	}
+}
+
 func newLocationRepo(t *testing.T) location.LocationRepository {
 	t.Helper()
 	return location.NewLocationRepository(entities.New(testdb.Open(t)))

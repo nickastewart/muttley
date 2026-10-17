@@ -21,6 +21,7 @@ import (
 	"muttley/location"
 	"muttley/sqlite/entities"
 	"muttley/sqlite/testdb"
+	"muttley/user"
 
 	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
@@ -111,7 +112,7 @@ func TestDashboardQueryErrorDoesNotRenderZeros(t *testing.T) {
 	router := gin.New()
 	router.HTMLRender = &testTemplRender{}
 	router.GET("/dashboard", func(c *gin.Context) {
-		c.Set("currentUser", entities.User{ID: 1})
+		c.Set("currentUser", entities.User{ID: 1, DisplayName: "Ada"})
 		handler.GetDashboard(c)
 	})
 
@@ -150,6 +151,83 @@ func TestDashboardFormatsLapTimes(t *testing.T) {
 	if strings.Contains(body, ">45000<") || strings.Contains(body, ">47000<") {
 		t.Fatalf("lap times were still raw milliseconds: %s", body)
 	}
+}
+
+func TestDashboardSendsBlankAccountToAccount(t *testing.T) {
+	db := testdb.Open(t)
+	blank := createAccountUser(t, db, "", "", "", "blank@example.com", "blank")
+	named := createAccountUser(t, db, "", "", "Apex", "apex@example.com", "apex")
+
+	blankRec := requestDashboardRaw(t, db, blank, nil)
+	if blankRec.Code != http.StatusSeeOther || blankRec.Header().Get("Location") != "/account" {
+		t.Fatalf("blank status = %d location = %q body = %s", blankRec.Code, blankRec.Header().Get("Location"), blankRec.Body.String())
+	}
+
+	hx := requestDashboardRaw(t, db, blank, map[string]string{"HX-Request": "true"})
+	if hx.Code != http.StatusOK || hx.Header().Get("HX-Redirect") != "/account" {
+		t.Fatalf("hx status = %d redirect = %q", hx.Code, hx.Header().Get("HX-Redirect"))
+	}
+	if strings.Contains(hx.Body.String(), "<span>Races</span>") {
+		t.Fatalf("blank htmx dashboard rendered: %s", hx.Body.String())
+	}
+
+	namedRec := requestDashboardRaw(t, db, named, nil)
+	if namedRec.Code != http.StatusOK || namedRec.Header().Get("Location") != "" {
+		t.Fatalf("display-name-only status = %d location = %q", namedRec.Code, namedRec.Header().Get("Location"))
+	}
+	if namedRec.Header().Get("HX-Redirect") != "/dashboard" {
+		t.Fatalf("display-name-only redirect = %q, want /dashboard", namedRec.Header().Get("HX-Redirect"))
+	}
+}
+
+func requestDashboardRaw(t *testing.T, db *sql.DB, user entities.User, headers map[string]string) *httptest.ResponseRecorder {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	queries := entities.New(db)
+	handler := dashboard.NewDashboardHander(
+		dashboard.NewDashboardRepository(queries),
+		event.NewEventRepository(queries),
+		headtohead.NewHeadToHeadRepository(queries),
+	)
+
+	router := gin.New()
+	router.HTMLRender = &testTemplRender{}
+	router.GET("/dashboard", func(c *gin.Context) {
+		c.Set("currentUser", user)
+		handler.GetDashboard(c)
+	})
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/dashboard", nil)
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
+	router.ServeHTTP(recorder, request)
+	return recorder
+}
+
+func createAccountUser(t *testing.T, db *sql.DB, first, last, display, email, profileID string) entities.User {
+	t.Helper()
+	repo := user.NewUserRepository(db)
+	ctx := context.Background()
+	if _, err := repo.CreateUser(ctx, entities.CreateUserParams{
+		FirstName:   first,
+		LastName:    last,
+		Email:       email,
+		ProfileID:   profileID,
+		DisplayName: display,
+	}); err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	byEmail, err := repo.GetUserByEmail(ctx, email)
+	if err != nil {
+		t.Fatalf("get user: %v", err)
+	}
+	byID, err := repo.GetUserById(ctx, byEmail.ID)
+	if err != nil {
+		t.Fatalf("get user by id: %v", err)
+	}
+	return byID
 }
 
 func requestDashboard(t *testing.T, db *sql.DB, user *entities.User) *httptest.ResponseRecorder {
